@@ -45,9 +45,7 @@ export class HtmlValue {
     }
 }
 
-type SaveQueryFormType = { name: string, user: boolean };
-
-export class SaveQueryForm extends Form<FormGroup, SaveQueryFormType> {
+export class SaveQueryForm extends Form<FormGroup, any> {
     constructor(formBuilder: FormBuilder) {
         super(formBuilder.group({
             name: ['',

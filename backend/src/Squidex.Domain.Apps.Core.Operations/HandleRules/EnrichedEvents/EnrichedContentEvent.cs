@@ -28,8 +28,6 @@ namespace Squidex.Domain.Apps.Core.HandleRules.EnrichedEvents
 
         public NamedContentData Data { get; set; }
 
-        public NamedContentData? DataOld { get; set; }
-
         public Status Status { get; set; }
 
         public override long Partition

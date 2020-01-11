@@ -208,11 +208,7 @@ export class RichEditorComponent extends StatefulControlComponent<undefined, str
         let content = '';
 
         for (const asset of assets) {
-            if (asset.type === 'Video') {
-                content += `<video src="${asset.fullUrl(this.apiUrl)}" />`;
-            } else {
-                content += `<img src="${asset.fullUrl(this.apiUrl)}" alt="${asset.fileName}" />`;
-            }
+            content += `<img src="${asset.fullUrl(this.apiUrl)}" alt="${asset.fileName}" />`;
         }
 
         if (content.length > 0) {
@@ -242,11 +238,7 @@ export class RichEditorComponent extends StatefulControlComponent<undefined, str
         this.assetUploader.uploadFile(file)
             .subscribe(asset => {
                 if (Types.is(asset, AssetDto)) {
-                    if (asset.type === 'Video') {
-                        replaceText(`<video src="${asset.fullUrl(this.apiUrl)}" />`);
-                    } else {
-                        replaceText(`<img src="${asset.fullUrl(this.apiUrl)}" alt="${asset.fileName}" />`);
-                    }
+                    replaceText(`<img src="${asset.fullUrl(this.apiUrl)}" alt="${asset.fileName}" />`);
                 }
             }, error => {
                 if (!Types.is(error, UploadCanceled)) {

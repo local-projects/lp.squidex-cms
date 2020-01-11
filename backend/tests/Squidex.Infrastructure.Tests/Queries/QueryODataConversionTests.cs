@@ -36,7 +36,6 @@ namespace Squidex.Infrastructure.Queries
             entityType.AddStructuralProperty("incomeMioNullable", EdmPrimitiveTypeKind.Double, true);
             entityType.AddStructuralProperty("age", EdmPrimitiveTypeKind.Int32, false);
             entityType.AddStructuralProperty("ageNullable", EdmPrimitiveTypeKind.Int32, true);
-            entityType.AddStructuralProperty("properties", new EdmComplexTypeReference(new EdmComplexType("Squidex", "Properties", null, false, true), true));
 
             var container = new EdmEntityContainer("Squidex", "Container");
 
@@ -61,8 +60,6 @@ namespace Squidex.Infrastructure.Queries
         [Theory]
         [InlineData("created")]
         [InlineData("createdNullable")]
-        [InlineData("properties/datetime")]
-        [InlineData("properties/nested/dateime")]
         public void Should_parse_filter_when_type_is_datetime(string field)
         {
             var i = Q($"$filter={field} eq 1988-01-19T12:00:00Z");
@@ -92,8 +89,6 @@ namespace Squidex.Infrastructure.Queries
         [Theory]
         [InlineData("birthday")]
         [InlineData("birthdayNullable")]
-        [InlineData("properties/date")]
-        [InlineData("properties/nested/date")]
         public void Should_parse_filter_when_type_is_date(string field)
         {
             var i = Q($"$filter={field} eq 1988-01-19");
@@ -114,8 +109,6 @@ namespace Squidex.Infrastructure.Queries
         [Theory]
         [InlineData("id")]
         [InlineData("idNullable")]
-        [InlineData("properties/uid")]
-        [InlineData("properties/nested/guid")]
         public void Should_parse_filter_when_type_is_guid(string field)
         {
             var i = Q($"$filter={field} eq B5FE25E3-B262-4B17-91EF-B3772A6B62BB");
@@ -145,8 +138,6 @@ namespace Squidex.Infrastructure.Queries
         [Theory]
         [InlineData("firstName")]
         [InlineData("firstNameNullable")]
-        [InlineData("properties/string")]
-        [InlineData("properties/nested/string")]
         public void Should_parse_filter_when_type_is_string(string field)
         {
             var i = Q($"$filter={field} eq 'Dagobert'");
@@ -167,8 +158,6 @@ namespace Squidex.Infrastructure.Queries
         [Theory]
         [InlineData("isComicFigure")]
         [InlineData("isComicFigureNullable")]
-        [InlineData("properties/boolean")]
-        [InlineData("properties/nested/boolean")]
         public void Should_parse_filter_when_type_is_boolean(string field)
         {
             var i = Q($"$filter={field} eq true");
@@ -189,8 +178,6 @@ namespace Squidex.Infrastructure.Queries
         [Theory]
         [InlineData("age")]
         [InlineData("ageNullable")]
-        [InlineData("properties/int")]
-        [InlineData("properties/nested/int")]
         public void Should_parse_filter_when_type_is_int32(string field)
         {
             var i = Q($"$filter={field} eq 60");
@@ -211,8 +198,6 @@ namespace Squidex.Infrastructure.Queries
         [Theory]
         [InlineData("incomeCents")]
         [InlineData("incomeCentsNullable")]
-        [InlineData("properties/long")]
-        [InlineData("properties/nested/long")]
         public void Should_parse_filter_when_type_is_int64(string field)
         {
             var i = Q($"$filter={field} eq 31543143513456789");
@@ -233,8 +218,6 @@ namespace Squidex.Infrastructure.Queries
         [Theory]
         [InlineData("incomeMio")]
         [InlineData("incomeMioNullable")]
-        [InlineData("properties/double")]
-        [InlineData("properties/nested/double")]
         public void Should_parse_filter_when_type_is_double(string field)
         {
             var i = Q($"$filter={field} eq 5634474356.1233");
@@ -461,7 +444,7 @@ namespace Squidex.Infrastructure.Queries
 
         private static string C(string value)
         {
-            return value.Replace('/', '.');
+            return value;
         }
 
         private static string? Q(string value)

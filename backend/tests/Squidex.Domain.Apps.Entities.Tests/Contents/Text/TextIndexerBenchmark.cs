@@ -13,8 +13,6 @@ using Squidex.Infrastructure;
 using Squidex.Infrastructure.Log;
 using Xunit;
 
-#pragma warning disable xUnit1004 // Test methods should not be skipped
-
 namespace Squidex.Domain.Apps.Entities.Contents.Text
 {
     public class TextIndexerBenchmark

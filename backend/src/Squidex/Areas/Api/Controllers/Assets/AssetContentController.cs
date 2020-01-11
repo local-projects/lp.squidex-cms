@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Net.Http.Headers;
 using Squidex.Areas.Api.Controllers.Assets.Models;
-using Squidex.Domain.Apps.Core.Assets;
 using Squidex.Domain.Apps.Entities.Assets;
 using Squidex.Domain.Apps.Entities.Assets.Repositories;
 using Squidex.Infrastructure;
@@ -127,7 +126,7 @@ namespace Squidex.Areas.Api.Controllers.Assets
 
             var handler = new Func<Stream, Task>(async bodyStream =>
             {
-                if (asset.Type == AssetType.Image && query.ShouldResize())
+                if (asset.IsImage && query.ShouldResize())
                 {
                     var resizedAsset = $"{asset.Id}_{asset.FileVersion}_{query.Width}_{query.Height}_{query.Mode}";
 

@@ -6,16 +6,13 @@
 // ==========================================================================
 
 using System;
-using System.Collections.Generic;
-using System.Threading;
+using System.IO;
 using System.Threading.Tasks;
 
-namespace Squidex.Infrastructure.Log.Store
+namespace Squidex.Infrastructure.Log
 {
-    public interface IRequestLogRepository
+    public interface ILogStore
     {
-        Task InsertManyAsync(IEnumerable<Request> items);
-
-        Task QueryAllAsync(Func<Request, Task> callback, string key, DateTime fromDate, DateTime toDate, CancellationToken ct = default);
+        Task ReadLogAsync(string key, DateTime from, DateTime to, Stream stream);
     }
 }

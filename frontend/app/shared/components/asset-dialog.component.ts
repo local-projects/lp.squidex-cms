@@ -69,8 +69,6 @@ export class AssetDialogComponent implements OnInit {
                 }, error => {
                     this.annotateForm.submitFailed(error);
                 });
-        } else if (this.annotateForm.form.valid) {
-            this.emitComplete();
         }
     }
 }

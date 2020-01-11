@@ -60,21 +60,21 @@ namespace Squidex.Infrastructure.TestHelpers
 
     public sealed class CreateAuto : MyCommand
     {
-        public long Value { get; set; }
+        public int Value { get; set; }
     }
 
     public sealed class CreateCustom : MyCommand
     {
-        public long Value { get; set; }
+        public int Value { get; set; }
     }
 
     public sealed class UpdateAuto : MyCommand
     {
-        public long Value { get; set; }
+        public int Value { get; set; }
     }
 
     public sealed class UpdateCustom : MyCommand
     {
-        public long Value { get; set; }
+        public int Value { get; set; }
     }
 }

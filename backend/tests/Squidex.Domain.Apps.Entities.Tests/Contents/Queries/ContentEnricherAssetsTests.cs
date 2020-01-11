@@ -10,7 +10,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using FakeItEasy;
 using Squidex.Domain.Apps.Core;
-using Squidex.Domain.Apps.Core.Assets;
 using Squidex.Domain.Apps.Core.Contents;
 using Squidex.Domain.Apps.Core.ConvertContent;
 using Squidex.Domain.Apps.Core.Schemas;
@@ -72,11 +71,11 @@ namespace Squidex.Domain.Apps.Entities.Contents.Queries
         [Fact]
         public async Task Should_add_assets_id_and_versions_as_dependency()
         {
-            var image1 = CreateAsset(Guid.NewGuid(), 1, AssetType.Image);
-            var image2 = CreateAsset(Guid.NewGuid(), 2, AssetType.Image);
+            var image1 = CreateAsset(Guid.NewGuid(), 1, true);
+            var image2 = CreateAsset(Guid.NewGuid(), 2, true);
 
-            var document1 = CreateAsset(Guid.NewGuid(), 3, AssetType.Unknown);
-            var document2 = CreateAsset(Guid.NewGuid(), 4, AssetType.Unknown);
+            var document1 = CreateAsset(Guid.NewGuid(), 3, false);
+            var document2 = CreateAsset(Guid.NewGuid(), 4, false);
 
             var source = new IContentEntity[]
             {
@@ -107,11 +106,11 @@ namespace Squidex.Domain.Apps.Entities.Contents.Queries
         [Fact]
         public async Task Should_enrich_with_asset_urls()
         {
-            var image1 = CreateAsset(Guid.NewGuid(), 1, AssetType.Image);
-            var image2 = CreateAsset(Guid.NewGuid(), 2, AssetType.Image);
+            var image1 = CreateAsset(Guid.NewGuid(), 1, true);
+            var image2 = CreateAsset(Guid.NewGuid(), 2, true);
 
-            var document1 = CreateAsset(Guid.NewGuid(), 3, AssetType.Unknown);
-            var document2 = CreateAsset(Guid.NewGuid(), 4, AssetType.Unknown);
+            var document1 = CreateAsset(Guid.NewGuid(), 3, false);
+            var document2 = CreateAsset(Guid.NewGuid(), 4, false);
 
             var source = new IContentEntity[]
             {
@@ -224,9 +223,9 @@ namespace Squidex.Domain.Apps.Entities.Contents.Queries
             };
         }
 
-        private static IEnrichedAssetEntity CreateAsset(Guid id, int version, AssetType type)
+        private static IEnrichedAssetEntity CreateAsset(Guid id, int version, bool isImage)
         {
-            return new AssetEntity { Id = id, Type = type, Version = version };
+            return new AssetEntity { Id = id, IsImage = isImage, Version = version };
         }
     }
 }

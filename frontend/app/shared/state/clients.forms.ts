@@ -13,13 +13,7 @@ import {
     ValidatorsEx
 } from '@app/framework';
 
-import {
-    ClientDto,
-    CreateClientDto,
-    UpdateClientDto
-} from './../services/clients.service';
-
-export class RenameClientForm extends Form<FormGroup, UpdateClientDto, ClientDto> {
+export class RenameClientForm extends Form<FormGroup, { name: string }> {
     constructor(formBuilder: FormBuilder) {
         super(formBuilder.group({
             name: ['',
@@ -31,12 +25,12 @@ export class RenameClientForm extends Form<FormGroup, UpdateClientDto, ClientDto
     }
 }
 
-export class AddClientForm extends Form<FormGroup, CreateClientDto> {
-    public hasNoId = hasNoValue$(this.form.controls['id']);
+export class AddClientForm extends Form<FormGroup, { name: string}> {
+    public hasNoName = hasNoValue$(this.form.controls['name']);
 
     constructor(formBuilder: FormBuilder) {
         super(formBuilder.group({
-            id: ['',
+            name: ['',
                 [
                     Validators.maxLength(40),
                     ValidatorsEx.pattern('[a-z0-9]+(\-[a-z0-9]+)*', 'Name can contain lower case letters (a-z), numbers and dashes between.')

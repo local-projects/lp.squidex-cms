@@ -7,7 +7,6 @@
 
 using System;
 using System.Collections.Generic;
-using Squidex.Domain.Apps.Core.Assets;
 using Squidex.Domain.Apps.Entities.Assets.Commands;
 using Squidex.Infrastructure.Reflection;
 
@@ -29,11 +28,6 @@ namespace Squidex.Areas.Api.Controllers.Assets.Models
         /// The new asset tags.
         /// </summary>
         public HashSet<string>? Tags { get; set; }
-
-        /// <summary>
-        /// The asset metadata.
-        /// </summary>
-        public AssetMetadata? Metadata { get; set; }
 
         public AnnotateAsset ToCommand(Guid id)
         {

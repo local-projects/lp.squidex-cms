@@ -1,14 +1,16 @@
 ﻿// ==========================================================================
 //  Squidex Headless CMS
 // ==========================================================================
-//  Copyright (c) Squidex UG (haftungsbeschraenkt)
+//  Copyright (c) Squidex UG (haftungsbeschränkt)
 //  All rights reserved. Licensed under the MIT license.
 // ==========================================================================
 
-namespace Squidex.Infrastructure.Log.Store
+using Squidex.Infrastructure;
+
+namespace Squidex.Domain.Apps.Entities
 {
-    public sealed class RequestLogStoreOptions
+    public interface IUpdateableEntityWithCreatedBy
     {
-        public int StoreRetentionInDays { get; set; } = 90;
+        RefToken CreatedBy { get; set; }
     }
 }

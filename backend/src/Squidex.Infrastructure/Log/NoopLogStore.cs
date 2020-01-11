@@ -6,15 +6,19 @@
 // ==========================================================================
 
 using System;
-using System.Threading;
+using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 
-namespace Squidex.Infrastructure.Log.Store
+namespace Squidex.Infrastructure.Log
 {
-    public interface IRequestLogStore
+    public sealed class NoopLogStore : ILogStore
     {
-        Task LogAsync(Request request);
+        private static readonly byte[] NoopText = Encoding.UTF8.GetBytes("Not Supported");
 
-        Task QueryAllAsync(Func<Request, Task> callback, string key, DateTime fromDate, DateTime toDate, CancellationToken ct = default);
+        public Task ReadLogAsync(string key, DateTime from, DateTime to, Stream stream)
+        {
+            return stream.WriteAsync(NoopText, 0, NoopText.Length);
+        }
     }
 }

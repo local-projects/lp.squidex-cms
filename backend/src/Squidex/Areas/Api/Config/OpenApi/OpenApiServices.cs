@@ -14,7 +14,6 @@ using NSwag.Generation;
 using NSwag.Generation.Processors;
 using Squidex.Areas.Api.Controllers.Contents.Generator;
 using Squidex.Areas.Api.Controllers.Rules.Models;
-using Squidex.Domain.Apps.Core.Assets;
 using Squidex.Domain.Apps.Core.Contents;
 using Squidex.Infrastructure;
 
@@ -71,31 +70,16 @@ namespace Squidex.Areas.Api.Config.OpenApi
         {
             settings.TypeMappers = new List<ITypeMapper>
             {
-                CreateStringMap<Instant>(JsonFormatStrings.DateTime),
-                CreateStringMap<Language>(),
-                CreateStringMap<RefToken>(),
-                CreateStringMap<Status>(),
-
-                new PrimitiveTypeMapper(typeof(AssetMetadata), schema =>
+                new PrimitiveTypeMapper(typeof(Instant), schema =>
                 {
-                    schema.Type = JsonObjectType.Object;
+                    schema.Type = JsonObjectType.String;
+                    schema.Format = JsonFormatStrings.DateTime;
+                }),
 
-                    schema.AdditionalPropertiesSchema = new JsonSchema
-                    {
-                        Description = "Any JSON type"
-                    };
-                })
+                new PrimitiveTypeMapper(typeof(Language), s => s.Type = JsonObjectType.String),
+                new PrimitiveTypeMapper(typeof(RefToken), s => s.Type = JsonObjectType.String),
+                new PrimitiveTypeMapper(typeof(Status), s => s.Type = JsonObjectType.String)
             };
-        }
-
-        private static ITypeMapper CreateStringMap<T>(string? format = null)
-        {
-            return new PrimitiveTypeMapper(typeof(T), schema =>
-            {
-                schema.Type = JsonObjectType.String;
-
-                schema.Format = format;
-            });
         }
     }
 }

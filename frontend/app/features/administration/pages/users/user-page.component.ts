@@ -46,9 +46,7 @@ export class UserPageComponent extends ResourceOwner implements OnInit {
 
                     this.isEditable = !user || user.canUpdate;
 
-                    const permissions: string[] = [];
-
-                    this.userForm.load(user || { permissions } );
+                    this.userForm.load(user || { permissions: [] });
                     this.userForm.setEnabled(this.isEditable);
                 }));
     }

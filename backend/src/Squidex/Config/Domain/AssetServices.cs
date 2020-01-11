@@ -12,7 +12,9 @@ using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using MongoDB.Driver.GridFS;
 using Squidex.Domain.Apps.Entities.Assets;
+using Squidex.Domain.Apps.Entities.Assets.Commands;
 using Squidex.Domain.Apps.Entities.Assets.Queries;
+using Squidex.Domain.Apps.Entities.Tags;
 using Squidex.Infrastructure;
 using Squidex.Infrastructure.Assets;
 using Squidex.Infrastructure.Assets.ImageSharp;
@@ -47,10 +49,10 @@ namespace Squidex.Config.Domain
                 .As<IAssetUsageTracker>().As<IEventConsumer>();
 
             services.AddSingletonAs<FileTypeTagGenerator>()
-                .As<IAssetMetadataSource>();
+                .As<ITagGenerator<CreateAsset>>();
 
-            services.AddSingletonAs<FileTagAssetMetadataSource>()
-                .As<IAssetMetadataSource>();
+            services.AddSingletonAs<ImageTagGenerator>()
+                .As<ITagGenerator<CreateAsset>>();
         }
 
         public static void AddSquidexAssetInfrastructure(this IServiceCollection services, IConfiguration config)
@@ -86,7 +88,7 @@ namespace Squidex.Config.Domain
                 },
                 ["AmazonS3"] = () =>
                 {
-                    var amazonS3Options = config.GetSection("assetStore:amazonS3").Get<AmazonS3Options>();
+                    var amazonS3Options = config.GetSection("assetStore:amazonS3").Get<MyAmazonS3Options>();
 
                     services.AddSingletonAs(c => new AmazonS3AssetStore(amazonS3Options))
                         .As<IAssetStore>();

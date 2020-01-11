@@ -61,7 +61,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.GraphQL.Types
             AddField(new FieldType
             {
                 Name = $"find{schemaType}Content",
-                Arguments = CreateContentFindArguments(schemaName),
+                Arguments = CreateContentFindTypes(schemaName),
                 ResolvedType = contentType,
                 Resolver = ResolveAsync((c, e) =>
                 {
@@ -149,7 +149,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.GraphQL.Types
             };
         }
 
-        private static QueryArguments CreateContentFindArguments(string schemaName)
+        private static QueryArguments CreateContentFindTypes(string schemaName)
         {
             return new QueryArguments
             {

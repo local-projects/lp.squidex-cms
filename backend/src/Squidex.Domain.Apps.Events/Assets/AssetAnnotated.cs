@@ -6,7 +6,6 @@
 // ==========================================================================
 
 using System.Collections.Generic;
-using Squidex.Domain.Apps.Core.Assets;
 using Squidex.Infrastructure.EventSourcing;
 
 namespace Squidex.Domain.Apps.Events.Assets
@@ -17,8 +16,6 @@ namespace Squidex.Domain.Apps.Events.Assets
         public string FileName { get; set; }
 
         public string Slug { get; set; }
-
-        public AssetMetadata? Metadata { get; set; }
 
         public HashSet<string>? Tags { get; set; }
     }

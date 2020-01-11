@@ -1,17 +1,21 @@
 ﻿// ==========================================================================
 //  Squidex Headless CMS
 // ==========================================================================
-//  Copyright (c) Squidex UG (haftungsbeschraenkt)
+//  Copyright (c) Squidex UG (haftungsbeschränkt)
 //  All rights reserved. Licensed under the MIT license.
 // ==========================================================================
 
-namespace Squidex.Areas.Api.Controllers.Assets.Models
+using System;
+using NodaTime;
+
+namespace Squidex.Domain.Apps.Entities
 {
-    public sealed class AssetMeta
+    public interface IUpdateableEntity
     {
-        /// <summary>
-        /// Indicates whether the asset is a duplicate.
-        /// </summary>
-        public string IsDuplicate { get; set; }
+        Guid Id { get; set; }
+
+        Instant Created { get; set; }
+
+        Instant LastModified { get; set; }
     }
 }

@@ -267,7 +267,9 @@ export abstract class ContentsStateBase extends State<Snapshot> {
     public publishDraft(content: ContentDto, dueTime: string | null): Observable<ContentDto> {
         return this.contentsService.publishDraft(this.appName, content, dueTime, content.version).pipe(
             tap(updated => {
-                this.replaceContent(updated, content.version, 'Content updated successfully.');
+                this.dialogs.notifyInfo('Content updated successfully.');
+
+                this.replaceContent(updated);
             }),
             shareSubscribed(this.dialogs));
     }
@@ -275,7 +277,9 @@ export abstract class ContentsStateBase extends State<Snapshot> {
     public changeStatus(content: ContentDto, status: string, dueTime: string | null): Observable<ContentDto> {
         return this.contentsService.putStatus(this.appName, content, status, dueTime, content.version).pipe(
             tap(updated => {
-                this.replaceContent(updated, content.version, 'Content updated successfully.');
+                this.dialogs.notifyInfo('Content updated successfully.');
+
+                this.replaceContent(updated);
             }),
             shareSubscribed(this.dialogs));
     }
@@ -283,7 +287,9 @@ export abstract class ContentsStateBase extends State<Snapshot> {
     public update(content: ContentDto, request: any): Observable<ContentDto> {
         return this.contentsService.putContent(this.appName, content, request, content.version).pipe(
             tap(updated => {
-                this.replaceContent(updated, content.version, 'Content updated successfully.');
+                this.dialogs.notifyInfo('Content updated successfully.');
+
+                this.replaceContent(updated, content.version);
             }),
             shareSubscribed(this.dialogs, { silent: true }));
     }
@@ -291,7 +297,9 @@ export abstract class ContentsStateBase extends State<Snapshot> {
     public proposeDraft(content: ContentDto, request: any): Observable<ContentDto> {
         return this.contentsService.proposeDraft(this.appName, content, request, content.version).pipe(
             tap(updated => {
-                this.replaceContent(updated, content.version, 'Content updated successfully.');
+                this.dialogs.notifyInfo('Content updated successfully.');
+
+                this.replaceContent(updated, content.version);
             }),
             shareSubscribed(this.dialogs, { silent: true }));
     }
@@ -299,7 +307,9 @@ export abstract class ContentsStateBase extends State<Snapshot> {
     public discardDraft(content: ContentDto): Observable<ContentDto> {
         return this.contentsService.discardDraft(this.appName, content, content.version).pipe(
             tap(updated => {
-                this.replaceContent(updated, content.version, 'Content updated successfully.');
+                this.dialogs.notifyInfo('Content updated successfully.');
+
+                this.replaceContent(updated, content.version);
             }),
             shareSubscribed(this.dialogs));
     }
@@ -307,7 +317,9 @@ export abstract class ContentsStateBase extends State<Snapshot> {
     public patch(content: ContentDto, request: any): Observable<ContentDto> {
         return this.contentsService.patchContent(this.appName, content, request, content.version).pipe(
             tap(updated => {
-                this.replaceContent(updated, content.version, 'Content updated successfully.');
+                this.dialogs.notifyInfo('Content updated successfully.');
+
+                this.replaceContent(updated, content.version);
             }),
             shareSubscribed(this.dialogs));
     }
@@ -332,12 +344,8 @@ export abstract class ContentsStateBase extends State<Snapshot> {
         return this.appsState.appName;
     }
 
-    private replaceContent(content: ContentDto, oldVersion?: Version, updateText?: string) {
+    private replaceContent(content: ContentDto, oldVersion?: Version) {
         if (!oldVersion || !oldVersion.eq(content.version)) {
-            if (updateText) {
-                this.dialogs.notifyInfo(updateText);
-            }
-
             return this.next(s => {
                 const contents = s.contents.replaceBy('id', content);
 

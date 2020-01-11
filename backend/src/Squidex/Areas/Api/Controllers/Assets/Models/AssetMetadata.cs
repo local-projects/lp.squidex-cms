@@ -5,16 +5,13 @@
 //  All rights reserved. Licensed under the MIT license.
 // ==========================================================================
 
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Squidex.Domain.Apps.Entities.Assets.Commands;
-
-namespace Squidex.Domain.Apps.Entities.Assets
+namespace Squidex.Areas.Api.Controllers.Assets.Models
 {
-    public interface IAssetMetadataSource
+    public sealed class AssetMetadata
     {
-        Task EnhanceAsync(UploadAssetCommand command, HashSet<string>? tags);
-
-        IEnumerable<string> Format(IAssetEntity asset);
+        /// <summary>
+        /// Indicates whether the asset is a duplicate.
+        /// </summary>
+        public string IsDuplicate { get; set; }
     }
 }

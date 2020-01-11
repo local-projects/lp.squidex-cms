@@ -9,13 +9,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 import { Form, ValidatorsEx } from '@app/framework';
 
-import {
-    AppDto,
-    CreateAppDto,
-    UpdateAppDto
-} from './../services/apps.service';
-
-export class CreateAppForm extends Form<FormGroup, CreateAppDto> {
+export class CreateAppForm extends Form<FormGroup, { name: string }> {
     constructor(formBuilder: FormBuilder) {
         super(formBuilder.group({
             name: ['',
@@ -29,7 +23,7 @@ export class CreateAppForm extends Form<FormGroup, CreateAppDto> {
     }
 }
 
-export class UpdateAppForm extends Form<FormGroup, UpdateAppDto, AppDto> {
+export class UpdateAppForm extends Form<FormGroup, { label?: string, description?: string }> {
     constructor(formBuilder: FormBuilder) {
         super(formBuilder.group({
             label: ['',

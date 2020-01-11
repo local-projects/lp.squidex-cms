@@ -17,7 +17,7 @@ using Squidex.Infrastructure.Reflection;
 
 namespace Squidex.Domain.Apps.Entities.Contents.State
 {
-    public sealed class ContentState : DomainObjectState<ContentState>, IContentEntity
+    public class ContentState : DomainObjectState<ContentState>, IContentEntity
     {
         [DataMember]
         public NamedId<Guid> AppId { get; set; }
@@ -43,7 +43,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.State
         [DataMember]
         public Status Status { get; set; }
 
-        public override bool ApplyEvent(IEvent @event)
+        public void ApplyEvent(IEvent @event)
         {
             switch (@event)
             {
@@ -121,8 +121,11 @@ namespace Squidex.Domain.Apps.Entities.Contents.State
                         break;
                     }
             }
+        }
 
-            return true;
+        public override ContentState Apply(Envelope<IEvent> @event)
+        {
+            return Clone().Update(@event, (e, s) => s.ApplyEvent(e));
         }
 
         private void UpdateData(NamedContentData? data, NamedContentData? dataDraft, bool isPending)

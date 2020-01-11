@@ -16,6 +16,7 @@ using Orleans;
 using Squidex.Domain.Apps.Core.Tags;
 using Squidex.Domain.Apps.Entities.Assets.Commands;
 using Squidex.Domain.Apps.Entities.Assets.State;
+using Squidex.Domain.Apps.Entities.Tags;
 using Squidex.Domain.Apps.Entities.TestHelpers;
 using Squidex.Infrastructure.Assets;
 using Squidex.Infrastructure.Commands;
@@ -31,12 +32,14 @@ namespace Squidex.Domain.Apps.Entities.Assets
         private readonly IAssetEnricher assetEnricher = A.Fake<IAssetEnricher>();
         private readonly IAssetFileStore assetFileStore = A.Fake<IAssetFileStore>();
         private readonly IAssetQueryService assetQuery = A.Fake<IAssetQueryService>();
-        private readonly IAssetMetadataSource assetMetadataSource = A.Fake<IAssetMetadataSource>();
+        private readonly IAssetThumbnailGenerator assetThumbnailGenerator = A.Fake<IAssetThumbnailGenerator>();
         private readonly IContextProvider contextProvider = A.Fake<IContextProvider>();
         private readonly IGrainFactory grainFactory = A.Fake<IGrainFactory>();
+        private readonly ITagGenerator<CreateAsset> tagGenerator = A.Fake<ITagGenerator<CreateAsset>>();
         private readonly ITagService tagService = A.Fake<ITagService>();
         private readonly Guid assetId = Guid.NewGuid();
         private readonly Stream stream = new MemoryStream();
+        private readonly ImageInfo image = new ImageInfo(2048, 2048);
         private readonly AssetGrain asset;
         private readonly AssetFile file;
         private readonly Context requestContext = Context.Anonymous();
@@ -70,11 +73,15 @@ namespace Squidex.Domain.Apps.Entities.Assets
             A.CallTo(() => grainFactory.GetGrain<IAssetGrain>(Id, null))
                 .Returns(asset);
 
+            A.CallTo(() => assetThumbnailGenerator.GetImageInfoAsync(stream))
+                .Returns(image);
+
             sut = new AssetCommandMiddleware(grainFactory,
                 assetEnricher,
-                assetFileStore,
                 assetQuery,
-                contextProvider, new[] { assetMetadataSource });
+                assetFileStore,
+                assetThumbnailGenerator,
+                contextProvider, new[] { tagGenerator });
         }
 
         [Fact]
@@ -142,7 +149,7 @@ namespace Squidex.Domain.Apps.Entities.Assets
             result.Asset.Should().BeEquivalentTo(asset.Snapshot, x => x.ExcludingMissingMembers());
 
             AssertAssetHasBeenUploaded(0);
-            AssertMetadataEnriched();
+            AssertAssetImageChecked();
         }
 
         [Fact]
@@ -227,7 +234,7 @@ namespace Squidex.Domain.Apps.Entities.Assets
             await sut.HandleAsync(context);
 
             AssertAssetHasBeenUploaded(1);
-            AssertMetadataEnriched();
+            AssertAssetImageChecked();
         }
 
         [Fact]
@@ -300,9 +307,9 @@ namespace Squidex.Domain.Apps.Entities.Assets
                 .Returns(new List<IEnrichedAssetEntity> { duplicate });
         }
 
-        private void AssertMetadataEnriched()
+        private void AssertAssetImageChecked()
         {
-            A.CallTo(() => assetMetadataSource.EnhanceAsync(A<UploadAssetCommand>.Ignored, A<HashSet<string>>.Ignored))
+            A.CallTo(() => assetThumbnailGenerator.GetImageInfoAsync(stream))
                 .MustHaveHappened();
         }
     }

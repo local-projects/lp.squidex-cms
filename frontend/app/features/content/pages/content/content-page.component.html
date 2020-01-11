@@ -3,12 +3,13 @@
 <form [formGroup]="contentForm.form" (ngSubmit)="saveAndPublish()">
     <sqx-panel desiredWidth="*" minWidth="60rem" [showSidebar]="!!content" grid="true">
         <ng-container title>
-            <a class="btn btn-text" (click)="back()" *ngIf="!schema.isSingleton">
-                <i class="icon-angle-left"></i>
+            <a class="btn btn-primary" (click)="back()" *ngIf="!schema.isSingleton">
+                <a class="icon-angle-left"></a>
             </a>
 
             <ng-container *ngIf="content else noContentTitle">
                 <sqx-title message="Edit Content"></sqx-title>
+                
 
                 Edit Content
             </ng-container>

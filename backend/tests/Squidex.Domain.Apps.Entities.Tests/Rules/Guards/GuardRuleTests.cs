@@ -24,6 +24,7 @@ namespace Squidex.Domain.Apps.Entities.Rules.Guards
     public class GuardRuleTests
     {
         private readonly Uri validUrl = new Uri("https://squidex.io");
+        private readonly Rule rule_0 = new Rule(new ContentChangedTriggerV2(), new TestAction()).Rename("MyName");
         private readonly NamedId<Guid> appId = NamedId.Of(Guid.NewGuid(), "my-app");
         private readonly NamedId<Guid> schemaId = NamedId.Of(Guid.NewGuid(), "my-schema");
         private readonly IAppProvider appProvider = A.Fake<IAppProvider>();
@@ -94,7 +95,7 @@ namespace Squidex.Domain.Apps.Entities.Rules.Guards
         {
             var command = new UpdateRule();
 
-            await ValidationAssert.ThrowsAsync(() => GuardRule.CanUpdate(command, appId.Id, appProvider),
+            await ValidationAssert.ThrowsAsync(() => GuardRule.CanUpdate(command, appId.Id, appProvider, rule_0),
                 new ValidationError("Either trigger, action or name is required.", "Trigger", "Action"));
         }
 
@@ -103,7 +104,7 @@ namespace Squidex.Domain.Apps.Entities.Rules.Guards
         {
             var command = new UpdateRule { Name = "MyName" };
 
-            await GuardRule.CanUpdate(command, appId.Id, appProvider);
+            await GuardRule.CanUpdate(command, appId.Id, appProvider, rule_0);
         }
 
         [Fact]
@@ -122,23 +123,47 @@ namespace Squidex.Domain.Apps.Entities.Rules.Guards
                 Name = "NewName"
             };
 
-            await GuardRule.CanUpdate(command, appId.Id, appProvider);
+            await GuardRule.CanUpdate(command, appId.Id, appProvider, rule_0);
         }
 
         [Fact]
-        public void CanEnable_should_not_throw_exception()
+        public void CanEnable_should_throw_exception_if_rule_enabled()
         {
             var command = new EnableRule();
 
-            GuardRule.CanEnable(command);
+            var rule_1 = rule_0.Enable();
+
+            Assert.Throws<DomainException>(() => GuardRule.CanEnable(command, rule_1));
         }
 
         [Fact]
-        public void CanDisable_should_not_throw_exception()
+        public void CanEnable_should_not_throw_exception_if_rule_disabled()
+        {
+            var command = new EnableRule();
+
+            var rule_1 = rule_0.Disable();
+
+            GuardRule.CanEnable(command, rule_1);
+        }
+
+        [Fact]
+        public void CanDisable_should_throw_exception_if_rule_disabled()
         {
             var command = new DisableRule();
 
-            GuardRule.CanDisable(command);
+            var rule_1 = rule_0.Disable();
+
+            Assert.Throws<DomainException>(() => GuardRule.CanDisable(command, rule_1));
+        }
+
+        [Fact]
+        public void CanDisable_should_not_throw_exception_if_rule_enabled()
+        {
+            var command = new DisableRule();
+
+            var rule_1 = rule_0.Enable();
+
+            GuardRule.CanDisable(command, rule_1);
         }
 
         [Fact]
