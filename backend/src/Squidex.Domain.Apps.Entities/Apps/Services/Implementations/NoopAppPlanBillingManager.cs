@@ -20,7 +20,7 @@ namespace Squidex.Domain.Apps.Entities.Apps.Services.Implementations
 
         public Task<IChangePlanResult> ChangePlanAsync(string userId, NamedId<Guid> appId, string? planId)
         {
-            return Task.FromResult<IChangePlanResult>(new PlanChangedResult());
+            return Task.FromResult<IChangePlanResult>(new PlanResetResult());
         }
 
         public Task<string> GetPortalLinkAsync(string userId)

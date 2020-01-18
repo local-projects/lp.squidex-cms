@@ -46,7 +46,7 @@ namespace Squidex.Domain.Apps.Entities.Schemas.Guards
             });
         }
 
-        public static void CanReorder(ReorderFields command, Schema schema)
+        public static void CanReorder(Schema schema, ReorderFields command)
         {
             Guard.NotNull(command);
 
@@ -88,7 +88,27 @@ namespace Squidex.Domain.Apps.Entities.Schemas.Guards
             });
         }
 
-        public static void CanConfigureUIFields(ConfigureUIFields command, Schema schema)
+        public static void CanPublish(Schema schema, PublishSchema command)
+        {
+            Guard.NotNull(command);
+
+            if (schema.IsPublished)
+            {
+                throw new DomainException("Schema is already published.");
+            }
+        }
+
+        public static void CanUnpublish(Schema schema, UnpublishSchema command)
+        {
+            Guard.NotNull(command);
+
+            if (!schema.IsPublished)
+            {
+                throw new DomainException("Schema is not published.");
+            }
+        }
+
+        public static void CanConfigureUIFields(Schema schema, ConfigureUIFields command)
         {
             Guard.NotNull(command);
 
@@ -99,32 +119,22 @@ namespace Squidex.Domain.Apps.Entities.Schemas.Guards
             });
         }
 
-        public static void CanPublish(PublishSchema command)
+        public static void CanUpdate(Schema schema, UpdateSchema command)
         {
             Guard.NotNull(command);
         }
 
-        public static void CanUnpublish(UnpublishSchema command)
+        public static void CanConfigureScripts(Schema schema, ConfigureScripts command)
         {
             Guard.NotNull(command);
         }
 
-        public static void CanUpdate(UpdateSchema command)
+        public static void CanChangeCategory(Schema schema, ChangeCategory command)
         {
             Guard.NotNull(command);
         }
 
-        public static void CanConfigureScripts(ConfigureScripts command)
-        {
-            Guard.NotNull(command);
-        }
-
-        public static void CanChangeCategory(ChangeCategory command)
-        {
-            Guard.NotNull(command);
-        }
-
-        public static void CanDelete(DeleteSchema command)
+        public static void CanDelete(Schema schema, DeleteSchema command)
         {
             Guard.NotNull(command);
         }

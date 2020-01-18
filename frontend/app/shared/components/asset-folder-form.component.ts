@@ -10,8 +10,8 @@ import { FormBuilder } from '@angular/forms';
 
 import {
     AssetFolderDto,
-    AssetsState,
-    RenameAssetFolderForm
+    AssetFolderForm,
+    AssetsState
 } from '@app/shared/internal';
 
 @Component({
@@ -27,7 +27,7 @@ export class AssetFolderFormComponent implements OnInit {
     @Input()
     public assetFolder: AssetFolderDto;
 
-    public editForm = new RenameAssetFolderForm(this.formBuilder);
+    public editForm = new AssetFolderForm(this.formBuilder);
 
     constructor(
         private readonly assetsState: AssetsState,
@@ -37,7 +37,7 @@ export class AssetFolderFormComponent implements OnInit {
 
     public ngOnInit() {
         if (this.assetFolder) {
-            this.editForm.load(this.assetFolder);
+            this.editForm.load({ folderName: this.assetFolder.folderName });
         }
     }
 

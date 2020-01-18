@@ -89,7 +89,7 @@ export class AutocompleteComponent extends StatefulControlComponent<State, any[]
                             this.reset();
                         }
                     }),
-                    debounceTime(500),
+                    debounceTime(200),
                     distinctUntilChanged(),
                     filter(query => !!query && !!this.source),
                     switchMap(query => this.source.find(query)), catchError(() => of([])))

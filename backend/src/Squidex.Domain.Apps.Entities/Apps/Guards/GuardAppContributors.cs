@@ -52,7 +52,14 @@ namespace Squidex.Domain.Apps.Entities.Apps.Guards
                             throw new DomainForbiddenException("You cannot change your own role.");
                         }
 
-                        if (!contributors.TryGetValue(command.ContributorId, out var role))
+                        if (contributors.TryGetValue(command.ContributorId, out var role))
+                        {
+                            if (role == command.Role)
+                            {
+                                e(Not.New("Contributor", "role"), nameof(command.Role));
+                            }
+                        }
+                        else
                         {
                             if (plan != null && plan.MaxContributors > 0 && contributors.Count >= plan.MaxContributors)
                             {

@@ -8,12 +8,11 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Threading.Tasks;
 using FakeItEasy;
 using Squidex.Domain.Apps.Core.Contents;
 using Squidex.Domain.Apps.Core.HandleRules;
-using Squidex.Domain.Apps.Core.Rules.EnrichedEvents;
+using Squidex.Domain.Apps.Core.HandleRules.EnrichedEvents;
 using Squidex.Domain.Apps.Core.Rules.Triggers;
 using Squidex.Domain.Apps.Core.Scripting;
 using Squidex.Domain.Apps.Events;
@@ -60,42 +59,16 @@ namespace Squidex.Domain.Apps.Entities.Contents
 
         [Theory]
         [MemberData(nameof(TestEvents))]
-        public async Task Should_create_enriched_events(ContentEvent @event, EnrichedContentEventType type)
+        public async Task Should_enrich_events(ContentEvent @event, EnrichedContentEventType type)
         {
             var envelope = Envelope.Create<AppEvent>(@event).SetEventStreamNumber(12);
 
             A.CallTo(() => contentLoader.GetAsync(@event.ContentId, 12))
                 .Returns(new ContentEntity { SchemaId = SchemaMatch });
 
-            var result = await sut.CreateEnrichedEventsAsync(envelope);
+            var result = await sut.CreateEnrichedEventAsync(envelope) as EnrichedContentEvent;
 
-            var enrichedEvent = result.Single() as EnrichedContentEvent;
-
-            Assert.Equal(type, enrichedEvent!.Type);
-        }
-
-        [Fact]
-        public async Task Should_enrich_with_old_data_when_updated()
-        {
-            var @event = new ContentUpdated();
-
-            var envelope = Envelope.Create<AppEvent>(@event).SetEventStreamNumber(12);
-
-            var dataNow = new NamedContentData();
-            var dataOld = new NamedContentData();
-
-            A.CallTo(() => contentLoader.GetAsync(@event.ContentId, 12))
-                .Returns(new ContentEntity { SchemaId = SchemaMatch, Version = 12, Data = dataNow });
-
-            A.CallTo(() => contentLoader.GetAsync(@event.ContentId, 11))
-                .Returns(new ContentEntity { SchemaId = SchemaMatch, Version = 11, Data = dataOld });
-
-            var result = await sut.CreateEnrichedEventsAsync(envelope);
-
-            var enrichedEvent = result.Single() as EnrichedContentEvent;
-
-            Assert.Same(dataNow, enrichedEvent!.Data);
-            Assert.Same(dataOld, enrichedEvent!.DataOld);
+            Assert.Equal(type, result!.Type);
         }
 
         [Fact]

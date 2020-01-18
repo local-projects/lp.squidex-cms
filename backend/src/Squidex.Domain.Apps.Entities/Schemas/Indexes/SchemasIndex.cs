@@ -94,7 +94,7 @@ namespace Squidex.Domain.Apps.Entities.Schemas.Indexes
             }
         }
 
-        public async Task HandleAsync(CommandContext context, NextDelegate next)
+        public async Task HandleAsync(CommandContext context, Func<Task> next)
         {
             if (context.Command is CreateSchema createSchema)
             {
@@ -104,7 +104,7 @@ namespace Squidex.Domain.Apps.Entities.Schemas.Indexes
 
                 try
                 {
-                    await next(context);
+                    await next();
                 }
                 finally
                 {
@@ -123,7 +123,7 @@ namespace Squidex.Domain.Apps.Entities.Schemas.Indexes
             }
             else
             {
-                await next(context);
+                await next();
 
                 if (context.IsCompleted)
                 {

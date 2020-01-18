@@ -32,21 +32,12 @@ namespace Squidex.Infrastructure.Commands
             this.store = store;
         }
 
-        protected sealed override bool ApplyEvent(Envelope<IEvent> @event, bool isLoading)
+        protected sealed override void ApplyEvent(Envelope<IEvent> @event)
         {
             var newVersion = Version + 1;
 
-            var newSnapshot = OnEvent(@event);
-
-            if (!ReferenceEquals(Snapshot, newSnapshot) || isLoading)
-            {
-                snapshot = newSnapshot;
-                snapshot.Version = newVersion;
-
-                return true;
-            }
-
-            return false;
+            snapshot = OnEvent(@event);
+            snapshot.Version = newVersion;
         }
 
         protected sealed override void RestorePreviousSnapshot(T previousSnapshot, long previousVersion)
@@ -56,7 +47,7 @@ namespace Squidex.Infrastructure.Commands
 
         protected sealed override Task ReadAsync(Type type, Guid id)
         {
-            persistence = store.WithSnapshotsAndEventSourcing(GetType(), id, new HandleSnapshot<T>(ApplySnapshot), x => ApplyEvent(x, true));
+            persistence = store.WithSnapshotsAndEventSourcing(GetType(), id, new HandleSnapshot<T>(ApplySnapshot), ApplyEvent);
 
             return persistence.ReadAsync();
         }

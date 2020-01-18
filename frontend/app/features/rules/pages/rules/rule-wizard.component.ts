@@ -168,7 +168,7 @@ export class RuleWizardComponent implements AfterViewInit, OnInit {
             .subscribe(() => {
                 this.emitComplete();
 
-                this.triggerForm.submitCompleted({ noReset: true });
+                this.triggerForm.submitCompleted();
             }, error => {
                 this.triggerForm.submitFailed(error);
             });
@@ -183,7 +183,7 @@ export class RuleWizardComponent implements AfterViewInit, OnInit {
             .subscribe(() => {
                 this.emitComplete();
 
-                this.actionForm.submitCompleted({ noReset: true });
+                this.actionForm.submitCompleted();
             }, error => {
                 this.actionForm.submitFailed(error);
             });

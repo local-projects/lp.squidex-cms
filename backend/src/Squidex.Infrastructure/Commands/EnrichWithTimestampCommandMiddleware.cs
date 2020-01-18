@@ -5,6 +5,7 @@
 //  All rights reserved. Licensed under the MIT license.
 // ==========================================================================
 
+using System;
 using System.Threading.Tasks;
 using NodaTime;
 
@@ -21,14 +22,14 @@ namespace Squidex.Infrastructure.Commands
             this.clock = clock;
         }
 
-        public Task HandleAsync(CommandContext context, NextDelegate next)
+        public Task HandleAsync(CommandContext context, Func<Task> next)
         {
             if (context.Command is ITimestampCommand timestampCommand)
             {
                 timestampCommand.Timestamp = clock.GetCurrentInstant();
             }
 
-            return next(context);
+            return next();
         }
     }
 }

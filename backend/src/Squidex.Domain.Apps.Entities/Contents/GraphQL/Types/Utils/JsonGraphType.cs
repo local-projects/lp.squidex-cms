@@ -14,7 +14,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.GraphQL.Types.Utils
     {
         public JsonGraphType()
         {
-            Name = "JsonScalar";
+            Name = "Json";
 
             Description = "Unstructured Json object";
         }

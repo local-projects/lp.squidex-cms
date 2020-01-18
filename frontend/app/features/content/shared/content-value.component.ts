@@ -24,6 +24,7 @@ import { HtmlValue, Types } from '@app/shared';
         }
         ::ng-deep .html-value img {
             position: absolute;
+            top: 50%;
             min-height: 50px;
             max-height: 50px;
             margin-top: -25px;

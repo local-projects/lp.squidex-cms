@@ -9,7 +9,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Squidex.Domain.Apps.Core.Assets;
 using Squidex.Domain.Apps.Core.Contents;
 using Squidex.Domain.Apps.Core.ConvertContent;
 using Squidex.Domain.Apps.Core.ExtractReferenceIds;
@@ -250,7 +249,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.Queries
                                 field.GetReferencedIds(partitionValue, Ids.ContentOnly)
                                     .Select(x => assets[x])
                                     .SelectMany(x => x)
-                                    .FirstOrDefault(x => x.Type == AssetType.Image);
+                                    .FirstOrDefault(x => x.IsImage);
 
                             if (referencedImage != null)
                             {

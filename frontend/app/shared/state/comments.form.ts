@@ -9,9 +9,7 @@ import { FormBuilder, FormGroup } from '@angular/forms';
 
 import { Form } from '@app/framework';
 
-import { UpsertCommentDto } from './../services/comments.service';
-
-export class UpsertCommentForm extends Form<FormGroup, UpsertCommentDto> {
+export class UpsertCommentForm extends Form<FormGroup, { text: string }> {
     constructor(formBuilder: FormBuilder) {
         super(formBuilder.group({
             text: ''

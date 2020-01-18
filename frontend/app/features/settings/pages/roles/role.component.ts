@@ -12,16 +12,16 @@ import {
     AddPermissionForm,
     AutocompleteComponent,
     AutocompleteSource,
-    EditRoleForm,
+    EditPermissionsForm,
     RoleDto,
     RolesState
 } from '@app/shared';
 
 const Descriptions = {
-    Developer: 'Can use the API view, edit assets, contents, schemas, rules, workflows and patterns.',
-    Editor: 'Can edit assets and contents and view workflows.',
-    Owner: 'Can do everything, including deleting the app.',
-    Reader: 'Can only read assets and contents.'
+    'Developer': 'Can use the API view, edit assets, contents, schemas, rules, workflows and patterns.',
+    'Editor': 'Can edit assets and contents and view workflows.',
+    'Owner': 'Can do everything, including deleting the app.',
+    'Reader': 'Can only read assets and contents.'
 };
 
 @Component({
@@ -47,7 +47,7 @@ export class RoleComponent implements OnChanges {
 
     public addPermissionForm = new AddPermissionForm(this.formBuilder);
 
-    public editForm = new EditRoleForm();
+    public editForm = new EditPermissionsForm();
 
     constructor(
         private readonly formBuilder: FormBuilder,
@@ -58,7 +58,7 @@ export class RoleComponent implements OnChanges {
     public ngOnChanges() {
         this.isEditable = this.role.canUpdate;
 
-        this.editForm.load(this.role);
+        this.editForm.load(this.role.permissions);
         this.editForm.setEnabled(this.isEditable);
     }
 
@@ -89,7 +89,9 @@ export class RoleComponent implements OnChanges {
         const value = this.editForm.submit();
 
         if (value) {
-            this.rolesState.update(this.role, value)
+            const request = { permissions: value };
+
+            this.rolesState.update(this.role, request)
                 .subscribe(() => {
                     this.editForm.submitCompleted();
 

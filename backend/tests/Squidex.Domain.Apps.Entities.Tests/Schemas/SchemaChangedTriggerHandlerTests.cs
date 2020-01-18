@@ -7,11 +7,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using FakeItEasy;
 using Squidex.Domain.Apps.Core.HandleRules;
-using Squidex.Domain.Apps.Core.Rules.EnrichedEvents;
+using Squidex.Domain.Apps.Core.HandleRules.EnrichedEvents;
 using Squidex.Domain.Apps.Core.Rules.Triggers;
 using Squidex.Domain.Apps.Core.Scripting;
 using Squidex.Domain.Apps.Events;
@@ -51,15 +50,13 @@ namespace Squidex.Domain.Apps.Entities.Schemas
 
         [Theory]
         [MemberData(nameof(TestEvents))]
-        public async Task Should_create_enriched_events(SchemaEvent @event, EnrichedSchemaEventType type)
+        public async Task Should_enrich_events(SchemaEvent @event, EnrichedSchemaEventType type)
         {
             var envelope = Envelope.Create<AppEvent>(@event).SetEventStreamNumber(12);
 
-            var result = await sut.CreateEnrichedEventsAsync(envelope);
+            var result = await sut.CreateEnrichedEventAsync(envelope);
 
-            var enrichedEvent = result.Single() as EnrichedSchemaEvent;
-
-            Assert.Equal(type, enrichedEvent!.Type);
+            Assert.Equal(type, ((EnrichedSchemaEvent)result!).Type);
         }
 
         [Fact]

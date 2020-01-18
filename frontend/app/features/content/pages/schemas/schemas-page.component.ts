@@ -8,7 +8,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 
-import { LocalStoreService, SchemaCategory, SchemasState } from '@app/shared';
+import { SchemaCategory, SchemasState } from '@app/shared';
 
 @Component({
     selector: 'sqx-schemas-page',
@@ -18,27 +18,13 @@ import { LocalStoreService, SchemaCategory, SchemasState } from '@app/shared';
 export class SchemasPageComponent implements OnInit {
     public schemasFilter = new FormControl();
 
-    public isCollapsed: boolean;
-
-    public get width() {
-        return this.isCollapsed ? '4rem' : '16rem';
-    }
-
     constructor(
-        public readonly schemasState: SchemasState,
-        private readonly localStore: LocalStoreService
+        public readonly schemasState: SchemasState
     ) {
-        this.isCollapsed = localStore.getBoolean('content.schemas.collapsed');
     }
 
     public ngOnInit() {
         this.schemasState.load();
-    }
-
-    public toggle() {
-        this.isCollapsed = !this.isCollapsed;
-
-        this.localStore.setBoolean('content.schemas.collapsed', this.isCollapsed);
     }
 
     public trackByCategory(index: number, category: SchemaCategory) {

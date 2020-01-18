@@ -27,9 +27,6 @@ export class ImageSourceDirective extends ResourceOwner implements OnChanges, On
     public retryCount = 10;
 
     @Input()
-    public accessToken: string;
-
-    @Input()
     public layoutKey: string;
 
     @Input()
@@ -130,10 +127,6 @@ export class ImageSourceDirective extends ResourceOwner implements OnChanges, On
 
             if (this.loadQuery) {
                 source += `&q=${this.loadQuery}`;
-            }
-
-            if (this.accessToken) {
-                source += `&access_token=${this.accessToken}`;
             }
 
             this.renderer.setProperty(this.element.nativeElement, 'src', source);

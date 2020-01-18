@@ -23,7 +23,7 @@ namespace Squidex.Infrastructure.Queries
 
         public JsonQueryConversionTests()
         {
-            var nested = new JsonSchemaProperty { Title = "nested", Type = JsonObjectType.Object };
+            var nested = new JsonSchemaProperty { Title = "nested" };
 
             nested.Properties["property"] = new JsonSchemaProperty
             {

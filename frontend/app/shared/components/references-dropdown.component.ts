@@ -143,7 +143,7 @@ export class ReferencesDropdownComponent extends StatefulControlComponent<State,
             this.selectedId = obj;
 
             this.selectContent();
-        } else if (Types.isArrayOfString(obj)) {
+        } if (Types.isArrayOfString(obj)) {
             this.selectedId = obj[0];
 
             this.selectContent();

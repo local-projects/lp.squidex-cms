@@ -27,8 +27,6 @@ import {
     Versioned
 } from '@app/framework';
 
-const SVG_PREVIEW_LIMIT = 10 * 1024;
-
 import { encodeQuery, Query } from './../state/query';
 
 export class AssetsDto extends ResultSet<AssetDto> {
@@ -67,17 +65,16 @@ export class AssetDto {
         public readonly fileType: string,
         public readonly fileSize: number,
         public readonly fileVersion: number,
-        public readonly isProtected: boolean,
         public readonly parentId: string,
         public readonly mimeType: string,
-        public readonly type: string,
-        public readonly metadataText: string,
-        public readonly metadata: any,
+        public readonly isImage: boolean,
+        public readonly pixelWidth: number | null | undefined,
+        public readonly pixelHeight: number | null | undefined,
         public readonly slug: string,
         public readonly tags: ReadonlyArray<string>,
         public readonly version: Version
     ) {
-        this.canPreview = this.type === 'Image' || (this.mimeType === 'image/svg+xml' && this.fileSize < SVG_PREVIEW_LIMIT);
+        this.canPreview = this.isImage || (this.mimeType === 'image/svg+xml' && this.fileSize < 100 * 1024);
 
         this._links = links;
 
@@ -123,10 +120,8 @@ export class AssetFolderDto {
 
 export interface AnnotateAssetDto {
     readonly fileName?: string;
-    readonly isProtected?: boolean;
     readonly slug?: string;
     readonly tags?: ReadonlyArray<string>;
-    readonly metadata?: { [key: string]: any };
 }
 
 export interface CreateAssetFolderDto {
@@ -379,12 +374,11 @@ function parseAsset(response: any) {
         response.fileType,
         response.fileSize,
         response.fileVersion,
-        response.isProtected,
         response.parentId,
         response.mimeType,
-        response.type,
-        response.metadataText,
-        response.metadata,
+        response.isImage,
+        response.pixelWidth,
+        response.pixelHeight,
         response.slug,
         response.tags || [],
         new Version(response.version.toString()));

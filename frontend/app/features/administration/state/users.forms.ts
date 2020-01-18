@@ -2,9 +2,9 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 import { Form, ValidatorsEx } from '@app/shared';
 
-import { UpdateUserDto, UserDto } from './../services/users.service';
+import { UpdateUserDto } from './../services/users.service';
 
-export class UserForm extends Form<FormGroup, UpdateUserDto, UserDto> {
+export class UserForm extends Form<FormGroup, UpdateUserDto> {
     constructor(
         formBuilder: FormBuilder
     ) {
@@ -36,7 +36,7 @@ export class UserForm extends Form<FormGroup, UpdateUserDto, UserDto> {
         }));
     }
 
-    public load(value: Partial<UserDto>) {
+    public load(value: any) {
         if (value) {
             this.form.controls['password'].setValidators(Validators.nullValidator);
         } else {
@@ -46,13 +46,11 @@ export class UserForm extends Form<FormGroup, UpdateUserDto, UserDto> {
         super.load(value);
     }
 
-    protected transformLoad(user: Partial<UserDto>) {
-        const permissions = user.permissions ? user.permissions.join('\n') : '';
-
-        return { ...user, permissions: permissions };
+    protected transformLoad(user: UpdateUserDto) {
+        return { ...user, permissions: user.permissions.join('\n') };
     }
 
-    protected transformSubmit(value: any) {
+    protected transformSubmit(value: any): UpdateUserDto {
         return { ...value, permissions: value['permissions'].split('\n').filter((x: any) => !!x) };
     }
 }

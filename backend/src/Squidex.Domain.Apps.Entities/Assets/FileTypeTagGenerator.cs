@@ -6,33 +6,22 @@
 // ==========================================================================
 
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Squidex.Domain.Apps.Entities.Assets.Commands;
+using Squidex.Domain.Apps.Entities.Tags;
 using Squidex.Infrastructure;
-using Squidex.Infrastructure.Tasks;
 
 namespace Squidex.Domain.Apps.Entities.Assets
 {
-    public sealed class FileTypeTagGenerator : IAssetMetadataSource
+    public sealed class FileTypeTagGenerator : ITagGenerator<CreateAsset>
     {
-        public Task EnhanceAsync(UploadAssetCommand command, HashSet<string>? tags)
+        public void GenerateTags(CreateAsset source, HashSet<string> tags)
         {
-            if (tags != null)
+            var extension = source.File?.FileName?.FileType();
+
+            if (!string.IsNullOrWhiteSpace(extension))
             {
-                var extension = command.File?.FileName?.FileType();
-
-                if (!string.IsNullOrWhiteSpace(extension))
-                {
-                    tags.Add($"type/{extension.ToLowerInvariant()}");
-                }
+                tags.Add($"type/{extension.ToLowerInvariant()}");
             }
-
-            return TaskHelper.Done;
-        }
-
-        public IEnumerable<string> Format(IAssetEntity asset)
-        {
-            yield break;
         }
     }
 }

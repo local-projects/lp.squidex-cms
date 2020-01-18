@@ -5,6 +5,7 @@
 //  All rights reserved. Licensed under the MIT license.
 // ==========================================================================
 
+using System;
 using System.Threading.Tasks;
 using Orleans;
 
@@ -21,11 +22,11 @@ namespace Squidex.Infrastructure.Commands
             this.grainFactory = grainFactory;
         }
 
-        public virtual async Task HandleAsync(CommandContext context, NextDelegate next)
+        public virtual async Task HandleAsync(CommandContext context, Func<Task> next)
         {
             await ExecuteCommandAsync(context);
 
-            await next(context);
+            await next();
         }
 
         protected async Task ExecuteCommandAsync(CommandContext context)

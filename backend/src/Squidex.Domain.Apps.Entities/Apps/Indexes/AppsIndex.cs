@@ -164,7 +164,7 @@ namespace Squidex.Domain.Apps.Entities.Apps.Indexes
             }
         }
 
-        public async Task HandleAsync(CommandContext context, NextDelegate next)
+        public async Task HandleAsync(CommandContext context, Func<Task> next)
         {
             if (context.Command is CreateApp createApp)
             {
@@ -174,7 +174,7 @@ namespace Squidex.Domain.Apps.Entities.Apps.Indexes
 
                 try
                 {
-                    await next(context);
+                    await next();
                 }
                 finally
                 {
@@ -195,7 +195,7 @@ namespace Squidex.Domain.Apps.Entities.Apps.Indexes
             }
             else
             {
-                await next(context);
+                await next();
 
                 if (context.IsCompleted)
                 {

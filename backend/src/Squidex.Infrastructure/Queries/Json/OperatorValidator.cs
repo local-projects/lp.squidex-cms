@@ -54,8 +54,6 @@ namespace Squidex.Infrastructure.Queries.Json
         {
             switch (schema.Type)
             {
-                case JsonObjectType.None:
-                    return true;
                 case JsonObjectType.Boolean:
                     return BooleanOperators.Contains(compareOperator);
                 case JsonObjectType.Integer:

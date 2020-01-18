@@ -416,15 +416,11 @@ describe('AssetsService', () => {
             fileType: 'png',
             fileSize: id * 2,
             fileVersion: id * 4,
-            isProtected: true,
             parentId,
             mimeType: 'image/png',
-            type: `my-type${id}${suffix}`,
-            metadataText: `my-metadata${id}${suffix}`,
-            metadata: {
-                pixelWidth: id * 3,
-                pixelHeight: id * 5
-            },
+            isImage: true,
+            pixelWidth: id * 3,
+            pixelHeight: id * 5,
             slug: `my-name${id}${suffix}.png`,
             tags: ['tag1', 'tag2'],
             version: id,
@@ -473,18 +469,14 @@ export function createAsset(id: number, tags?: ReadonlyArray<string>, suffix = '
         'png',
         id * 2,
         id * 4,
-        true,
         parentId,
         'image/png',
-        `my-type${id}${suffix}`,
-        `my-metadata${id}${suffix}`,
-        {
-            pixelWidth: id * 3,
-            pixelHeight: id * 5
-        },
+        true,
+        id * 3,
+        id * 5,
         `my-name${id}${suffix}.png`,
         tags || ['tag1', 'tag2'],
-        new Version(`${id}${suffix}`));
+        new Version(`${id}`));
 }
 
 export function createAssetFolder(id: number, suffix = '', parentId?: string) {

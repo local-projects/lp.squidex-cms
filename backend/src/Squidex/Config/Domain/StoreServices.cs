@@ -34,8 +34,6 @@ using Squidex.Infrastructure;
 using Squidex.Infrastructure.Diagnostics;
 using Squidex.Infrastructure.EventSourcing;
 using Squidex.Infrastructure.Json;
-using Squidex.Infrastructure.Log;
-using Squidex.Infrastructure.Log.Store;
 using Squidex.Infrastructure.Migrations;
 using Squidex.Infrastructure.Reflection;
 using Squidex.Infrastructure.States;
@@ -81,14 +79,8 @@ namespace Squidex.Config.Domain
                     services.AddTransientAs<RenameAssetSlugField>()
                         .As<IMigration>();
 
-                    services.AddTransientAs<RenameAssetMetadata>()
-                        .As<IMigration>();
-
                     services.AddHealthChecks()
                         .AddCheck<MongoDBHealthCheck>("MongoDB", tags: new[] { "node" });
-
-                    services.AddSingletonAs<MongoRequestLogRepository>()
-                        .As<IRequestLogRepository>();
 
                     services.AddSingletonAs<MongoUsageRepository>()
                         .As<IUsageRepository>();

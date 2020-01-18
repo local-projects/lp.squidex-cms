@@ -9,6 +9,7 @@ import { Component, Input, OnChanges } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 
 import {
+    DialogService,
     SchemaDetailsDto,
     SchemasState,
     SynchronizeSchemaForm
@@ -28,6 +29,7 @@ export class SchemaExportFormComponent implements OnChanges {
     public isEditable = false;
 
     constructor(
+        private readonly dialogs: DialogService,
         private readonly formBuilder: FormBuilder,
         private readonly schemasState: SchemasState
     ) {
@@ -36,7 +38,7 @@ export class SchemaExportFormComponent implements OnChanges {
     public ngOnChanges() {
         this.isEditable = this.schema.canUpdateScripts;
 
-        this.synchronizeForm.loadSchema(this.schema);
+        this.synchronizeForm.form.get('json')!.setValue(this.schema.export());
     }
 
     public synchronize() {
@@ -47,8 +49,16 @@ export class SchemaExportFormComponent implements OnChanges {
         const value = this.synchronizeForm.submit();
 
         if (value) {
-            this.schemasState.synchronize(this.schema, value)
+            const request = {
+                ...value.json,
+                noFieldDeletion: !value.fieldsDelete,
+                noFieldRecreation: !value.fieldsDelete
+            };
+
+            this.schemasState.synchronize(this.schema, request)
                 .subscribe(() => {
+                    this.dialogs.notifyInfo('Schema synchronized successfully.');
+
                     this.synchronizeForm.submitCompleted({ noReset: true });
                 }, error => {
                     this.synchronizeForm.submitFailed(error);

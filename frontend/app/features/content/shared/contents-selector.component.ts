@@ -8,8 +8,6 @@
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 
 import {
-    ApiUrlConfig,
-    AppsState,
     ContentDto,
     LanguageDto,
     ManualContentsState,
@@ -60,8 +58,6 @@ export class ContentsSelectorComponent extends ResourceOwner implements OnInit {
     public selectedAll = false;
 
     constructor(
-        public readonly appsState: AppsState,
-        public readonly apiUrl: ApiUrlConfig,
         public readonly contentsState: ManualContentsState,
         public readonly schemasState: SchemasState,
         private readonly changeDetector: ChangeDetectorRef

@@ -79,7 +79,7 @@ namespace Squidex.Domain.Apps.Entities.Assets
                 case AnnotateAsset annotateAsset:
                     return UpdateReturnAsync(annotateAsset, async c =>
                     {
-                        GuardAsset.CanAnnotate(c);
+                        GuardAsset.CanAnnotate(c, Snapshot.FileName!, Snapshot.Slug);
 
                         var tagIds = await NormalizeTagsAsync(Snapshot.AppId.Id, c.Tags);
 
@@ -126,10 +126,13 @@ namespace Squidex.Domain.Apps.Entities.Assets
         {
             var @event = SimpleMapper.Map(command, new AssetCreated
             {
+                IsImage = command.ImageInfo != null,
                 FileName = command.File.FileName,
                 FileSize = command.File.FileSize,
                 FileVersion = 0,
                 MimeType = command.File.MimeType,
+                PixelWidth = command.ImageInfo?.PixelWidth,
+                PixelHeight = command.ImageInfo?.PixelHeight,
                 Slug = command.File.FileName.ToAssetSlug()
             });
 
@@ -144,7 +147,10 @@ namespace Squidex.Domain.Apps.Entities.Assets
             {
                 FileVersion = Snapshot.FileVersion + 1,
                 FileSize = command.File.FileSize,
-                MimeType = command.File.MimeType
+                MimeType = command.File.MimeType,
+                PixelWidth = command.ImageInfo?.PixelWidth,
+                PixelHeight = command.ImageInfo?.PixelHeight,
+                IsImage = command.ImageInfo != null
             });
 
             RaiseEvent(@event);

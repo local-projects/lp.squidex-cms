@@ -5,6 +5,7 @@
 //  All rights reserved. Licensed under the MIT license.
 // ==========================================================================
 
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using FakeItEasy;
@@ -30,14 +31,14 @@ namespace Squidex.Infrastructure.Commands
                 this.value = value;
             }
 
-            public Task HandleAsync(CommandContext context, NextDelegate next)
+            public Task HandleAsync(CommandContext context, Func<Task> next)
             {
                 if (context.Command is Command command)
                 {
                     command.Values.Add(value);
                 }
 
-                return next(context);
+                return next();
             }
         }
 
@@ -56,7 +57,7 @@ namespace Squidex.Infrastructure.Commands
 
             var isNextCalled = false;
 
-            await sut.HandleAsync(context, c =>
+            await sut.HandleAsync(context, () =>
             {
                 isNextCalled = true;
 

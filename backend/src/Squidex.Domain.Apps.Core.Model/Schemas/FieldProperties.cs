@@ -6,7 +6,6 @@
 // ==========================================================================
 
 using System.Collections.ObjectModel;
-using DeepEqual.Syntax;
 
 namespace Squidex.Domain.Apps.Core.Schemas
 {
@@ -27,10 +26,5 @@ namespace Squidex.Domain.Apps.Core.Schemas
         public abstract RootField CreateRootField(long id, string name, Partitioning partitioning, IFieldSettings? settings = null);
 
         public abstract NestedField CreateNestedField(long id, string name, IFieldSettings? settings = null);
-
-        public bool DeepEquals(FieldProperties properties)
-        {
-            return this.WithDeepEqual(properties).IgnoreProperty<Freezable>(x => x.IsFrozen).Compare();
-        }
     }
 }

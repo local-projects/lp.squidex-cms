@@ -51,7 +51,7 @@ namespace Squidex.Infrastructure.Commands
 
         private async Task MakeCallAsync(CommandContext context)
         {
-            await sut.HandleAsync(context, c =>
+            await sut.HandleAsync(context, () =>
             {
                 context.Complete(true);
 

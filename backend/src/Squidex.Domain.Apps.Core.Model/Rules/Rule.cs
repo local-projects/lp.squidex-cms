@@ -43,18 +43,16 @@ namespace Squidex.Domain.Apps.Core.Rules
             Guard.NotNull(trigger);
             Guard.NotNull(action);
 
-            SetTrigger(trigger);
-            SetAction(action);
+            this.trigger = trigger;
+            this.trigger.Freeze();
+
+            this.action = action;
+            this.action.Freeze();
         }
 
         [Pure]
         public Rule Rename(string newName)
         {
-            if (string.Equals(name, newName))
-            {
-                return this;
-            }
-
             return Clone(clone =>
             {
                 clone.name = newName;
@@ -64,11 +62,6 @@ namespace Squidex.Domain.Apps.Core.Rules
         [Pure]
         public Rule Enable()
         {
-            if (isEnabled)
-            {
-                return this;
-            }
-
             return Clone(clone =>
             {
                 clone.isEnabled = true;
@@ -78,11 +71,6 @@ namespace Squidex.Domain.Apps.Core.Rules
         [Pure]
         public Rule Disable()
         {
-            if (!isEnabled)
-            {
-                return this;
-            }
-
             return Clone(clone =>
             {
                 clone.isEnabled = false;
@@ -99,14 +87,11 @@ namespace Squidex.Domain.Apps.Core.Rules
                 throw new ArgumentException("New trigger has another type.", nameof(newTrigger));
             }
 
-            if (trigger.DeepEquals(newTrigger))
-            {
-                return this;
-            }
+            newTrigger.Freeze();
 
             return Clone(clone =>
             {
-                clone.SetTrigger(newTrigger);
+                clone.trigger = newTrigger;
             });
         }
 
@@ -120,27 +105,12 @@ namespace Squidex.Domain.Apps.Core.Rules
                 throw new ArgumentException("New action has another type.", nameof(newAction));
             }
 
-            if (action.DeepEquals(newAction))
-            {
-                return this;
-            }
+            newAction.Freeze();
 
             return Clone(clone =>
             {
-                clone.SetAction(newAction);
+                clone.action = newAction;
             });
-        }
-
-        private void SetAction(RuleAction newAction)
-        {
-            action = newAction;
-            action.Freeze();
-        }
-
-        private void SetTrigger(RuleTrigger newTrigger)
-        {
-            trigger = newTrigger;
-            trigger.Freeze();
         }
     }
 }

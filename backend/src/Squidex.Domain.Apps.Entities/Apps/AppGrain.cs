@@ -289,6 +289,9 @@ namespace Squidex.Domain.Apps.Entities.Apps
                                 case PlanChangedResult _:
                                     ChangePlan(c);
                                     break;
+                                case PlanResetResult _:
+                                    ResetPlan(c);
+                                    break;
                             }
 
                             return result;
@@ -348,18 +351,6 @@ namespace Squidex.Domain.Apps.Entities.Apps
             if (command.Role != null)
             {
                 RaiseEvent(SimpleMapper.Map(command, new AppClientUpdated { Role = command.Role }));
-            }
-        }
-
-        public void ChangePlan(ChangePlan command)
-        {
-            if (string.Equals(appPlansProvider.GetFreePlan()?.Id, command.PlanId))
-            {
-                RaiseEvent(SimpleMapper.Map(command, new AppPlanReset()));
-            }
-            else
-            {
-                RaiseEvent(SimpleMapper.Map(command, new AppPlanChanged()));
             }
         }
 
@@ -426,6 +417,16 @@ namespace Squidex.Domain.Apps.Entities.Apps
         public void RemoveLanguage(RemoveLanguage command)
         {
             RaiseEvent(SimpleMapper.Map(command, new AppLanguageRemoved()));
+        }
+
+        public void ChangePlan(ChangePlan command)
+        {
+            RaiseEvent(SimpleMapper.Map(command, new AppPlanChanged()));
+        }
+
+        public void ResetPlan(ChangePlan command)
+        {
+            RaiseEvent(SimpleMapper.Map(command, new AppPlanReset()));
         }
 
         public void AddPattern(AddPattern command)

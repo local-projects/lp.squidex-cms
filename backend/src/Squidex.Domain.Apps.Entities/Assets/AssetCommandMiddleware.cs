@@ -5,11 +5,13 @@
 //  All rights reserved. Licensed under the MIT license.
 // ==========================================================================
 
+using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Orleans;
 using Squidex.Domain.Apps.Entities.Assets.Commands;
+using Squidex.Domain.Apps.Entities.Tags;
 using Squidex.Infrastructure;
 using Squidex.Infrastructure.Assets;
 using Squidex.Infrastructure.Commands;
@@ -21,32 +23,36 @@ namespace Squidex.Domain.Apps.Entities.Assets
         private readonly IAssetFileStore assetFileStore;
         private readonly IAssetEnricher assetEnricher;
         private readonly IAssetQueryService assetQuery;
+        private readonly IAssetThumbnailGenerator assetThumbnailGenerator;
         private readonly IContextProvider contextProvider;
-        private readonly IEnumerable<IAssetMetadataSource> assetMetadataSources;
+        private readonly IEnumerable<ITagGenerator<CreateAsset>> tagGenerators;
 
         public AssetCommandMiddleware(
             IGrainFactory grainFactory,
             IAssetEnricher assetEnricher,
-            IAssetFileStore assetFileStore,
             IAssetQueryService assetQuery,
+            IAssetFileStore assetFileStore,
+            IAssetThumbnailGenerator assetThumbnailGenerator,
             IContextProvider contextProvider,
-            IEnumerable<IAssetMetadataSource> assetMetadataSources)
+            IEnumerable<ITagGenerator<CreateAsset>> tagGenerators)
             : base(grainFactory)
         {
             Guard.NotNull(assetEnricher);
             Guard.NotNull(assetFileStore);
             Guard.NotNull(assetQuery);
-            Guard.NotNull(assetMetadataSources);
+            Guard.NotNull(assetThumbnailGenerator);
             Guard.NotNull(contextProvider);
+            Guard.NotNull(tagGenerators);
 
             this.assetFileStore = assetFileStore;
             this.assetEnricher = assetEnricher;
             this.assetQuery = assetQuery;
+            this.assetThumbnailGenerator = assetThumbnailGenerator;
             this.contextProvider = contextProvider;
-            this.assetMetadataSources = assetMetadataSources;
+            this.tagGenerators = tagGenerators;
         }
 
-        public override async Task HandleAsync(CommandContext context, NextDelegate next)
+        public override async Task HandleAsync(CommandContext context, Func<Task> next)
         {
             var tempFile = context.ContextId.ToString();
 
@@ -54,6 +60,7 @@ namespace Squidex.Domain.Apps.Entities.Assets
             {
                 case CreateAsset createAsset:
                     {
+                        await EnrichWithImageInfosAsync(createAsset);
                         await EnrichWithHashAndUploadAsync(createAsset, tempFile);
 
                         try
@@ -70,12 +77,12 @@ namespace Squidex.Domain.Apps.Entities.Assets
 
                                     context.Complete(result);
 
-                                    await next(context);
+                                    await next();
                                     return;
                                 }
                             }
 
-                            await EnrichWithMetadataAsync(createAsset, createAsset.Tags);
+                            GenerateTags(createAsset);
 
                             await HandleCoreAsync(context, next);
 
@@ -95,7 +102,7 @@ namespace Squidex.Domain.Apps.Entities.Assets
 
                 case UpdateAsset updateAsset:
                     {
-                        await EnrichWithMetadataAsync(updateAsset);
+                        await EnrichWithImageInfosAsync(updateAsset);
                         await EnrichWithHashAndUploadAsync(updateAsset, tempFile);
 
                         try
@@ -120,7 +127,7 @@ namespace Squidex.Domain.Apps.Entities.Assets
             }
         }
 
-        private async Task HandleCoreAsync(CommandContext context, NextDelegate next)
+        private async Task HandleCoreAsync(CommandContext context, Func<Task> next)
         {
             await base.HandleAsync(context, next);
 
@@ -137,6 +144,11 @@ namespace Squidex.Domain.Apps.Entities.Assets
             return asset?.FileName == file.FileName && asset.FileSize == file.FileSize;
         }
 
+        private async Task EnrichWithImageInfosAsync(UploadAssetCommand command)
+        {
+            command.ImageInfo = await assetThumbnailGenerator.GetImageInfoAsync(command.File.OpenRead());
+        }
+
         private async Task EnrichWithHashAndUploadAsync(UploadAssetCommand command, string tempFile)
         {
             using (var hashStream = new HasherStream(command.File.OpenRead(), HashAlgorithmName.SHA256))
@@ -147,11 +159,16 @@ namespace Squidex.Domain.Apps.Entities.Assets
             }
         }
 
-        private async Task EnrichWithMetadataAsync(UploadAssetCommand command, HashSet<string>? tags = null)
+        private void GenerateTags(CreateAsset createAsset)
         {
-            foreach (var metadataSource in assetMetadataSources)
+            if (createAsset.Tags == null)
             {
-                await metadataSource.EnhanceAsync(command, tags);
+                createAsset.Tags = new HashSet<string>();
+            }
+
+            foreach (var tagGenerator in tagGenerators)
+            {
+                tagGenerator.GenerateTags(createAsset, createAsset.Tags);
             }
         }
     }

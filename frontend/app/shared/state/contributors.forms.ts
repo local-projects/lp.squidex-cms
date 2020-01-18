@@ -37,7 +37,7 @@ export class AssignContributorForm extends Form<FormGroup, AssignContributorDto>
         }));
     }
 
-    protected transformSubmit(value: any) {
+    protected transformSubmit(value: { user: string | UserDto, role: string }) {
         let contributorId = value.user;
 
         if (Types.is(contributorId, UserDto)) {
@@ -48,9 +48,7 @@ export class AssignContributorForm extends Form<FormGroup, AssignContributorDto>
     }
 }
 
-type ImportContributorsFormType = ReadonlyArray<AssignContributorDto>;
-
-export class ImportContributorsForm extends Form<FormGroup, ImportContributorsFormType> {
+export class ImportContributorsForm extends Form<FormGroup, ReadonlyArray<AssignContributorDto>> {
     public numberOfEmails = value$(this.form.controls['import']).pipe(debounceTime(100), map(v => extractEmails(v).length), shareReplay(1));
 
     public hasNoUser = this.numberOfEmails.pipe(map(v => v === 0));
@@ -65,7 +63,7 @@ export class ImportContributorsForm extends Form<FormGroup, ImportContributorsFo
         }));
     }
 
-    protected transformSubmit(value: any) {
+    protected transformSubmit(value: { import: string }) {
         return extractEmails(value.import);
     }
 }

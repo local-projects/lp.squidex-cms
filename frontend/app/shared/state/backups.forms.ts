@@ -13,9 +13,7 @@ import {
     ValidatorsEx
 } from '@app/framework';
 
-import { StartRestoreDto } from './../services/backups.service';
-
-export class RestoreForm extends Form<FormGroup, StartRestoreDto> {
+export class RestoreForm extends Form<FormGroup, { name?: string, url: string }> {
     public hasNoUrl = hasNoValue$(this.form.controls['url']);
 
     constructor(formBuilder: FormBuilder) {

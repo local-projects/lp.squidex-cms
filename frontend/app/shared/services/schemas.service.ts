@@ -359,7 +359,6 @@ export interface SynchronizeSchemaDto {
 export interface UpdateSchemaDto {
     readonly label?: string;
     readonly hints?: string;
-    readonly tags?: ReadonlyArray<string>;
 }
 
 @Injectable()

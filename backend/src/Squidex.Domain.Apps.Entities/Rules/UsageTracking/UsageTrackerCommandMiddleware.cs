@@ -5,6 +5,7 @@
 //  All rights reserved. Licensed under the MIT license.
 // ==========================================================================
 
+using System;
 using System.Threading.Tasks;
 using Orleans;
 using Squidex.Domain.Apps.Core.Rules.Triggers;
@@ -26,7 +27,7 @@ namespace Squidex.Domain.Apps.Entities.Rules.UsageTracking
             usageTrackerGrain = grainFactory.GetGrain<IUsageTrackerGrain>(SingleGrain.Id);
         }
 
-        public async Task HandleAsync(CommandContext context, NextDelegate next)
+        public async Task HandleAsync(CommandContext context, Func<Task> next)
         {
             switch (context.Command)
             {
@@ -54,7 +55,7 @@ namespace Squidex.Domain.Apps.Entities.Rules.UsageTracking
                     }
             }
 
-            await next(context);
+            await next();
         }
     }
 }

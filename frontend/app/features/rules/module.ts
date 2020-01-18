@@ -16,7 +16,6 @@ import {
 
 import {
     AssetChangedTriggerComponent,
-    CommentTriggerComponent,
     ContentChangedTriggerComponent,
     GenericActionComponent,
     RuleComponent,
@@ -58,7 +57,6 @@ const routes: Routes = [
     ],
     declarations: [
         AssetChangedTriggerComponent,
-        CommentTriggerComponent,
         ContentChangedTriggerComponent,
         GenericActionComponent,
         RuleComponent,

@@ -47,7 +47,7 @@ namespace Squidex.Infrastructure.Commands
         {
             var context = new CommandContext(command, commandBus);
 
-            await sut.HandleAsync(context, c =>
+            await sut.HandleAsync(context, () =>
             {
                 context.Complete(true);
 
@@ -68,7 +68,7 @@ namespace Squidex.Infrastructure.Commands
 
             await Assert.ThrowsAsync<InvalidOperationException>(async () =>
             {
-                await sut.HandleAsync(context, c => throw new InvalidOperationException());
+                await sut.HandleAsync(context, () => throw new InvalidOperationException());
             });
 
             Assert.Equal(log.LogLevels, new Dictionary<SemanticLogLevel, int>
@@ -84,7 +84,7 @@ namespace Squidex.Infrastructure.Commands
         {
             var context = new CommandContext(command, commandBus);
 
-            await sut.HandleAsync(context, c => TaskHelper.Done);
+            await sut.HandleAsync(context, () => TaskHelper.Done);
 
             Assert.Equal(log.LogLevels, new Dictionary<SemanticLogLevel, int>
             {

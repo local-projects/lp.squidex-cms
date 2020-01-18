@@ -6,16 +6,14 @@
 // ==========================================================================
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FakeItEasy;
 using Microsoft.Extensions.Options;
 using NodaTime;
 using Squidex.Domain.Apps.Core.HandleRules;
+using Squidex.Domain.Apps.Core.HandleRules.EnrichedEvents;
 using Squidex.Domain.Apps.Core.Rules;
-using Squidex.Domain.Apps.Core.Rules.EnrichedEvents;
 using Squidex.Domain.Apps.Core.Rules.Triggers;
 using Squidex.Domain.Apps.Events;
 using Squidex.Domain.Apps.Events.Contents;
@@ -99,9 +97,9 @@ namespace Squidex.Domain.Apps.Core.Operations.HandleRules
         {
             var @event = Envelope.Create(new ContentCreated());
 
-            var jobs = await sut.CreateJobsAsync(ValidRule().Disable(), ruleId, @event);
+            var job = await sut.CreateJobAsync(ValidRule().Disable(), ruleId, @event);
 
-            Assert.Empty(jobs);
+            Assert.Null(job);
 
             A.CallTo(() => ruleTriggerHandler.Trigger(A<AppEvent>.Ignored, A<RuleTrigger>.Ignored, ruleId))
                 .MustNotHaveHappened();
@@ -112,9 +110,9 @@ namespace Squidex.Domain.Apps.Core.Operations.HandleRules
         {
             var @event = Envelope.Create(new InvalidEvent());
 
-            var jobs = await sut.CreateJobsAsync(ValidRule(), ruleId, @event);
+            var job = await sut.CreateJobAsync(ValidRule(), ruleId, @event);
 
-            Assert.Empty(jobs);
+            Assert.Null(job);
 
             A.CallTo(() => ruleTriggerHandler.Trigger(A<AppEvent>.Ignored, A<RuleTrigger>.Ignored, ruleId))
                 .MustNotHaveHappened();
@@ -125,9 +123,9 @@ namespace Squidex.Domain.Apps.Core.Operations.HandleRules
         {
             var @event = Envelope.Create(new ContentCreated());
 
-            var jobs = await sut.CreateJobsAsync(RuleInvalidTrigger(), ruleId, @event);
+            var job = await sut.CreateJobAsync(RuleInvalidTrigger(), ruleId, @event);
 
-            Assert.Empty(jobs);
+            Assert.Null(job);
 
             A.CallTo(() => ruleTriggerHandler.Trigger(A<AppEvent>.Ignored, A<RuleTrigger>.Ignored, ruleId))
                 .MustNotHaveHappened();
@@ -138,9 +136,9 @@ namespace Squidex.Domain.Apps.Core.Operations.HandleRules
         {
             var @event = Envelope.Create(new ContentCreated());
 
-            var jobs = await sut.CreateJobsAsync(RuleInvalidAction(), ruleId, @event);
+            var job = await sut.CreateJobAsync(RuleInvalidAction(), ruleId, @event);
 
-            Assert.Empty(jobs);
+            Assert.Null(job);
 
             A.CallTo(() => ruleTriggerHandler.Trigger(A<AppEvent>.Ignored, A<RuleTrigger>.Ignored, ruleId))
                 .MustNotHaveHappened();
@@ -151,9 +149,9 @@ namespace Squidex.Domain.Apps.Core.Operations.HandleRules
         {
             var @event = Envelope.Create(new ContentCreated()).SetTimestamp(clock.GetCurrentInstant().Minus(Duration.FromDays(3)));
 
-            var jobs = await sut.CreateJobsAsync(ValidRule(), ruleId, @event);
+            var job = await sut.CreateJobAsync(ValidRule(), ruleId, @event);
 
-            Assert.Empty(jobs);
+            Assert.Null(job);
 
             A.CallTo(() => ruleTriggerHandler.Trigger(A<AppEvent>.Ignored, A<RuleTrigger>.Ignored, ruleId))
                 .MustNotHaveHappened();
@@ -169,11 +167,11 @@ namespace Squidex.Domain.Apps.Core.Operations.HandleRules
             A.CallTo(() => ruleTriggerHandler.Trigger(@event.Payload, rule.Trigger, ruleId))
                 .Returns(false);
 
-            var jobs = await sut.CreateJobsAsync(rule, ruleId, @event);
+            var job = await sut.CreateJobAsync(rule, ruleId, @event);
 
-            Assert.Empty(jobs);
+            Assert.Null(job);
 
-            A.CallTo(() => ruleTriggerHandler.CreateEnrichedEventsAsync(A<Envelope<AppEvent>>.Ignored))
+            A.CallTo(() => ruleTriggerHandler.CreateEnrichedEventAsync(A<Envelope<AppEvent>>.Ignored))
                 .MustNotHaveHappened();
         }
 
@@ -187,12 +185,12 @@ namespace Squidex.Domain.Apps.Core.Operations.HandleRules
             A.CallTo(() => ruleTriggerHandler.Trigger(@event.Payload, rule.Trigger, ruleId))
                 .Returns(true);
 
-            A.CallTo(() => ruleTriggerHandler.CreateEnrichedEventsAsync(A<Envelope<AppEvent>>.That.Matches(x => x.Payload == @event.Payload)))
-                .Returns(new List<EnrichedEvent>());
+            A.CallTo(() => ruleTriggerHandler.CreateEnrichedEventAsync(A<Envelope<AppEvent>>.That.Matches(x => x.Payload == @event.Payload)))
+                .Returns(Task.FromResult<EnrichedEvent?>(null));
 
-            var jobs = await sut.CreateJobsAsync(rule, ruleId, @event);
+            var job = await sut.CreateJobAsync(rule, ruleId, @event);
 
-            Assert.Empty(jobs);
+            Assert.Null(job);
         }
 
         [Fact]
@@ -207,15 +205,15 @@ namespace Squidex.Domain.Apps.Core.Operations.HandleRules
             A.CallTo(() => ruleTriggerHandler.Trigger(@event.Payload, rule.Trigger, ruleId))
                 .Returns(true);
 
-            A.CallTo(() => ruleTriggerHandler.CreateEnrichedEventsAsync(A<Envelope<AppEvent>>.That.Matches(x => x.Payload == @event.Payload)))
-                .Returns(new List<EnrichedEvent> { enrichedEvent });
+            A.CallTo(() => ruleTriggerHandler.CreateEnrichedEventAsync(A<Envelope<AppEvent>>.That.Matches(x => x.Payload == @event.Payload)))
+                .Returns(enrichedEvent);
 
             A.CallTo(() => ruleTriggerHandler.Trigger(enrichedEvent, rule.Trigger))
                 .Returns(false);
 
-            var jobs = await sut.CreateJobsAsync(rule, ruleId, @event);
+            var job = await sut.CreateJobAsync(rule, ruleId, @event);
 
-            Assert.Empty(jobs);
+            Assert.Null(job);
         }
 
         [Fact]
@@ -232,64 +230,29 @@ namespace Squidex.Domain.Apps.Core.Operations.HandleRules
             A.CallTo(() => ruleTriggerHandler.Trigger(@event.Payload, rule.Trigger, ruleId))
                 .Returns(true);
 
-            A.CallTo(() => ruleTriggerHandler.CreateEnrichedEventsAsync(A<Envelope<AppEvent>>.That.Matches(x => x.Payload == @event.Payload)))
-                .Returns(new List<EnrichedEvent> { enrichedEvent });
-
             A.CallTo(() => ruleTriggerHandler.Trigger(enrichedEvent, rule.Trigger))
                 .Returns(true);
 
-            A.CallTo(() => ruleActionHandler.CreateJobAsync(enrichedEvent, rule.Action))
+            A.CallTo(() => ruleTriggerHandler.CreateEnrichedEventAsync(A<Envelope<AppEvent>>.That.Matches(x => x.Payload == @event.Payload)))
+                .Returns(enrichedEvent);
+
+            A.CallTo(() => ruleActionHandler.CreateJobAsync(A<EnrichedEvent>.Ignored, rule.Action))
                 .Returns((actionDescription, new ValidData { Value = 10 }));
 
-            var jobs = (await sut.CreateJobsAsync(rule, ruleId, @event))!;
+            var job = (await sut.CreateJobAsync(rule, ruleId, @event))!;
 
-            var job = jobs.Single();
+            Assert.Equal(actionData, job.ActionData);
+            Assert.Equal(actionName, job.ActionName);
+            Assert.Equal(actionDescription, job.Description);
 
-            AssertJob(now, enrichedEvent, job);
+            Assert.Equal(now, job.Created);
+            Assert.Equal(now.Plus(Duration.FromDays(30)), job.Expires);
+
+            Assert.Equal(enrichedEvent.AppId.Id, job.AppId);
+
+            Assert.NotEqual(Guid.Empty, job.Id);
 
             A.CallTo(() => eventEnricher.EnrichAsync(enrichedEvent, A<Envelope<AppEvent>>.That.Matches(x => x.Payload == @event.Payload)))
-                .MustHaveHappened();
-        }
-
-        [Fact]
-        public async Task Should_create_multiple_jobs_if_triggered()
-        {
-            var now = clock.GetCurrentInstant();
-
-            var rule = ValidRule();
-
-            var enrichedEvent1 = new EnrichedContentEvent { AppId = appId };
-            var enrichedEvent2 = new EnrichedContentEvent { AppId = appId };
-
-            var @event = Envelope.Create(new ContentCreated()).SetTimestamp(now);
-
-            A.CallTo(() => ruleTriggerHandler.Trigger(@event.Payload, rule.Trigger, ruleId))
-                .Returns(true);
-
-            A.CallTo(() => ruleTriggerHandler.CreateEnrichedEventsAsync(A<Envelope<AppEvent>>.That.Matches(x => x.Payload == @event.Payload)))
-                .Returns(new List<EnrichedEvent> { enrichedEvent1, enrichedEvent2 });
-
-            A.CallTo(() => ruleTriggerHandler.Trigger(enrichedEvent1, rule.Trigger))
-                .Returns(true);
-
-            A.CallTo(() => ruleTriggerHandler.Trigger(enrichedEvent2, rule.Trigger))
-                .Returns(true);
-
-            A.CallTo(() => ruleActionHandler.CreateJobAsync(enrichedEvent1, rule.Action))
-                .Returns((actionDescription, new ValidData { Value = 10 }));
-
-            A.CallTo(() => ruleActionHandler.CreateJobAsync(enrichedEvent2, rule.Action))
-                .Returns((actionDescription, new ValidData { Value = 10 }));
-
-            var jobs = (await sut.CreateJobsAsync(rule, ruleId, @event))!;
-
-            AssertJob(now, enrichedEvent1, jobs[0]);
-            AssertJob(now, enrichedEvent1, jobs[1]);
-
-            A.CallTo(() => eventEnricher.EnrichAsync(enrichedEvent1, A<Envelope<AppEvent>>.That.Matches(x => x.Payload == @event.Payload)))
-                .MustHaveHappened();
-
-            A.CallTo(() => eventEnricher.EnrichAsync(enrichedEvent2, A<Envelope<AppEvent>>.That.Matches(x => x.Payload == @event.Payload)))
                 .MustHaveHappened();
         }
 
@@ -363,20 +326,6 @@ namespace Squidex.Domain.Apps.Core.Operations.HandleRules
         private static Rule ValidRule()
         {
             return new Rule(new ContentChangedTriggerV2(), new ValidAction());
-        }
-
-        private void AssertJob(Instant now, EnrichedContentEvent enrichedEvent, RuleJob job)
-        {
-            Assert.Equal(enrichedEvent.AppId.Id, job.AppId);
-
-            Assert.Equal(actionData, job.ActionData);
-            Assert.Equal(actionName, job.ActionName);
-            Assert.Equal(actionDescription, job.Description);
-
-            Assert.Equal(now, job.Created);
-            Assert.Equal(now.Plus(Duration.FromDays(30)), job.Expires);
-
-            Assert.NotEqual(Guid.Empty, job.Id);
         }
     }
 }

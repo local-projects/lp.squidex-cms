@@ -8,10 +8,8 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
-using Squidex.Domain.Apps.Core.Assets;
 using Squidex.Domain.Apps.Events.Assets;
 using Squidex.Infrastructure;
-using Squidex.Infrastructure.Commands;
 using Squidex.Infrastructure.EventSourcing;
 using Squidex.Infrastructure.Reflection;
 
@@ -49,26 +47,26 @@ namespace Squidex.Domain.Apps.Entities.Assets.State
         public long TotalSize { get; set; }
 
         [DataMember]
-        public bool IsProtected { get; set; }
+        public bool IsImage { get; set; }
 
         [DataMember]
-        public HashSet<string> Tags { get; set; }
+        public int? PixelWidth { get; set; }
 
         [DataMember]
-        public AssetMetadata Metadata { get; set; }
-
-        [DataMember]
-        public AssetType Type { get; set; }
+        public int? PixelHeight { get; set; }
 
         [DataMember]
         public bool IsDeleted { get; set; }
+
+        [DataMember]
+        public HashSet<string> Tags { get; set; }
 
         public Guid AssetId
         {
             get { return Id; }
         }
 
-        public override bool ApplyEvent(IEvent @event)
+        public void ApplyEvent(IEvent @event)
         {
             switch (@event)
             {
@@ -89,9 +87,7 @@ namespace Squidex.Domain.Apps.Entities.Assets.State
 
                         TotalSize += e.FileSize;
 
-                        EnsureProperties();
-
-                        return true;
+                        break;
                     }
 
                 case AssetUpdated e:
@@ -100,84 +96,48 @@ namespace Squidex.Domain.Apps.Entities.Assets.State
 
                         TotalSize += e.FileSize;
 
-                        EnsureProperties();
-
-                        return true;
+                        break;
                     }
 
                 case AssetAnnotated e:
                     {
-                        var hasChanged = false;
-
-                        if (Is.OptionalChange(FileName, e.FileName))
+                        if (!string.IsNullOrWhiteSpace(e.FileName))
                         {
                             FileName = e.FileName;
-
-                            hasChanged = true;
                         }
 
-                        if (Is.OptionalChange(Slug, e.Slug))
+                        if (!string.IsNullOrWhiteSpace(e.Slug))
                         {
                             Slug = e.Slug;
-
-                            hasChanged = true;
                         }
 
-                        if (Is.OptionalChange(IsProtected, e.IsProtected))
-                        {
-                            IsProtected = e.IsProtected.Value;
-
-                            hasChanged = true;
-                        }
-
-                        if (Is.OptionalChange(Tags, e.Tags))
+                        if (e.Tags != null)
                         {
                             Tags = e.Tags;
-
-                            hasChanged = true;
                         }
 
-                        if (Is.OptionalChange(Metadata, e.Metadata))
-                        {
-                            Metadata = e.Metadata;
-
-                            hasChanged = true;
-                        }
-
-                        EnsureProperties();
-
-                        return hasChanged;
+                        break;
                     }
 
-                case AssetMoved e when e.ParentId != ParentId:
+                case AssetMoved e:
                     {
                         ParentId = e.ParentId;
 
-                        return true;
+                        break;
                     }
 
                 case AssetDeleted _:
                     {
                         IsDeleted = true;
 
-                        return true;
+                        break;
                     }
             }
-
-            return false;
         }
 
-        private void EnsureProperties()
+        public override AssetState Apply(Envelope<IEvent> @event)
         {
-            if (Tags == null)
-            {
-                Tags = new HashSet<string>();
-            }
-
-            if (Metadata == null)
-            {
-                Metadata = new AssetMetadata();
-            }
+            return Clone().Update(@event, (e, s) => s.ApplyEvent(e));
         }
     }
 }

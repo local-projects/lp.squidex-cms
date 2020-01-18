@@ -7,11 +7,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using FakeItEasy;
 using Squidex.Domain.Apps.Core.HandleRules;
-using Squidex.Domain.Apps.Core.Rules.EnrichedEvents;
+using Squidex.Domain.Apps.Core.HandleRules.EnrichedEvents;
 using Squidex.Domain.Apps.Core.Rules.Triggers;
 using Squidex.Domain.Apps.Core.Scripting;
 using Squidex.Domain.Apps.Events;
@@ -51,18 +50,16 @@ namespace Squidex.Domain.Apps.Entities.Assets
 
         [Theory]
         [MemberData(nameof(TestEvents))]
-        public async Task Should_create_enriched_events(AssetEvent @event, EnrichedAssetEventType type)
+        public async Task Should_enrich_events(AssetEvent @event, EnrichedAssetEventType type)
         {
             var envelope = Envelope.Create<AppEvent>(@event).SetEventStreamNumber(12);
 
             A.CallTo(() => assetLoader.GetAsync(@event.AssetId, 12))
                 .Returns(new AssetEntity());
 
-            var result = await sut.CreateEnrichedEventsAsync(envelope);
+            var result = await sut.CreateEnrichedEventAsync(envelope) as EnrichedAssetEvent;
 
-            var enrichedEvent = result.Single() as EnrichedAssetEvent;
-
-            Assert.Equal(type, enrichedEvent!.Type);
+            Assert.Equal(type, result!.Type);
         }
 
         [Fact]
@@ -70,9 +67,9 @@ namespace Squidex.Domain.Apps.Entities.Assets
         {
             var envelope = Envelope.Create<AppEvent>(new AssetMoved());
 
-            var result = await sut.CreateEnrichedEventsAsync(envelope);
+            var result = await sut.CreateEnrichedEventAsync(envelope);
 
-            Assert.Empty(result);
+            Assert.Null(result);
         }
 
         [Fact]
