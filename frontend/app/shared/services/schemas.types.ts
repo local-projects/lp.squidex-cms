@@ -297,7 +297,7 @@ export class ReferencesFieldPropertiesDto extends FieldPropertiesDto {
     public readonly schemaIds?: ReadonlyArray<string>;
 
     public get singleId() {
-        return this.schemaIds?.[0] || null;
+        return this.schemaIds && this.schemaIds.length === 1 ? this.schemaIds[0] : null;
     }
 
     public get isSortable() {
@@ -309,7 +309,7 @@ export class ReferencesFieldPropertiesDto extends FieldPropertiesDto {
     }
 }
 
-export type StringEditor = 'Color' | 'Dropdown' | 'Html' | 'Input' | 'Markdown' | 'Radio' | 'RichText' | 'Slug' | 'StockPhoto' | 'TextArea';
+export type StringEditor = 'Color' | 'Dropdown' | 'Html' | 'Input' | 'Markdown' | 'Radio' | 'RichText' | 'Slug' | 'TextArea';
 
 export class StringFieldPropertiesDto extends FieldPropertiesDto {
     public readonly fieldType = 'String';

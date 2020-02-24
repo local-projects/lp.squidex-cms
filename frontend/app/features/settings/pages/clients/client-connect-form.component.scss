@@ -1,3 +1,6 @@
+@import '_vars';
+@import '_mixins';
+
 .badge {
     @include circle(1.3rem);
     font-size: 80%;
@@ -34,4 +37,12 @@
         font-size: 1.8rem;
         font-weight: 300;
     }
+}
+
+.access-token {
+    font-family: monospace;
+    font-size: 1rem;
+    font-weight: normal;
+    height: 10rem;
+    resize: none;
 }

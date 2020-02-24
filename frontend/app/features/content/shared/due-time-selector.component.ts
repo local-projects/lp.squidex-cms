@@ -16,26 +16,25 @@ import { DialogModel } from '@app/shared';
     templateUrl: './due-time-selector.component.html'
 })
 export class DueTimeSelectorComponent {
-    private dueTimeResult: Subject<string | null>;
-
     public dueTimeDialog = new DialogModel();
     public dueTime: string | null = '';
+    public dueTimeFunction: Subject<string | null>;
     public dueTimeAction: string | null = '';
     public dueTimeMode = 'Immediately';
 
     public selectDueTime(action: string): Observable<string | null> {
         this.dueTimeAction = action;
-        this.dueTimeResult = new Subject<string | null>();
+        this.dueTimeFunction = new Subject<string | null>();
         this.dueTimeDialog.show();
 
-        return this.dueTimeResult;
+        return this.dueTimeFunction;
     }
 
     public confirmStatusChange() {
         const result = this.dueTimeMode === 'Immediately' ? null : this.dueTime;
 
-        this.dueTimeResult.next(result);
-        this.dueTimeResult.complete();
+        this.dueTimeFunction.next(result);
+        this.dueTimeFunction.complete();
 
         this.cancelStatusChange();
     }
@@ -43,7 +42,7 @@ export class DueTimeSelectorComponent {
     public cancelStatusChange() {
         this.dueTimeMode = 'Immediately';
         this.dueTimeDialog.hide();
-        this.dueTimeResult = null!;
+        this.dueTimeFunction = null!;
         this.dueTime = null;
     }
 }

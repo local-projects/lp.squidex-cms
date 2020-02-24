@@ -6,7 +6,6 @@
 // ==========================================================================
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
 using Squidex.Domain.Apps.Core.Apps;
@@ -31,7 +30,7 @@ namespace Squidex.Domain.Apps.Core.Model.Apps
         [Fact]
         public void Should_create_roles_without_defaults()
         {
-            var roles = new Roles(new Dictionary<string, Role>(Roles.Defaults));
+            var roles = new Roles(Roles.Defaults.ToArray());
 
             Assert.Equal(0, roles.CustomCount);
         }
@@ -69,14 +68,6 @@ namespace Squidex.Domain.Apps.Core.Model.Apps
         }
 
         [Fact]
-        public void Should_return_same_roles_if_role_is_updated_with_same_values()
-        {
-            var roles_1 = roles_0.Update(firstRole);
-
-            Assert.Same(roles_0, roles_1);
-        }
-
-        [Fact]
         public void Should_return_same_roles_if_role_not_found()
         {
             var roles_1 = roles_0.Update(role, "P1", "P2");
@@ -87,11 +78,9 @@ namespace Squidex.Domain.Apps.Core.Model.Apps
         [Fact]
         public void Should_remove_role()
         {
-            var roles_1 = roles_0.Add("role1");
-            var roles_2 = roles_1.Add("role2");
-            var roles_3 = roles_2.Remove(firstRole);
+            var roles_1 = roles_0.Remove(firstRole);
 
-            Assert.Equal(new[] { "role1", "role2" }, roles_3.Custom.Select(x => x.Name));
+            Assert.Equal(0, roles_1.CustomCount);
         }
 
         [Fact]
@@ -99,7 +88,7 @@ namespace Squidex.Domain.Apps.Core.Model.Apps
         {
             var roles_1 = roles_0.Remove(role);
 
-            Assert.Same(roles_0, roles_1);
+            Assert.True(roles_1.CustomCount > 0);
         }
 
         [Fact]

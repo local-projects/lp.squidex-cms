@@ -17,13 +17,14 @@ import {
     AssetsDto,
     AssetsService,
     DateTime,
-    encodeQuery,
     ErrorDto,
     MathHelper,
     Resource,
     ResourceLinks,
     Version
 } from '@app/shared/internal';
+
+import { encodeQuery } from '../state/query';
 
 describe('AssetsService', () => {
     const version = new Version('1');
@@ -79,9 +80,7 @@ describe('AssetsService', () => {
             assets = result;
         });
 
-        const query = { take: 17, skip: 13 };
-
-        const req = httpMock.expectOne(`http://service/p/api/apps/my-app/assets?q=${encodeQuery(query)}`);
+        const req = httpMock.expectOne(`http://service/p/api/apps/my-app/assets?q=${encodeQuery({ take: 17, skip: 13 })}`);
 
         expect(req.request.method).toEqual('GET');
         expect(req.request.headers.get('If-Match')).toBeNull();
@@ -158,9 +157,7 @@ describe('AssetsService', () => {
 
         assetsService.getAssets('my-app', 17, 13, { fullText: 'my-query' }).subscribe();
 
-        const query = { filter: { and: [{ path: 'fileName', op: 'contains', value: 'my-query' }] }, take: 17, skip: 13 };
-
-        const req = httpMock.expectOne(`http://service/p/api/apps/my-app/assets?q=${encodeQuery(query)}`);
+        const req = httpMock.expectOne(`http://service/p/api/apps/my-app/assets?q=${encodeQuery({ filter: { and: [{ path: 'fileName', op: 'contains', value: 'my-query' }] }, take: 17, skip: 13 })}`);
 
         expect(req.request.method).toEqual('GET');
         expect(req.request.headers.get('If-Match')).toBeNull();
@@ -173,9 +170,7 @@ describe('AssetsService', () => {
 
         assetsService.getAssets('my-app', 17, 13, undefined, ['tag1']).subscribe();
 
-        const query = { filter: { and: [{ path: 'tags', op: 'eq', value: 'tag1' }] }, take: 17, skip: 13 };
-
-        const req = httpMock.expectOne(`http://service/p/api/apps/my-app/assets?q=${encodeQuery(query)}`);
+        const req = httpMock.expectOne(`http://service/p/api/apps/my-app/assets?q=${encodeQuery({ filter: { and: [{ path: 'tags', op: 'eq', value: 'tag1' }] }, take: 17, skip: 13 })}`);
 
         expect(req.request.method).toEqual('GET');
         expect(req.request.headers.get('If-Match')).toBeNull();
@@ -421,15 +416,11 @@ describe('AssetsService', () => {
             fileType: 'png',
             fileSize: id * 2,
             fileVersion: id * 4,
-            isProtected: true,
             parentId,
             mimeType: 'image/png',
-            type: `my-type${id}${suffix}`,
-            metadataText: `my-metadata${id}${suffix}`,
-            metadata: {
-                pixelWidth: id * 3,
-                pixelHeight: id * 5
-            },
+            isImage: true,
+            pixelWidth: id * 3,
+            pixelHeight: id * 5,
             slug: `my-name${id}${suffix}.png`,
             tags: ['tag1', 'tag2'],
             version: id,
@@ -478,18 +469,14 @@ export function createAsset(id: number, tags?: ReadonlyArray<string>, suffix = '
         'png',
         id * 2,
         id * 4,
-        true,
         parentId,
         'image/png',
-        `my-type${id}${suffix}`,
-        `my-metadata${id}${suffix}`,
-        {
-            pixelWidth: id * 3,
-            pixelHeight: id * 5
-        },
+        true,
+        id * 3,
+        id * 5,
         `my-name${id}${suffix}.png`,
         tags || ['tag1', 'tag2'],
-        new Version(`${id}${suffix}`));
+        new Version(`${id}`));
 }
 
 export function createAssetFolder(id: number, suffix = '', parentId?: string) {

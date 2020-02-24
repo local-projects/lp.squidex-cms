@@ -6,6 +6,7 @@
 // ==========================================================================
 
 using System.Collections.ObjectModel;
+using Squidex.Infrastructure.Collections;
 
 namespace Squidex.Domain.Apps.Core.Contents
 {
@@ -15,11 +16,14 @@ namespace Squidex.Domain.Apps.Core.Contents
 
         public ReadOnlyCollection<string>? Roles { get; }
 
-        protected WorkflowCondition(string? expression, ReadOnlyCollection<string>? roles)
+        protected WorkflowCondition(string? expression, params string[]? roles)
         {
             Expression = expression;
 
-            Roles = roles;
+            if (roles != null)
+            {
+                Roles = ReadOnlyCollection.Create(roles);
+            }
         }
     }
 }

@@ -91,11 +91,9 @@ describe('LocalStore', () => {
 
         localStoreService.set('key1', 'abc');
         localStoreService.setInt('key2', 2);
-        localStoreService.setInt('key3', 0);
 
         expect(localStoreService.getInt('key1', 13)).toBe(13);
         expect(localStoreService.getInt('key2', 13)).toBe(2);
-        expect(localStoreService.getInt('key3', 13)).toBe(0);
 
         expect(localStoreService.getInt('not_set', 13)).toBe(13);
     });

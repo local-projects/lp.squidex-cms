@@ -70,9 +70,9 @@ namespace Squidex.Domain.Apps.Entities.Rules.Indexes
             }
         }
 
-        public async Task HandleAsync(CommandContext context, NextDelegate next)
+        public async Task HandleAsync(CommandContext context, Func<Task> next)
         {
-            await next(context);
+            await next();
 
             if (context.IsCompleted)
             {

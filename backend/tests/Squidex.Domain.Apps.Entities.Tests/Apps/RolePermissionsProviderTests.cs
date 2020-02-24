@@ -35,7 +35,7 @@ namespace Squidex.Domain.Apps.Entities.Apps
         [Fact]
         public async Task Should_provide_all_permissions()
         {
-            A.CallTo(() => appProvider.GetSchemasAsync(A<Guid>._))
+            A.CallTo(() => appProvider.GetSchemasAsync(A<Guid>.Ignored))
                 .Returns(new List<ISchemaEntity>
                 {
                     Mocks.Schema(appId, NamedId.Of(Guid.NewGuid(), "schema1")),

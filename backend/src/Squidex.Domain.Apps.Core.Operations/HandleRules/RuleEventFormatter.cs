@@ -8,11 +8,10 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Squidex.Domain.Apps.Core.Contents;
-using Squidex.Domain.Apps.Core.Rules.EnrichedEvents;
+using Squidex.Domain.Apps.Core.HandleRules.EnrichedEvents;
 using Squidex.Domain.Apps.Core.Scripting;
 using Squidex.Infrastructure;
 using Squidex.Infrastructure.Json;
@@ -32,10 +31,10 @@ namespace Squidex.Domain.Apps.Core.HandleRules
         private static readonly Regex ContentDataPlaceholderNew = new Regex(@"^\{CONTENT_DATA(\.([0-9A-Za-z\-_]*)){2,}\}", RegexOptions.Compiled);
         private readonly List<(char[] Pattern, Func<EnrichedEvent, string> Replacer)> patterns = new List<(char[] Pattern, Func<EnrichedEvent, string> Replacer)>();
         private readonly IJsonSerializer jsonSerializer;
-        private readonly IUrlGenerator urlGenerator;
+        private readonly IRuleUrlGenerator urlGenerator;
         private readonly IScriptEngine scriptEngine;
 
-        public RuleEventFormatter(IJsonSerializer jsonSerializer, IUrlGenerator urlGenerator, IScriptEngine scriptEngine)
+        public RuleEventFormatter(IJsonSerializer jsonSerializer, IRuleUrlGenerator urlGenerator, IScriptEngine scriptEngine)
         {
             Guard.NotNull(jsonSerializer);
             Guard.NotNull(scriptEngine);
@@ -50,9 +49,6 @@ namespace Squidex.Domain.Apps.Core.HandleRules
             AddPattern("CONTENT_ACTION", ContentAction);
             AddPattern("CONTENT_STATUS", ContentStatus);
             AddPattern("CONTENT_URL", ContentUrl);
-            AddPattern("MENTIONED_ID", MentionedId);
-            AddPattern("MENTIONED_NAME", MentionedName);
-            AddPattern("MENTIONED_EMAIL", MentionedEmail);
             AddPattern("SCHEMA_ID", SchemaId);
             AddPattern("SCHEMA_NAME", SchemaName);
             AddPattern("TIMESTAMP_DATETIME", TimestampTime);
@@ -233,7 +229,7 @@ namespace Squidex.Domain.Apps.Core.HandleRules
         {
             if (@event is EnrichedContentEvent contentEvent)
             {
-                return urlGenerator.ContentUI(contentEvent.AppId, contentEvent.SchemaId, contentEvent.Id);
+                return urlGenerator.GenerateContentUIUrl(contentEvent.AppId, contentEvent.SchemaId, contentEvent.Id);
             }
 
             return Fallback;
@@ -269,36 +265,6 @@ namespace Squidex.Domain.Apps.Core.HandleRules
             return Fallback;
         }
 
-        private static string MentionedName(EnrichedEvent @event)
-        {
-            if (@event is EnrichedCommentEvent commentEvent)
-            {
-                return commentEvent.MentionedUser.DisplayName() ?? Fallback;
-            }
-
-            return Fallback;
-        }
-
-        private static string MentionedId(EnrichedEvent @event)
-        {
-            if (@event is EnrichedCommentEvent commentEvent)
-            {
-                return commentEvent.MentionedUser.Id ?? Fallback;
-            }
-
-            return Fallback;
-        }
-
-        private static string MentionedEmail(EnrichedEvent @event)
-        {
-            if (@event is EnrichedCommentEvent commentEvent)
-            {
-                return commentEvent.MentionedUser.Email ?? Fallback;
-            }
-
-            return Fallback;
-        }
-
         private static string CalculateData(NamedContentData data, Match match)
         {
             var captures = match.Groups[2].Captures;
@@ -320,12 +286,26 @@ namespace Squidex.Domain.Apps.Core.HandleRules
                 return Fallback;
             }
 
-            if (path.Skip(2).Any())
+            for (var j = 2; j < path.Length; j++)
             {
-                if (!value.TryGetByPath(path.Skip(2), out value) || value == null || value.Type == JsonValueType.Null)
+                if (value is JsonObject obj && obj.TryGetValue(path[j], out value))
+                {
+                    continue;
+                }
+
+                if (value is JsonArray array && int.TryParse(path[j], out var idx) && idx >= 0 && idx < array.Count)
+                {
+                    value = array[idx];
+                }
+                else
                 {
                     return Fallback;
                 }
+            }
+
+            if (value == null || value.Type == JsonValueType.Null)
+            {
+                return Fallback;
             }
 
             return value.ToString() ?? Fallback;

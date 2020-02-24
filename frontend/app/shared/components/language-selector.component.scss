@@ -1,0 +1,16 @@
+@import '_vars';
+@import '_mixins';
+
+.dropdown-item {
+    cursor: pointer;
+}
+
+.iso-code {
+    font-family: monospace;
+}
+
+.iso-code-dropdown {
+    display: inline-block;
+    max-width: 60px;
+    min-width: 40px;
+}

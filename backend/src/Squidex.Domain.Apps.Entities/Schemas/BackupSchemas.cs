@@ -13,6 +13,7 @@ using Squidex.Domain.Apps.Entities.Schemas.Indexes;
 using Squidex.Domain.Apps.Events.Schemas;
 using Squidex.Infrastructure;
 using Squidex.Infrastructure.EventSourcing;
+using Squidex.Infrastructure.Tasks;
 
 namespace Squidex.Domain.Apps.Entities.Schemas
 {
@@ -42,7 +43,7 @@ namespace Squidex.Domain.Apps.Entities.Schemas
                     break;
             }
 
-            return Task.FromResult(true);
+            return TaskHelper.True;
         }
 
         public Task RestoreAsync(RestoreContext context)

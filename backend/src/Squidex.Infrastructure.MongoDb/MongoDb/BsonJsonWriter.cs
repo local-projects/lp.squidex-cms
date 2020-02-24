@@ -6,6 +6,7 @@
 // ==========================================================================
 
 using System;
+using System.Globalization;
 using MongoDB.Bson.IO;
 using NewtonsoftJSonWriter = Newtonsoft.Json.JsonWriter;
 
@@ -141,12 +142,19 @@ namespace Squidex.Infrastructure.MongoDb
 
         public override void WriteValue(DateTime value)
         {
-            bsonWriter.WriteString(value.ToIso8601());
+            bsonWriter.WriteString(value.ToString("yyyy-MM-ddTHH:mm:ssK", CultureInfo.InvariantCulture));
         }
 
         public override void WriteValue(DateTimeOffset value)
         {
-            bsonWriter.WriteString(value.UtcDateTime.ToIso8601());
+            if (value.Offset == TimeSpan.Zero)
+            {
+                bsonWriter.WriteString(value.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ssK", CultureInfo.InvariantCulture));
+            }
+            else
+            {
+                bsonWriter.WriteString(value.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ssK", CultureInfo.InvariantCulture));
+            }
         }
 
         public override void WriteValue(byte[]? value)

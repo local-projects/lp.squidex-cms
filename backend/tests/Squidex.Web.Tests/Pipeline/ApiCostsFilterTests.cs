@@ -15,7 +15,6 @@ using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Routing;
-using NodaTime;
 using Squidex.Domain.Apps.Entities.Apps;
 using Squidex.Domain.Apps.Entities.Apps.Services;
 using Squidex.Infrastructure.UsageTracking;
@@ -27,11 +26,9 @@ namespace Squidex.Web.Pipeline
     {
         private readonly IActionContextAccessor actionContextAccessor = A.Fake<IActionContextAccessor>();
         private readonly IAppEntity appEntity = A.Fake<IAppEntity>();
-        private readonly IAppLimitsPlan appPlan = A.Fake<IAppLimitsPlan>();
-        private readonly IAppLogStore appLogStore = A.Fake<IAppLogStore>();
         private readonly IAppPlansProvider appPlansProvider = A.Fake<IAppPlansProvider>();
-        private readonly IClock clock = A.Fake<IClock>();
         private readonly IUsageTracker usageTracker = A.Fake<IUsageTracker>();
+        private readonly IAppLimitsPlan appPlan = A.Fake<IAppLimitsPlan>();
         private readonly ActionExecutingContext actionContext;
         private readonly HttpContext httpContext = new DefaultHttpContext();
         private readonly ActionExecutionDelegate next;
@@ -60,7 +57,7 @@ namespace Squidex.Web.Pipeline
             A.CallTo(() => appPlan.MaxApiCalls)
                 .ReturnsLazily(x => apiCallsMax);
 
-            A.CallTo(() => usageTracker.GetMonthlyCallsAsync(A<string>._, DateTime.Today))
+            A.CallTo(() => usageTracker.GetMonthlyCallsAsync(A<string>.Ignored, DateTime.Today))
                 .ReturnsLazily(x => Task.FromResult(apiCallsCurrent));
 
             next = () =>
@@ -70,7 +67,7 @@ namespace Squidex.Web.Pipeline
                 return Task.FromResult<ActionExecutedContext?>(null);
             };
 
-            sut = new ApiCostsFilter(appLogStore, appPlansProvider, usageTracker, clock);
+            sut = new ApiCostsFilter(appPlansProvider, usageTracker);
         }
 
         [Fact]
@@ -88,7 +85,7 @@ namespace Squidex.Web.Pipeline
             Assert.Equal(429, (actionContext.Result as StatusCodeResult)?.StatusCode);
             Assert.False(isNextCalled);
 
-            A.CallTo(() => usageTracker.TrackAsync(A<string>._, A<string>._, A<double>._, A<double>._))
+            A.CallTo(() => usageTracker.TrackAsync(A<string>.Ignored, A<string>.Ignored, A<double>.Ignored, A<double>.Ignored))
                 .MustNotHaveHappened();
         }
 
@@ -106,7 +103,7 @@ namespace Squidex.Web.Pipeline
 
             Assert.True(isNextCalled);
 
-            A.CallTo(() => usageTracker.TrackAsync(A<string>._, A<string>._, 13, A<double>._))
+            A.CallTo(() => usageTracker.TrackAsync(A<string>.Ignored, A<string>.Ignored, 13, A<double>.Ignored))
                 .MustHaveHappened();
         }
 
@@ -124,7 +121,7 @@ namespace Squidex.Web.Pipeline
 
             Assert.True(isNextCalled);
 
-            A.CallTo(() => usageTracker.TrackAsync(A<string>._, A<string>._, 13, A<double>._))
+            A.CallTo(() => usageTracker.TrackAsync(A<string>.Ignored, A<string>.Ignored, 13, A<double>.Ignored))
                 .MustHaveHappened();
         }
 
@@ -142,7 +139,7 @@ namespace Squidex.Web.Pipeline
 
             Assert.True(isNextCalled);
 
-            A.CallTo(() => usageTracker.TrackAsync(A<string>._, A<string>._, A<double>._, A<double>._))
+            A.CallTo(() => usageTracker.TrackAsync(A<string>.Ignored, A<string>.Ignored, A<double>.Ignored, A<double>.Ignored))
                 .MustNotHaveHappened();
         }
 
@@ -158,29 +155,8 @@ namespace Squidex.Web.Pipeline
 
             Assert.True(isNextCalled);
 
-            A.CallTo(() => usageTracker.TrackAsync(A<string>._, A<string>._, A<double>._, A<double>._))
+            A.CallTo(() => usageTracker.TrackAsync(A<string>.Ignored, A<string>.Ignored, A<double>.Ignored, A<double>.Ignored))
                 .MustNotHaveHappened();
-        }
-
-        [Fact]
-        public async Task Should_log_request_event_if_weight_is_zero()
-        {
-            sut.FilterDefinition = new ApiCostsAttribute(0);
-
-            SetupApp();
-
-            httpContext.Request.Method = "GET";
-            httpContext.Request.Path = "/my-path";
-
-            var instant = SystemClock.Instance.GetCurrentInstant();
-
-            A.CallTo(() => clock.GetCurrentInstant())
-                .Returns(instant);
-
-            await sut.OnActionExecutionAsync(actionContext, next);
-
-            A.CallTo(() => appLogStore.LogAsync(appEntity.Id, instant, "GET", "/my-path", null, null, A<long>._, 0))
-                .MustHaveHappened();
         }
 
         private void SetupApp()

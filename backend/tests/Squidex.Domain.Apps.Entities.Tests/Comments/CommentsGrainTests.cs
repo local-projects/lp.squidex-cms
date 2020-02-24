@@ -41,7 +41,7 @@ namespace Squidex.Domain.Apps.Entities.Comments
 
         public CommentsGrainTests()
         {
-            A.CallTo(() => eventStore.AppendAsync(A<Guid>._, A<string>._, A<long>._, A<ICollection<EventData>>._))
+            A.CallTo(() => eventStore.AppendAsync(A<Guid>.Ignored, A<string>.Ignored, A<long>.Ignored, A<ICollection<EventData>>.Ignored))
                 .Invokes(x => LastEvents = sut.GetUncommittedEvents().Select(x => x.To<IEvent>()).ToList());
 
             sut = new CommentsGrain(eventStore, eventDataFormatter);
@@ -55,7 +55,7 @@ namespace Squidex.Domain.Apps.Entities.Comments
 
             var result = await sut.ExecuteAsync(CreateCommentsCommand(command));
 
-            result.ShouldBeEquivalent((object)EntityCreatedResult.Create(command.CommentId, 0));
+            result.ShouldBeEquivalent(EntityCreatedResult.Create(command.CommentId, 0));
 
             sut.GetCommentsAsync(0).Result.Should().BeEquivalentTo(new CommentsResult { Version = 0 });
             sut.GetCommentsAsync(-1).Result.Should().BeEquivalentTo(new CommentsResult
@@ -74,7 +74,7 @@ namespace Squidex.Domain.Apps.Entities.Comments
         }
 
         [Fact]
-        public async Task Update_should_create_events()
+        public async Task Update_should_create_events_and_update_state()
         {
             await ExecuteCreateAsync();
 
@@ -82,7 +82,7 @@ namespace Squidex.Domain.Apps.Entities.Comments
 
             var result = await sut.ExecuteAsync(CreateCommentsCommand(updateCommand));
 
-            result.ShouldBeEquivalent((object)new EntitySavedResult(1));
+            result.ShouldBeEquivalent(new EntitySavedResult(1));
 
             sut.GetCommentsAsync(-1).Result.Should().BeEquivalentTo(new CommentsResult
             {
@@ -109,7 +109,7 @@ namespace Squidex.Domain.Apps.Entities.Comments
         }
 
         [Fact]
-        public async Task Delete_should_create_events()
+        public async Task Delete_should_create_events_and_update_state()
         {
             await ExecuteCreateAsync();
             await ExecuteUpdateAsync();
@@ -118,7 +118,7 @@ namespace Squidex.Domain.Apps.Entities.Comments
 
             var result = await sut.ExecuteAsync(CreateCommentsCommand(deleteCommand));
 
-            result.ShouldBeEquivalent((object)new EntitySavedResult(2));
+            result.ShouldBeEquivalent(new EntitySavedResult(2));
 
             sut.GetCommentsAsync(-1).Result.Should().BeEquivalentTo(new CommentsResult { Version = 2 });
             sut.GetCommentsAsync(0).Result.Should().BeEquivalentTo(new CommentsResult

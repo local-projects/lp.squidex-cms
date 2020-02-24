@@ -12,7 +12,7 @@ using Squidex.Infrastructure.Collections;
 
 namespace Squidex.Domain.Apps.Core.Apps
 {
-    public sealed class AppContributors : ImmutableDictionary<string, string>
+    public sealed class AppContributors : ArrayDictionary<string, string>
     {
         public static readonly AppContributors Empty = new AppContributors();
 
@@ -20,8 +20,8 @@ namespace Squidex.Domain.Apps.Core.Apps
         {
         }
 
-        public AppContributors(Dictionary<string, string> inner)
-            : base(inner)
+        public AppContributors(KeyValuePair<string, string>[] items)
+            : base(items)
         {
         }
 
@@ -31,7 +31,7 @@ namespace Squidex.Domain.Apps.Core.Apps
             Guard.NotNullOrEmpty(contributorId);
             Guard.NotNullOrEmpty(role);
 
-            return With<AppContributors>(contributorId, role, EqualityComparer<string>.Default);
+            return new AppContributors(With(contributorId, role));
         }
 
         [Pure]
@@ -39,7 +39,7 @@ namespace Squidex.Domain.Apps.Core.Apps
         {
             Guard.NotNullOrEmpty(contributorId);
 
-            return Without<AppContributors>(contributorId);
+            return new AppContributors(Without(contributorId));
         }
     }
 }

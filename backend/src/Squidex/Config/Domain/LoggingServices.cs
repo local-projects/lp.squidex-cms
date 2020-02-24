@@ -12,7 +12,6 @@ using Microsoft.Extensions.Logging;
 using Squidex.Domain.Apps.Entities.Apps;
 using Squidex.Infrastructure.Log;
 using Squidex.Infrastructure.Log.Adapter;
-using Squidex.Infrastructure.Log.Store;
 using Squidex.Web.Pipeline;
 
 namespace Squidex.Config.Domain
@@ -34,9 +33,6 @@ namespace Squidex.Config.Domain
         private static void AddServices(this IServiceCollection services, IConfiguration config)
         {
             services.Configure<RequestLogOptions>(
-                config.GetSection("logging"));
-
-            services.Configure<RequestLogStoreOptions>(
                 config.GetSection("logging"));
 
             services.Configure<SemanticLogOptions>(
@@ -84,8 +80,8 @@ namespace Squidex.Config.Domain
             services.AddSingletonAs<DefaultAppLogStore>()
                 .As<IAppLogStore>();
 
-            services.AddSingletonAs<BackgroundRequestLogStore>()
-                .AsOptional<IRequestLogStore>();
+            services.AddSingletonAs<NoopLogStore>()
+                .AsOptional<ILogStore>();
         }
 
         private static void AddFilters(this ILoggingBuilder builder)

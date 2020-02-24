@@ -1,8 +1,16 @@
+@import '_vars';
+@import '_mixins';
+
 .user-picture {
     margin-right: .5rem;
 }
 
 .dropdown {
+    &-menu {
+        @include absolute($size-navbar-height - .5rem, 0, auto, auto);
+        margin: 0;
+    }
+
     &-item {
         cursor: pointer;
     }

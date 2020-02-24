@@ -12,6 +12,7 @@ import {
     Queries,
     Query,
     ResourceOwner,
+    SavedQuery,
     SchemasState,
     UIState
 } from '@app/shared';
@@ -40,7 +41,15 @@ export class ContentsFiltersPageComponent extends ResourceOwner implements OnIni
                 }));
     }
 
+    public isQueryUsed = (query: SavedQuery) => {
+        return this.contentsState.isQueryUsed(query);
+    }
+
     public search(query: Query) {
         this.contentsState.search(query);
+    }
+
+    public trackByQuery(index: number, query: { name: string }) {
+        return query.name;
     }
 }

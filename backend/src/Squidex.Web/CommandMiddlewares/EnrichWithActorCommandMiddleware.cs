@@ -5,11 +5,11 @@
 //  All rights reserved. Licensed under the MIT license.
 // ==========================================================================
 
+using System;
 using System.Security;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Squidex.Domain.Apps.Entities;
-using Squidex.Infrastructure;
 using Squidex.Infrastructure.Commands;
 using Squidex.Infrastructure.Security;
 
@@ -21,16 +21,14 @@ namespace Squidex.Web.CommandMiddlewares
 
         public EnrichWithActorCommandMiddleware(IHttpContextAccessor httpContextAccessor)
         {
-            Guard.NotNull(httpContextAccessor);
-
             this.httpContextAccessor = httpContextAccessor;
         }
 
-        public Task HandleAsync(CommandContext context, NextDelegate next)
+        public Task HandleAsync(CommandContext context, Func<Task> next)
         {
             if (httpContextAccessor.HttpContext == null)
             {
-                return next(context);
+                return next();
             }
 
             if (context.Command is SquidexCommand squidexCommand)
@@ -50,7 +48,7 @@ namespace Squidex.Web.CommandMiddlewares
                 }
             }
 
-            return next(context);
+            return next();
         }
     }
 }

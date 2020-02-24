@@ -1,3 +1,6 @@
+@import '_vars';
+@import '_mixins';
+
 .small {
     & {
         height: 3rem;
@@ -50,7 +53,7 @@
 
     &-text {
         font-size: .8rem;
-        margin-bottom: .125rem;
+        margin-bottom: .25rem;
         margin-top: .25rem;
     }
 

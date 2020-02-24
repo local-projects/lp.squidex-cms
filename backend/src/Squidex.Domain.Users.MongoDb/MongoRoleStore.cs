@@ -13,6 +13,7 @@ using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
 using Squidex.Infrastructure.MongoDb;
+using Squidex.Infrastructure.Tasks;
 
 namespace Squidex.Domain.Users.MongoDb
 {
@@ -24,8 +25,7 @@ namespace Squidex.Domain.Users.MongoDb
             {
                 cm.AutoMap();
 
-                cm.MapMember(x => x.Id)
-                    .SetSerializer(new StringSerializer(BsonType.ObjectId));
+                cm.MapMember(x => x.Id).SetSerializer(new StringSerializer(BsonType.ObjectId));
 
                 cm.UnmapMember(x => x.ConcurrencyStamp);
             });
@@ -87,7 +87,7 @@ namespace Squidex.Domain.Users.MongoDb
 
         public async Task<IdentityResult> UpdateAsync(IdentityRole role, CancellationToken cancellationToken)
         {
-            await Collection.ReplaceOneAsync(x => x.Id == role.Id, role, cancellationToken: cancellationToken);
+            await Collection.ReplaceOneAsync(x => x.Id == role.Id, role, null, cancellationToken);
 
             return IdentityResult.Success;
         }
@@ -118,14 +118,14 @@ namespace Squidex.Domain.Users.MongoDb
         {
             role.Name = roleName;
 
-            return Task.CompletedTask;
+            return TaskHelper.Done;
         }
 
         public Task SetNormalizedRoleNameAsync(IdentityRole role, string normalizedName, CancellationToken cancellationToken)
         {
             role.NormalizedName = normalizedName;
 
-            return Task.CompletedTask;
+            return TaskHelper.Done;
         }
     }
 }

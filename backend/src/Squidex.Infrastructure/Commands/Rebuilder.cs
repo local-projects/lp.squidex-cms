@@ -23,27 +23,24 @@ namespace Squidex.Infrastructure.Commands
         private readonly ILocalCache localCache;
         private readonly IStore<Guid> store;
         private readonly IEventStore eventStore;
-        private readonly IServiceProvider serviceProvider;
 
         public Rebuilder(
             ILocalCache localCache,
             IStore<Guid> store,
-            IEventStore eventStore,
-            IServiceProvider serviceProvider)
+            IEventStore eventStore)
         {
             Guard.NotNull(localCache);
             Guard.NotNull(store);
             Guard.NotNull(eventStore);
 
             this.eventStore = eventStore;
-            this.serviceProvider = serviceProvider;
             this.localCache = localCache;
             this.store = store;
         }
 
-        public Task RebuildAsync<T, TState>(string filter, CancellationToken ct) where T : DomainObjectBase<TState> where TState : class, IDomainState<TState>, new()
+        public Task RebuildAsync<TState, TGrain>(string filter, CancellationToken ct) where TState : IDomainState<TState>, new()
         {
-            return RebuildAsync<T, TState>(async target =>
+            return RebuildAsync<TState, TGrain>(async target =>
             {
                 await eventStore.QueryAsync(async storedEvent =>
                 {
@@ -54,16 +51,16 @@ namespace Squidex.Infrastructure.Commands
             }, ct);
         }
 
-        public virtual async Task RebuildAsync<T, TState>(IdSource source, CancellationToken ct = default) where T : DomainObjectBase<TState> where TState : class, IDomainState<TState>, new()
+        public virtual async Task RebuildAsync<TState, TGrain>(IdSource source, CancellationToken ct = default) where TState : IDomainState<TState>, new()
         {
             Guard.NotNull(source);
 
             await store.GetSnapshotStore<TState>().ClearAsync();
 
-            await InsertManyAsync<T, TState>(source, ct);
+            await InsertManyAsync<TState, TGrain>(source, ct);
         }
 
-        public virtual async Task InsertManyAsync<T, TState>(IdSource source, CancellationToken ct = default) where T : DomainObjectBase<TState> where TState : class, IDomainState<TState>, new()
+        public virtual async Task InsertManyAsync<TState, TGrain>(IdSource source, CancellationToken ct = default) where TState : IDomainState<TState>, new()
         {
             Guard.NotNull(source);
 
@@ -71,11 +68,20 @@ namespace Squidex.Infrastructure.Commands
             {
                 try
                 {
-                    var domainObject = (T)serviceProvider.GetService(typeof(T));
+                    var state = new TState
+                    {
+                        Version = EtagVersion.Empty
+                    };
 
-                    domainObject.Setup(id);
+                    var persistence = store.WithSnapshotsAndEventSourcing(typeof(TGrain), id, (TState s) => state = s, e =>
+                    {
+                        state = state.Apply(e);
 
-                    await domainObject.RebuildStateAsync();
+                        state.Version++;
+                    });
+
+                    await persistence.ReadAsync();
+                    await persistence.WriteSnapshotAsync(state);
                 }
                 catch (DomainObjectNotFoundException)
                 {
@@ -91,13 +97,13 @@ namespace Squidex.Infrastructure.Commands
 
             using (localCache.StartContext())
             {
-                await source(async id =>
+                await source(new Func<Guid, Task>(async id =>
                 {
                     if (handledIds.Add(id))
                     {
                         await worker.SendAsync(id, ct);
                     }
-                });
+                }));
 
                 worker.Complete();
 

@@ -6,9 +6,9 @@
 // ==========================================================================
 
 using System;
+using System.Runtime.Serialization;
 using Squidex.Domain.Apps.Events.Assets;
 using Squidex.Infrastructure;
-using Squidex.Infrastructure.Commands;
 using Squidex.Infrastructure.EventSourcing;
 using Squidex.Infrastructure.Reflection;
 
@@ -16,15 +16,21 @@ using Squidex.Infrastructure.Reflection;
 
 namespace Squidex.Domain.Apps.Entities.Assets.State
 {
-    public sealed class AssetFolderState : DomainObjectState<AssetFolderState>, IAssetFolderEntity
+    public class AssetFolderState : DomainObjectState<AssetFolderState>, IAssetFolderEntity
     {
+        [DataMember]
         public NamedId<Guid> AppId { get; set; }
 
+        [DataMember]
         public string FolderName { get; set; }
 
+        [DataMember]
+        public bool IsDeleted { get; set; }
+
+        [DataMember]
         public Guid ParentId { get; set; }
 
-        public override bool ApplyEvent(IEvent @event)
+        public void ApplyEvent(IEvent @event)
         {
             switch (@event)
             {
@@ -32,32 +38,35 @@ namespace Squidex.Domain.Apps.Entities.Assets.State
                     {
                         SimpleMapper.Map(e, this);
 
-                        return true;
+                        break;
                     }
 
-                case AssetFolderRenamed e when Is.OptionalChange(FolderName, e.FolderName):
+                case AssetFolderRenamed e:
                     {
-                        FolderName = e.FolderName;
+                        SimpleMapper.Map(e, this);
 
-                        return true;
+                        break;
                     }
 
-                case AssetFolderMoved e when Is.Change(ParentId, e.ParentId):
+                case AssetFolderMoved e:
                     {
                         ParentId = e.ParentId;
 
-                        return true;
+                        break;
                     }
 
                 case AssetFolderDeleted _:
                     {
                         IsDeleted = true;
 
-                        return true;
+                        break;
                     }
             }
+        }
 
-            return false;
+        public override AssetFolderState Apply(Envelope<IEvent> @event)
+        {
+            return Clone().Update(@event, (e, s) => s.ApplyEvent(e));
         }
     }
 }

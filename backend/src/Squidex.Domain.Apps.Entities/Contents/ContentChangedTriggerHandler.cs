@@ -9,7 +9,7 @@ using System;
 using System.Threading.Tasks;
 using Squidex.Domain.Apps.Core.Contents;
 using Squidex.Domain.Apps.Core.HandleRules;
-using Squidex.Domain.Apps.Core.Rules.EnrichedEvents;
+using Squidex.Domain.Apps.Core.HandleRules.EnrichedEvents;
 using Squidex.Domain.Apps.Core.Rules.Triggers;
 using Squidex.Domain.Apps.Core.Scripting;
 using Squidex.Domain.Apps.Events.Contents;
@@ -38,12 +38,11 @@ namespace Squidex.Domain.Apps.Entities.Contents
         {
             var result = new EnrichedContentEvent();
 
-            var content =
-                await contentLoader.GetAsync(
-                    @event.Headers.AggregateId(),
-                    @event.Headers.EventStreamNumber());
+            var content = await contentLoader.GetAsync(@event.Headers.AggregateId(), @event.Headers.EventStreamNumber());
 
             SimpleMapper.Map(content, result);
+
+            result.Data = content.Data ?? content.DataDraft;
 
             switch (@event.Payload)
             {
@@ -53,37 +52,25 @@ namespace Squidex.Domain.Apps.Entities.Contents
                 case ContentDeleted _:
                     result.Type = EnrichedContentEventType.Deleted;
                     break;
-
-                case ContentStatusChanged statusChanged:
-                    {
-                        switch (statusChanged.Change)
-                        {
-                            case StatusChange.Published:
-                                result.Type = EnrichedContentEventType.Published;
-                                break;
-                            case StatusChange.Unpublished:
-                                result.Type = EnrichedContentEventType.Unpublished;
-                                break;
-                            default:
-                                result.Type = EnrichedContentEventType.StatusChanged;
-                                break;
-                        }
-
-                        break;
-                    }
-
+                case ContentChangesPublished _:
                 case ContentUpdated _:
+                    result.Type = EnrichedContentEventType.Updated;
+                    break;
+                case ContentStatusChanged contentStatusChanged:
+                    switch (contentStatusChanged.Change)
                     {
-                        result.Type = EnrichedContentEventType.Updated;
-
-                        var previousContent =
-                            await contentLoader.GetAsync(
-                                content.Id,
-                                content.Version - 1);
-
-                        result.DataOld = previousContent.Data;
-                        break;
+                        case StatusChange.Published:
+                            result.Type = EnrichedContentEventType.Published;
+                            break;
+                        case StatusChange.Unpublished:
+                            result.Type = EnrichedContentEventType.Unpublished;
+                            break;
+                        default:
+                            result.Type = EnrichedContentEventType.StatusChanged;
+                            break;
                     }
+
+                    break;
             }
 
             result.Name = $"{content.SchemaId.Name.ToPascalCase()}{result.Type}";

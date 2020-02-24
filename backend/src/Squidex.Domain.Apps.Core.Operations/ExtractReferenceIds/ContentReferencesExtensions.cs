@@ -8,6 +8,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Squidex.Domain.Apps.Core.Apps;
 using Squidex.Domain.Apps.Core.Contents;
 using Squidex.Domain.Apps.Core.Schemas;
 using Squidex.Infrastructure;
@@ -17,97 +18,94 @@ namespace Squidex.Domain.Apps.Core.ExtractReferenceIds
 {
     public static class ContentReferencesExtensions
     {
-        public static HashSet<Guid> GetReferencedIds(this NamedContentData source, Schema schema)
+        public static IEnumerable<Guid> GetReferencedIds(this IdContentData source, Schema schema, Ids strategy = Ids.All)
         {
             Guard.NotNull(schema);
 
-            var extractor = new ReferencesExtractor(new HashSet<Guid>());
-
-            AddReferencedIds(source, schema.Fields, extractor);
-
-            return extractor.Result;
-        }
-
-        public static void AddReferencedIds(this NamedContentData source, Schema schema, HashSet<Guid> result)
-        {
-            Guard.NotNull(schema);
-
-            var extractor = new ReferencesExtractor(result);
-
-            AddReferencedIds(source, schema.Fields, extractor);
-        }
-
-        public static void AddReferencedIds(this NamedContentData source, IEnumerable<IField> fields, HashSet<Guid> result)
-        {
-            Guard.NotNull(fields);
-
-            var extractor = new ReferencesExtractor(result);
-
-            AddReferencedIds(source, fields, extractor);
-        }
-
-        public static void AddReferencedIds(this NamedContentData source, IField field, HashSet<Guid> result)
-        {
-            Guard.NotNull(field);
-
-            var extractor = new ReferencesExtractor(result);
-
-            AddReferencedIds(source, field, extractor);
-        }
-
-        private static void AddReferencedIds(NamedContentData source, IEnumerable<IField> fields, ReferencesExtractor extractor)
-        {
-            foreach (var field in fields)
+            foreach (var field in schema.Fields)
             {
-                AddReferencedIds(source, field, extractor);
-            }
-        }
+                var ids = source.GetReferencedIds(field, strategy);
 
-        private static void AddReferencedIds(NamedContentData source, IField field, ReferencesExtractor extractor)
-        {
-            if (source.TryGetValue(field.Name, out var fieldData) && fieldData != null)
-            {
-                foreach (var partitionValue in fieldData)
+                foreach (var id in ids)
                 {
-                    extractor.SetValue(partitionValue.Value);
-
-                    field.Accept(extractor);
+                    yield return id;
                 }
             }
         }
 
-        public static HashSet<Guid> GetReferencedIds(this IField field, IJsonValue? value)
+        public static IEnumerable<Guid> GetReferencedIds(this IdContentData source, IField field, Ids strategy = Ids.All)
         {
-            var result = new HashSet<Guid>();
+            Guard.NotNull(field);
 
-            if (value != null)
+            if (source.TryGetValue(field.Id, out var fieldData) && fieldData != null)
             {
-                var extractor = new ReferencesExtractor(result);
+                foreach (var partitionValue in fieldData)
+                {
+                    var ids = field.GetReferencedIds(partitionValue.Value, strategy);
 
-                extractor.SetValue(value);
-
-                field.Accept(extractor);
+                    foreach (var id in ids)
+                    {
+                        yield return id;
+                    }
+                }
             }
-
-            return result;
         }
 
-        public static JsonObject FormatReferences(this NamedContentData data, Schema schema, IFieldPartitioning partitioning, string separator = ", ")
+        public static IEnumerable<Guid> GetReferencedIds(this NamedContentData source, Schema schema, Ids strategy = Ids.All)
         {
             Guard.NotNull(schema);
-            Guard.NotNull(partitioning);
+
+            return GetReferencedIds(source, schema.Fields, strategy);
+        }
+
+        public static IEnumerable<Guid> GetReferencedIds(this NamedContentData source, IEnumerable<IField> fields, Ids strategy = Ids.All)
+        {
+            Guard.NotNull(fields);
+
+            foreach (var field in fields)
+            {
+                var ids = source.GetReferencedIds(field, strategy);
+
+                foreach (var id in ids)
+                {
+                    yield return id;
+                }
+            }
+        }
+
+        public static IEnumerable<Guid> GetReferencedIds(this NamedContentData source, IField field, Ids strategy = Ids.All)
+        {
+            Guard.NotNull(field);
+
+            if (source.TryGetValue(field.Name, out var fieldData) && fieldData != null)
+            {
+                foreach (var partitionValue in fieldData)
+                {
+                    var ids = field.GetReferencedIds(partitionValue.Value, strategy);
+
+                    foreach (var id in ids)
+                    {
+                        yield return id;
+                    }
+                }
+            }
+        }
+
+        public static JsonObject FormatReferences(this NamedContentData data, Schema schema, LanguagesConfig languages, string separator = ", ")
+        {
+            Guard.NotNull(schema);
 
             var result = JsonValue.Object();
 
-            foreach (var partitionKey in partitioning.AllKeys)
+            foreach (var language in languages)
             {
-                result[partitionKey] = JsonValue.Create(data.FormatReferenceFields(schema, partitionKey, separator));
+                result[language.Key] = JsonValue.Create(data.FormatReferenceFields(schema, language.Key, separator));
             }
 
             return result;
         }
 
-        private static string FormatReferenceFields(this NamedContentData data, Schema schema, string partitionKey, string separator)
+        private static string FormatReferenceFields(this NamedContentData data, Schema schema, string partition, string separator)
         {
             Guard.NotNull(schema);
 
@@ -123,13 +121,13 @@ namespace Squidex.Domain.Apps.Core.ExtractReferenceIds
                 sb.Append(value);
             }
 
-            var referenceFields = schema.ReferenceFields();
+            var referenceFields = schema.ReferencesFields();
 
             foreach (var referenceField in referenceFields)
             {
                 if (data.TryGetValue(referenceField.Name, out var fieldData) && fieldData != null)
                 {
-                    if (fieldData.TryGetValue(partitionKey, out var value))
+                    if (fieldData.TryGetValue(partition, out var value))
                     {
                         AddValue(value);
                     }

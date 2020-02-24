@@ -5,12 +5,11 @@
 //  All rights reserved. Licensed under the MIT license.
 // ==========================================================================
 
-using Squidex.Domain.Apps.Core.Assets;
-using Squidex.Infrastructure.EventSourcing;
+using Squidex.Infrastructure.Reflection;
 
 namespace Squidex.Domain.Apps.Events.Assets
 {
-    [EventType(nameof(AssetUpdated), 2)]
+    [TypeName("AssetUpdated")]
     public sealed class AssetUpdated : AssetEvent
     {
         public string MimeType { get; set; }
@@ -21,8 +20,10 @@ namespace Squidex.Domain.Apps.Events.Assets
 
         public long FileVersion { get; set; }
 
-        public AssetType Type { get; set; }
+        public bool IsImage { get; set; }
 
-        public AssetMetadata Metadata { get; set; }
+        public int? PixelWidth { get; set; }
+
+        public int? PixelHeight { get; set; }
     }
 }

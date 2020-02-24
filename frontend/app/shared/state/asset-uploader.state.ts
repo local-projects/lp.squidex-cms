@@ -71,11 +71,11 @@ export class AssetUploaderState extends State<Snapshot> {
     }
 
     public uploadFile(file: File, target?: AssetsState): Observable<UploadResult> {
-        const parentId = target?.parentId || undefined;
+        const parentId = target ? target.parentId : undefined;
 
         const stream = this.assetsService.postAssetFile(this.appName, file, parentId);
 
-        return this.upload(stream, MathHelper.guid(), file.name, asset  => {
+        return this.upload(stream, MathHelper.guid(), file, asset  => {
             if (asset.isDuplicate) {
                 this.dialogs.notifyError('Asset has already been uploaded.');
             } else if (target) {
@@ -86,14 +86,14 @@ export class AssetUploaderState extends State<Snapshot> {
         });
     }
 
-    public uploadAsset(asset: AssetDto, file: Blob): Observable<UploadResult> {
+    public uploadAsset(asset: AssetDto, file: File): Observable<UploadResult> {
         const stream = this.assetsService.putAssetFile(this.appName, asset, file, asset.version);
 
-        return this.upload(stream, asset.id, file['name'] || asset.fileName);
+        return this.upload(stream, asset.id, file);
     }
 
-    private upload(source: Observable<number | AssetDto>, id: string, name: string, complete?: ((completion: AssetDto) => AssetDto)) {
-        let upload = { id, name, progress: 1, status: 'Running', cancel: new Subject() };
+    private upload(source: Observable<number | AssetDto>, id: string, file: File, complete?: ((completion: AssetDto) => AssetDto)) {
+        let upload = { id, name: file.name, progress: 1, status: 'Running', cancel: new Subject() };
 
         this.addUpload(upload);
 

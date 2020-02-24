@@ -5,52 +5,87 @@
 //  All rights reserved. Licensed under the MIT license.
 // ==========================================================================
 
+using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using Squidex.Infrastructure;
-
-#pragma warning disable IDE0028 // Simplify collection initialization
+using Squidex.Infrastructure.Collections;
 
 namespace Squidex.Domain.Apps.Core.Apps
 {
     public sealed class LanguagesConfig : IFieldPartitioning
     {
-        public static readonly LanguagesConfig English = new LanguagesConfig(
-            new Dictionary<string, LanguageConfig>
-            {
-                [Language.EN] = new LanguageConfig()
-            },
-            Language.EN);
+        public static readonly LanguagesConfig English = Build(Language.EN);
 
-        private readonly Dictionary<string, LanguageConfig> languages;
-        private readonly string master;
+        private readonly ArrayDictionary<Language, LanguageConfig> languages;
+        private readonly LanguageConfig master;
 
-        public string Master
+        public LanguageConfig Master
         {
             get { return master; }
         }
 
-        public IEnumerable<string> AllKeys
+        IFieldPartitionItem IFieldPartitioning.Master
         {
-            get { return languages.Keys; }
+            get { return master; }
         }
 
-        public IReadOnlyDictionary<string, LanguageConfig> Languages
+        IEnumerator IEnumerable.GetEnumerator()
         {
-            get { return languages; }
+            return languages.Values.GetEnumerator();
         }
 
-        public LanguagesConfig(Dictionary<string, LanguageConfig> languages, string master)
+        IEnumerator<IFieldPartitionItem> IEnumerable<IFieldPartitionItem>.GetEnumerator()
         {
-            Guard.NotNull(languages);
-            Guard.NotNullOrEmpty(master);
+            return languages.Values.GetEnumerator();
+        }
 
-            Cleanup(languages, ref master);
+        public int Count
+        {
+            get { return languages.Count; }
+        }
+
+        private LanguagesConfig(ArrayDictionary<Language, LanguageConfig> languages, LanguageConfig master, bool checkMaster = true)
+        {
+            if (checkMaster)
+            {
+                this.master = master ?? throw new InvalidOperationException("Config has no master language.");
+            }
+
+            foreach (var languageConfig in languages.Values)
+            {
+                foreach (var fallback in languageConfig.LanguageFallbacks)
+                {
+                    if (!languages.ContainsKey(fallback))
+                    {
+                        var message = $"Config for language '{languageConfig.Language.Iso2Code}' contains unsupported fallback language '{fallback.Iso2Code}'";
+
+                        throw new InvalidOperationException(message);
+                    }
+                }
+            }
 
             this.languages = languages;
+        }
 
-            this.master = master;
+        public static LanguagesConfig Build(ICollection<LanguageConfig> configs)
+        {
+            Guard.NotNull(configs);
+
+            return new LanguagesConfig(configs.ToArrayDictionary(x => x.Language), configs.FirstOrDefault());
+        }
+
+        public static LanguagesConfig Build(params LanguageConfig[] configs)
+        {
+            return Build(configs?.ToList()!);
+        }
+
+        public static LanguagesConfig Build(params Language[] languages)
+        {
+            return Build(languages?.Select(x => new LanguageConfig(x)).ToList()!);
         }
 
         [Pure]
@@ -58,20 +93,28 @@ namespace Squidex.Domain.Apps.Core.Apps
         {
             Guard.NotNull(language);
 
-            return Build(languages, language);
+            return new LanguagesConfig(languages, languages[language]);
         }
 
         [Pure]
-        public LanguagesConfig Set(Language language, bool isOptional = false, params Language[]? fallbacks)
+        public LanguagesConfig Set(Language language, bool isOptional = false, IEnumerable<Language>? fallback = null)
         {
             Guard.NotNull(language);
 
-            var newLanguages = new Dictionary<string, LanguageConfig>(languages)
-            {
-                [language] = new LanguageConfig(isOptional, fallbacks)
-            };
+            return Set(new LanguageConfig(language, isOptional, fallback));
+        }
 
-            return Build(newLanguages, master);
+        [Pure]
+        public LanguagesConfig Set(LanguageConfig config)
+        {
+            Guard.NotNull(config);
+
+            var newLanguages =
+                new ArrayDictionary<Language, LanguageConfig>(languages.With(config.Language, config));
+
+            var newMaster = Master?.Language == config.Language ? config : Master;
+
+            return new LanguagesConfig(newLanguages, newMaster!);
         }
 
         [Pure]
@@ -79,59 +122,44 @@ namespace Squidex.Domain.Apps.Core.Apps
         {
             Guard.NotNull(language);
 
-            var newLanguages = new Dictionary<string, LanguageConfig>(languages);
+            var newLanguages =
+                languages.Values.Where(x => x.Language != language)
+                    .Select(config => new LanguageConfig(
+                        config.Language,
+                        config.IsOptional,
+                        config.LanguageFallbacks.Except(new[] { language })))
+                    .ToArrayDictionary(x => x.Language);
 
-            newLanguages.Remove(language);
-
-            return Build(newLanguages, master);
-        }
-
-        private LanguagesConfig Build(Dictionary<string, LanguageConfig> newLanguages, string newMaster)
-        {
-            if (newLanguages.Count == 0)
-            {
-                return this;
-            }
-
-            Cleanup(newLanguages, ref newMaster);
-
-            if (EqualLanguages(newLanguages) && Equals(newMaster, master))
-            {
-                return this;
-            }
+            var newMaster =
+                newLanguages.Values.FirstOrDefault(x => x.Language == Master.Language) ??
+                newLanguages.Values.FirstOrDefault();
 
             return new LanguagesConfig(newLanguages, newMaster);
         }
 
-        private bool EqualLanguages(Dictionary<string, LanguageConfig> newLanguages)
+        public bool Contains(Language language)
         {
-            return newLanguages.EqualsDictionary(languages);
+            return language != null && languages.ContainsKey(language);
         }
 
-        private void Cleanup(Dictionary<string, LanguageConfig> newLanguages, ref string newMaster)
+        public bool TryGetConfig(Language language, [MaybeNullWhen(false)] out LanguageConfig config)
         {
-            if (!newLanguages.ContainsKey(newMaster))
+            return languages.TryGetValue(language, out config!);
+        }
+
+        public bool TryGetItem(string key, [MaybeNullWhen(false)] out IFieldPartitionItem item)
+        {
+            if (Language.IsValidLanguage(key) && languages.TryGetValue(key, out var value))
             {
-                if (newLanguages.ContainsKey(master))
-                {
-                    newMaster = master;
-                }
-                else
-                {
-                    newMaster = newLanguages.Keys.First();
-                }
+                item = value;
+
+                return true;
             }
-
-            var masterConfig = newLanguages[newMaster];
-
-            if (masterConfig.IsOptional || masterConfig.Fallbacks.Any())
+            else
             {
-                newLanguages[newMaster] = LanguageConfig.Default;
-            }
+                item = null!;
 
-            foreach (var (key, config) in newLanguages.ToList())
-            {
-                newLanguages[key] = config.Cleanup(key, newLanguages);
+                return false;
             }
         }
 
@@ -146,66 +174,6 @@ namespace Squidex.Domain.Apps.Core.Apps
 
                 return this;
             };
-        }
-
-        public bool IsMaster(string key)
-        {
-            return Equals(Master, key);
-        }
-
-        public string? GetName(string key)
-        {
-            if (key != null && languages.ContainsKey(key))
-            {
-                return Language.GetLanguage(key).EnglishName;
-            }
-
-            return null;
-        }
-
-        public bool IsOptional(string key)
-        {
-            if (key != null && languages.TryGetValue(key, out var value))
-            {
-                return value.IsOptional;
-            }
-
-            return false;
-        }
-
-        public IEnumerable<string> GetPriorities(string key)
-        {
-            if (key != null)
-            {
-                if (Equals(Master, key))
-                {
-                    yield return key;
-                }
-                else if (languages.TryGetValue(key, out var config))
-                {
-                    yield return key;
-
-                    foreach (var fallback in config.Fallbacks)
-                    {
-                        yield return fallback;
-                    }
-
-                    if (config.Fallbacks.All(x => x.Iso2Code != Master))
-                    {
-                        yield return Master;
-                    }
-                }
-            }
-        }
-
-        public bool Contains(string key)
-        {
-            return key != null && languages.ContainsKey(key);
-        }
-
-        public override string ToString()
-        {
-            return "language";
         }
     }
 }

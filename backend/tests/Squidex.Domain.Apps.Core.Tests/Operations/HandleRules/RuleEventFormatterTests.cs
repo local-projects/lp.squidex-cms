@@ -12,7 +12,7 @@ using FakeItEasy;
 using NodaTime;
 using Squidex.Domain.Apps.Core.Contents;
 using Squidex.Domain.Apps.Core.HandleRules;
-using Squidex.Domain.Apps.Core.Rules.EnrichedEvents;
+using Squidex.Domain.Apps.Core.HandleRules.EnrichedEvents;
 using Squidex.Domain.Apps.Core.Scripting;
 using Squidex.Infrastructure;
 using Squidex.Infrastructure.Json.Objects;
@@ -25,7 +25,7 @@ namespace Squidex.Domain.Apps.Core.Operations.HandleRules
     public class RuleEventFormatterTests
     {
         private readonly IUser user = A.Fake<IUser>();
-        private readonly IUrlGenerator urlGenerator = A.Fake<IUrlGenerator>();
+        private readonly IRuleUrlGenerator urlGenerator = A.Fake<IRuleUrlGenerator>();
         private readonly NamedId<Guid> appId = NamedId.Of(Guid.NewGuid(), "my-app");
         private readonly NamedId<Guid> schemaId = NamedId.Of(Guid.NewGuid(), "my-schema");
         private readonly Instant now = SystemClock.Instance.GetCurrentInstant();
@@ -43,7 +43,7 @@ namespace Squidex.Domain.Apps.Core.Operations.HandleRules
             A.CallTo(() => user.Claims)
                 .Returns(new List<Claim> { new Claim(SquidexClaimTypes.DisplayName, "me") });
 
-            A.CallTo(() => urlGenerator.ContentUI(appId, schemaId, contentId))
+            A.CallTo(() => urlGenerator.GenerateContentUIUrl(appId, schemaId, contentId))
                 .Returns("content-url");
 
             sut = new RuleEventFormatter(TestUtils.DefaultSerializer, urlGenerator, new JintScriptEngine());
@@ -111,18 +111,6 @@ namespace Squidex.Domain.Apps.Core.Operations.HandleRules
             var result = sut.Format(script, @event);
 
             Assert.Equal($"Date: {now:yyyy-MM-dd}, Full: {now:yyyy-MM-dd-hh-mm-ss}", result);
-        }
-
-        [Theory]
-        [InlineData("From $MENTIONED_NAME ($MENTIONED_EMAIL, $MENTIONED_ID)")]
-        [InlineData("Script(`From ${event.mentionedUser.name} (${event.mentionedUser.email}, ${event.mentionedUser.id})`)")]
-        public void Should_format_email_and_display_name_from_mentioned_user(string script)
-        {
-            var @event = new EnrichedCommentEvent { MentionedUser = user };
-
-            var result = sut.Format(script, @event);
-
-            Assert.Equal("From me (me@email.com, 123)", result);
         }
 
         [Theory]
@@ -282,7 +270,7 @@ namespace Squidex.Domain.Apps.Core.Operations.HandleRules
                     new NamedContentData()
                         .AddField("city",
                             new ContentFieldData()
-                                .AddJsonValue(JsonValue.Array()))
+                                .AddValue("iv", JsonValue.Array()))
             };
 
             var result = sut.Format(script, @event);
@@ -301,7 +289,7 @@ namespace Squidex.Domain.Apps.Core.Operations.HandleRules
                     new NamedContentData()
                         .AddField("city",
                             new ContentFieldData()
-                                .AddJsonValue(JsonValue.Object().Add("name", "Berlin")))
+                                .AddValue("iv", JsonValue.Object().Add("name", "Berlin")))
             };
 
             var result = sut.Format(script, @event);
@@ -339,7 +327,8 @@ namespace Squidex.Domain.Apps.Core.Operations.HandleRules
                     new NamedContentData()
                         .AddField("city",
                             new ContentFieldData()
-                                .AddJsonValue(JsonValue.Array("Berlin")))
+                                .AddValue("iv", JsonValue.Array(
+                                    "Berlin")))
             };
 
             var result = sut.Format(script, @event);
@@ -358,7 +347,7 @@ namespace Squidex.Domain.Apps.Core.Operations.HandleRules
                     new NamedContentData()
                         .AddField("city",
                             new ContentFieldData()
-                                .AddJsonValue(JsonValue.Object().Add("name", "Berlin")))
+                                .AddValue("iv", JsonValue.Object().Add("name", "Berlin")))
             };
 
             var result = sut.Format(script, @event);
@@ -377,7 +366,7 @@ namespace Squidex.Domain.Apps.Core.Operations.HandleRules
                     new NamedContentData()
                         .AddField("city",
                             new ContentFieldData()
-                                .AddJsonValue(JsonValue.Object().Add("name", "Berlin")))
+                                .AddValue("iv", JsonValue.Object().Add("name", "Berlin")))
             };
 
             var result = sut.Format(script, @event);

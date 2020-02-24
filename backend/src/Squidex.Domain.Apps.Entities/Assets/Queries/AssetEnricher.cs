@@ -7,11 +7,9 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Squidex.Domain.Apps.Core.Tags;
 using Squidex.Infrastructure;
-using Squidex.Infrastructure.Caching;
 using Squidex.Infrastructure.Log;
 using Squidex.Infrastructure.Reflection;
 
@@ -20,18 +18,12 @@ namespace Squidex.Domain.Apps.Entities.Assets.Queries
     public sealed class AssetEnricher : IAssetEnricher
     {
         private readonly ITagService tagService;
-        private readonly IEnumerable<IAssetMetadataSource> assetMetadataSources;
-        private readonly IRequestCache requestCache;
 
-        public AssetEnricher(ITagService tagService, IEnumerable<IAssetMetadataSource> assetMetadataSources, IRequestCache requestCache)
+        public AssetEnricher(ITagService tagService)
         {
             Guard.NotNull(tagService);
-            Guard.NotNull(assetMetadataSources);
-            Guard.NotNull(requestCache);
 
             this.tagService = tagService;
-            this.assetMetadataSources = assetMetadataSources;
-            this.requestCache = requestCache;
         }
 
         public async Task<IEnrichedAssetEntity> EnrichAsync(IAssetEntity asset, Context context)
@@ -53,54 +45,12 @@ namespace Squidex.Domain.Apps.Entities.Assets.Queries
             {
                 var results = assets.Select(x => SimpleMapper.Map(x, new AssetEntity())).ToList();
 
-                foreach (var asset in results)
-                {
-                    requestCache.AddDependency(asset.Id, asset.Version);
-                }
-
                 if (ShouldEnrich(context))
                 {
                     await EnrichTagsAsync(results);
-
-                    EnrichWithMetadataText(results);
                 }
 
                 return results;
-            }
-        }
-
-        private void EnrichWithMetadataText(List<AssetEntity> results)
-        {
-            var sb = new StringBuilder();
-
-            void Append(string? text)
-            {
-                if (!string.IsNullOrWhiteSpace(text))
-                {
-                    if (sb.Length > 0)
-                    {
-                        sb.Append(", ");
-                    }
-
-                    sb.Append(text);
-                }
-            }
-
-            foreach (var asset in results)
-            {
-                sb.Clear();
-
-                foreach (var source in assetMetadataSources)
-                {
-                    foreach (var metadata in source.Format(asset))
-                    {
-                        Append(metadata);
-                    }
-                }
-
-                Append(asset.FileSize.ToReadableSize());
-
-                asset.MetadataText = sb.ToString();
             }
         }
 
@@ -137,7 +87,7 @@ namespace Squidex.Domain.Apps.Entities.Assets.Queries
 
         private static bool ShouldEnrich(Context context)
         {
-            return context.ShouldEnrichAsset();
+            return !context.IsNoAssetEnrichment();
         }
     }
 }

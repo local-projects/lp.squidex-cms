@@ -11,6 +11,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using FakeItEasy;
 using Squidex.Infrastructure.Log;
+using Squidex.Infrastructure.Tasks;
 using Xunit;
 
 namespace Squidex.Infrastructure.Migrations
@@ -59,13 +60,13 @@ namespace Squidex.Infrastructure.Migrations
                     version = newVersion;
                 }
 
-                return Task.CompletedTask;
+                return TaskHelper.Done;
             }
         }
 
         public MigratorTests()
         {
-            A.CallTo(() => path.GetNext(A<int>._))
+            A.CallTo(() => path.GetNext(A<int>.Ignored))
                 .ReturnsLazily((int v) =>
                 {
                     var m = migrations.Where(x => x.From == v).ToList();
@@ -131,7 +132,7 @@ namespace Squidex.Infrastructure.Migrations
 
             await Assert.ThrowsAsync<MigrationFailedException>(() => sut.MigrateAsync());
 
-            A.CallTo(() => log.Log(SemanticLogLevel.Fatal, None.Value, A<Action<None, IObjectWriter>>._))
+            A.CallTo(() => log.Log(SemanticLogLevel.Fatal, None.Value, A<Action<None, IObjectWriter>>.Ignored))
                 .MustHaveHappened();
 
             A.CallTo(() => migrator_1_2.UpdateAsync())

@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Orleans;
+using Squidex.Infrastructure.Tasks;
 
 namespace Squidex.Infrastructure.Orleans.Indexes
 {
@@ -79,7 +80,7 @@ namespace Squidex.Infrastructure.Orleans.Indexes
         {
             reservations.Remove(token ?? string.Empty);
 
-            return Task.CompletedTask;
+            return TaskHelper.Done;
         }
 
         public async Task RemoveAsync(T id)

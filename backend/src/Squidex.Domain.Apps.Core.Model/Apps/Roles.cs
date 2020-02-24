@@ -19,7 +19,7 @@ namespace Squidex.Domain.Apps.Core.Apps
 {
     public sealed class Roles
     {
-        private readonly ImmutableDictionary<string, Role> inner;
+        private readonly ArrayDictionary<string, Role> inner;
 
         public static readonly IReadOnlyDictionary<string, Role> Defaults = new Dictionary<string, Role>
         {
@@ -48,7 +48,7 @@ namespace Squidex.Domain.Apps.Core.Apps
                     Clean(Permissions.AppWorkflows)))
         };
 
-        public static readonly Roles Empty = new Roles(new ImmutableDictionary<string, Role>());
+        public static readonly Roles Empty = new Roles(new ArrayDictionary<string, Role>());
 
         public int CustomCount
         {
@@ -70,20 +70,20 @@ namespace Squidex.Domain.Apps.Core.Apps
             get { return inner.Values.Union(Defaults.Values); }
         }
 
-        private Roles(ImmutableDictionary<string, Role> roles)
+        private Roles(ArrayDictionary<string, Role> roles)
         {
             inner = roles;
         }
 
-        public Roles(Dictionary<string, Role> roles)
+        public Roles(IEnumerable<KeyValuePair<string, Role>> items)
         {
-            inner = new ImmutableDictionary<string, Role>(Cleaned(roles));
+            inner = new ArrayDictionary<string, Role>(Cleaned(items));
         }
 
         [Pure]
         public Roles Remove(string name)
         {
-            return Create(inner.Without(name));
+            return new Roles(inner.Without(name));
         }
 
         [Pure]
@@ -101,7 +101,7 @@ namespace Squidex.Domain.Apps.Core.Apps
                 return this;
             }
 
-            return Create(inner.With(name, newRole));
+            return new Roles(inner.With(name, newRole));
         }
 
         [Pure]
@@ -115,7 +115,7 @@ namespace Squidex.Domain.Apps.Core.Apps
                 return this;
             }
 
-            return Create(inner.With(name, role.Update(permissions)));
+            return new Roles(inner.With(name, role.Update(permissions)));
         }
 
         public static bool IsDefault(string role)
@@ -172,14 +172,9 @@ namespace Squidex.Domain.Apps.Core.Apps
             return permission.Substring(1);
         }
 
-        private static Dictionary<string, Role> Cleaned(Dictionary<string, Role> inner)
+        private static KeyValuePair<string, Role>[] Cleaned(IEnumerable<KeyValuePair<string, Role>> items)
         {
-            return inner.Where(x => !Defaults.ContainsKey(x.Key)).ToDictionary(x => x.Key, x => x.Value);
-        }
-
-        private Roles Create(ImmutableDictionary<string, Role> newRoles)
-        {
-            return ReferenceEquals(inner, newRoles) ? this : new Roles(newRoles);
+            return items.Where(x => !Defaults.ContainsKey(x.Key)).ToArray();
         }
     }
 }

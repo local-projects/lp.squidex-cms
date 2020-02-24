@@ -5,20 +5,21 @@
 //  All rights reserved. Licensed under the MIT license.
 // ==========================================================================
 
-using System.Linq;
 using Newtonsoft.Json;
+using Squidex.Infrastructure.Reflection;
+
 namespace Squidex.Domain.Apps.Core.Contents.Json
 {
     public class JsonWorkflowTransition
     {
         [JsonProperty]
-        public string? Expression { get; set; }
+        public string Expression { get; set; }
 
         [JsonProperty]
-        public string? Role { get; set; }
+        public string Role { get; set; }
 
         [JsonProperty]
-        public string[]? Roles { get; set; }
+        public string[] Roles { get; }
 
         public JsonWorkflowTransition()
         {
@@ -26,9 +27,7 @@ namespace Squidex.Domain.Apps.Core.Contents.Json
 
         public JsonWorkflowTransition(WorkflowTransition transition)
         {
-            Roles = transition.Roles?.ToArray();
-
-            Expression = transition.Expression;
+            SimpleMapper.Map(transition, this);
         }
 
         public WorkflowTransition ToTransition()
@@ -40,7 +39,7 @@ namespace Squidex.Domain.Apps.Core.Contents.Json
                 roles = new[] { Role };
             }
 
-            return WorkflowTransition.When(Expression, roles);
+            return new WorkflowTransition(Expression, roles);
         }
     }
 }

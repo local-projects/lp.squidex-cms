@@ -22,18 +22,16 @@ namespace Squidex.Web.CommandMiddlewares
 
         public ETagCommandMiddleware(IHttpContextAccessor httpContextAccessor)
         {
-            Guard.NotNull(httpContextAccessor);
-
             this.httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task HandleAsync(CommandContext context, NextDelegate next)
+        public async Task HandleAsync(CommandContext context, Func<Task> next)
         {
             var httpContext = httpContextAccessor.HttpContext;
 
             if (httpContext == null)
             {
-                await next(context);
+                await next();
 
                 return;
             }
@@ -52,7 +50,7 @@ namespace Squidex.Web.CommandMiddlewares
                 }
             }
 
-            await next(context);
+            await next();
 
             if (context.PlainResult is EntitySavedResult result)
             {
@@ -73,7 +71,7 @@ namespace Squidex.Web.CommandMiddlewares
         {
             version = default;
 
-            if (httpContext.Request.Headers.TryGetString(HeaderNames.IfMatch, out var etag))
+            if (httpContext.Request.Headers.TryGetHeaderString(HeaderNames.IfMatch, out var etag))
             {
                 if (etag.StartsWith("W/", StringComparison.OrdinalIgnoreCase))
                 {

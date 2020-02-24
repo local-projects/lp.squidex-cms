@@ -6,6 +6,7 @@
 // ==========================================================================
 
 using System;
+using System.Runtime.Serialization;
 using Squidex.Domain.Apps.Core.Contents;
 using Squidex.Domain.Apps.Events.Contents;
 using Squidex.Infrastructure;
@@ -16,39 +17,33 @@ using Squidex.Infrastructure.Reflection;
 
 namespace Squidex.Domain.Apps.Entities.Contents.State
 {
-    public sealed class ContentState : DomainObjectState<ContentState>, IContentEntity
+    public class ContentState : DomainObjectState<ContentState>, IContentEntity
     {
+        [DataMember]
         public NamedId<Guid> AppId { get; set; }
 
+        [DataMember]
         public NamedId<Guid> SchemaId { get; set; }
 
-        public ContentVersion? NewVersion { get; set; }
+        [DataMember]
+        public NamedContentData Data { get; set; }
 
-        public ContentVersion CurrentVersion { get; set; }
+        [DataMember]
+        public NamedContentData DataDraft { get; set; }
 
+        [DataMember]
         public ScheduleJob? ScheduleJob { get; set; }
 
-        public NamedContentData Data
-        {
-            get { return NewVersion?.Data ?? CurrentVersion.Data; }
-        }
+        [DataMember]
+        public bool IsPending { get; set; }
 
-        public Status EditingStatus
-        {
-            get { return NewStatus ?? Status; }
-        }
+        [DataMember]
+        public bool IsDeleted { get; set; }
 
-        public Status Status
-        {
-            get { return CurrentVersion.Status; }
-        }
+        [DataMember]
+        public Status Status { get; set; }
 
-        public Status? NewStatus
-        {
-            get { return NewVersion?.Status; }
-        }
-
-        public override bool ApplyEvent(IEvent @event, EnvelopeHeaders headers)
+        public void ApplyEvent(IEvent @event)
         {
             switch (@event)
             {
@@ -56,25 +51,16 @@ namespace Squidex.Domain.Apps.Entities.Contents.State
                     {
                         SimpleMapper.Map(e, this);
 
-                        CurrentVersion = new ContentVersion(e.Status, e.Data);
+                        UpdateData(null, e.Data, false);
 
                         break;
                     }
 
-                case ContentDraftCreated e:
+                case ContentChangesPublished _:
                     {
-                        NewVersion = new ContentVersion(e.Status, CurrentVersion.Data);
-
                         ScheduleJob = null;
 
-                        break;
-                    }
-
-                case ContentDraftDeleted _:
-                    {
-                        NewVersion = null;
-
-                        ScheduleJob = null;
+                        UpdateData(DataDraft, null, false);
 
                         break;
                     }
@@ -83,23 +69,33 @@ namespace Squidex.Domain.Apps.Entities.Contents.State
                     {
                         ScheduleJob = null;
 
-                        if (NewVersion != null)
-                        {
-                            if (e.Status == Status.Published)
-                            {
-                                CurrentVersion = new ContentVersion(e.Status, NewVersion.Data);
+                        SimpleMapper.Map(e, this);
 
-                                NewVersion = null;
-                            }
-                            else
-                            {
-                                NewVersion = NewVersion.WithStatus(e.Status);
-                            }
-                        }
-                        else
+                        if (e.Status == Status.Published)
                         {
-                            CurrentVersion = CurrentVersion.WithStatus(e.Status);
+                            UpdateData(DataDraft, null, false);
                         }
+
+                        break;
+                    }
+
+                case ContentUpdated e:
+                    {
+                        UpdateData(e.Data, e.Data, false);
+
+                        break;
+                    }
+
+                case ContentUpdateProposed e:
+                    {
+                        UpdateData(null, e.Data, true);
+
+                        break;
+                    }
+
+                case ContentChangesDiscarded _:
+                    {
+                        UpdateData(null, Data, false);
 
                         break;
                     }
@@ -118,20 +114,6 @@ namespace Squidex.Domain.Apps.Entities.Contents.State
                         break;
                     }
 
-                case ContentUpdated e:
-                    {
-                        if (NewVersion != null)
-                        {
-                            NewVersion = NewVersion.WithData(e.Data);
-                        }
-                        else
-                        {
-                            CurrentVersion = CurrentVersion.WithData(e.Data);
-                        }
-
-                        break;
-                    }
-
                 case ContentDeleted _:
                     {
                         IsDeleted = true;
@@ -139,8 +121,26 @@ namespace Squidex.Domain.Apps.Entities.Contents.State
                         break;
                     }
             }
+        }
 
-            return true;
+        public override ContentState Apply(Envelope<IEvent> @event)
+        {
+            return Clone().Update(@event, (e, s) => s.ApplyEvent(e));
+        }
+
+        private void UpdateData(NamedContentData? data, NamedContentData? dataDraft, bool isPending)
+        {
+            if (data != null)
+            {
+                Data = data;
+            }
+
+            if (dataDraft != null)
+            {
+                DataDraft = dataDraft;
+            }
+
+            IsPending = isPending;
         }
     }
 }

@@ -16,6 +16,7 @@ using Squidex.Domain.Apps.Entities.Contents.Repositories;
 using Squidex.Infrastructure;
 using Squidex.Infrastructure.Commands;
 using Squidex.Infrastructure.Log;
+using Squidex.Infrastructure.Tasks;
 
 namespace Squidex.Domain.Apps.Entities.Contents
 {
@@ -60,7 +61,7 @@ namespace Squidex.Domain.Apps.Entities.Contents
 
         public Task ActivateAsync()
         {
-            return Task.CompletedTask;
+            return TaskHelper.Done;
         }
 
         public Task PublishAsync()
@@ -95,7 +96,7 @@ namespace Squidex.Domain.Apps.Entities.Contents
 
         public Task ReceiveReminder(string reminderName, TickStatus status)
         {
-            return Task.CompletedTask;
+            return TaskHelper.Done;
         }
 
         private Task Dispatch(Func<Task> task)

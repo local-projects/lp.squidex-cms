@@ -11,20 +11,18 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using NodaTime;
 using Squidex.Domain.Apps.Core.Contents;
-using Squidex.Domain.Apps.Core.ExtractReferenceIds;
 using Squidex.Domain.Apps.Core.Schemas;
 using Squidex.Domain.Apps.Entities.Contents;
-using Squidex.Domain.Apps.Entities.MongoDb.Contents.Operations;
 using Squidex.Infrastructure;
 using Squidex.Infrastructure.Json;
 using Squidex.Infrastructure.MongoDb;
 
 namespace Squidex.Domain.Apps.Entities.MongoDb.Contents
 {
-    [BsonIgnoreExtraElements]
-    public sealed class MongoContentEntity : IContentEntity, IVersionedEntity<Guid>
+    public sealed class MongoContentEntity : IContentEntity
     {
-        private NamedContentData data;
+        private NamedContentData? data;
+        private NamedContentData dataDraft;
 
         [BsonId]
         [BsonElement("_id")]
@@ -44,20 +42,31 @@ namespace Squidex.Domain.Apps.Entities.MongoDb.Contents
         [BsonRequired]
         [BsonElement("rf")]
         [BsonRepresentation(BsonType.String)]
-        public HashSet<Guid>? ReferencedIds { get; set; }
+        public List<Guid>? ReferencedIds { get; set; }
+
+        [BsonRequired]
+        [BsonElement("rd")]
+        [BsonRepresentation(BsonType.String)]
+        public List<Guid> ReferencedIdsDeleted { get; set; } = new List<Guid>();
 
         [BsonRequired]
         [BsonElement("ss")]
         public Status Status { get; set; }
 
         [BsonIgnoreIfNull]
-        [BsonElement("ns")]
-        public Status? NewStatus { get; set; }
-
-        [BsonIgnoreIfNull]
         [BsonElement("do")]
         [BsonJson]
         public IdContentData DataByIds { get; set; }
+
+        [BsonIgnoreIfNull]
+        [BsonElement("dd")]
+        [BsonJson]
+        public IdContentData DataDraftByIds { get; set; }
+
+        [BsonIgnoreIfNull]
+        [BsonElement("sj")]
+        [BsonJson]
+        public ScheduleJob? ScheduleJob { get; set; }
 
         [BsonRequired]
         [BsonElement("ai")]
@@ -88,8 +97,8 @@ namespace Squidex.Domain.Apps.Entities.MongoDb.Contents
         public bool IsDeleted { get; set; }
 
         [BsonIgnoreIfDefault]
-        [BsonElement("sj")]
-        public ScheduleJob? ScheduleJob { get; set; }
+        [BsonElement("pd")]
+        public bool IsPending { get; set; }
 
         [BsonRequired]
         [BsonElement("cb")]
@@ -100,21 +109,25 @@ namespace Squidex.Domain.Apps.Entities.MongoDb.Contents
         public RefToken LastModifiedBy { get; set; }
 
         [BsonIgnore]
-        public NamedContentData Data
+        public NamedContentData? Data
         {
             get { return data; }
         }
 
-        public void LoadData(NamedContentData data, Schema schema, IJsonSerializer serializer)
+        [BsonIgnore]
+        public NamedContentData DataDraft
         {
-            ReferencedIds = data.GetReferencedIds(schema);
-
-            DataByIds = data.ToMongoModel(schema, serializer);
+            get { return dataDraft; }
         }
 
         public void ParseData(Schema schema, IJsonSerializer serializer)
         {
-            data = DataByIds.FromMongoModel(schema, serializer);
+            data = DataByIds?.FromMongoModel(schema, ReferencedIdsDeleted, serializer);
+
+            if (DataDraftByIds != null)
+            {
+                dataDraft = DataDraftByIds.FromMongoModel(schema, ReferencedIdsDeleted, serializer);
+            }
         }
     }
 }

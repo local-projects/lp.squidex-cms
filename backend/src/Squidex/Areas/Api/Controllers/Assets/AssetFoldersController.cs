@@ -84,7 +84,7 @@ namespace Squidex.Areas.Api.Controllers.Assets
 
             var response = await InvokeCommandAsync(app, command);
 
-            return CreatedAtAction(nameof(GetAssetFolders), new { parentId = request.ParentId, app }, response);
+            return Ok(response);
         }
 
         /// <summary>

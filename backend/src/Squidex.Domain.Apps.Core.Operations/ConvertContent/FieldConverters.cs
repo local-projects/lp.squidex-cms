@@ -68,12 +68,7 @@ namespace Squidex.Domain.Apps.Core.ConvertContent
 
                     try
                     {
-                        var (_, error) = JsonValueConverter.ConvertValue(field, value);
-
-                        if (error != null)
-                        {
-                            return null;
-                        }
+                        JsonValueConverter.ConvertValue(field, value);
                     }
                     catch
                     {
@@ -163,10 +158,10 @@ namespace Squidex.Domain.Apps.Core.ConvertContent
             };
         }
 
-        public static FieldConverter ResolveInvariant(LanguagesConfig languages)
+        public static FieldConverter ResolveInvariant(LanguagesConfig config)
         {
             var codeForInvariant = InvariantPartitioning.Key;
-            var codeForMasterLanguage = languages.Master;
+            var codeForMasterLanguage = config.Master.Language.Iso2Code;
 
             return (data, field) =>
             {
@@ -194,7 +189,7 @@ namespace Squidex.Domain.Apps.Core.ConvertContent
             };
         }
 
-        public static FieldConverter ResolveLanguages(LanguagesConfig languages)
+        public static FieldConverter ResolveLanguages(LanguagesConfig config)
         {
             var codeForInvariant = InvariantPartitioning.Key;
 
@@ -204,13 +199,15 @@ namespace Squidex.Domain.Apps.Core.ConvertContent
                 {
                     var result = new ContentFieldData();
 
-                    foreach (var languageCode in languages.AllKeys)
+                    foreach (var languageConfig in config)
                     {
+                        var languageCode = languageConfig.Key;
+
                         if (data.TryGetValue(languageCode, out var value))
                         {
                             result[languageCode] = value;
                         }
-                        else if (languages.IsMaster(languageCode) && data.TryGetValue(codeForInvariant, out value))
+                        else if (languageConfig == config.Master && data.TryGetValue(codeForInvariant, out value))
                         {
                             result[languageCode] = value;
                         }
@@ -223,22 +220,37 @@ namespace Squidex.Domain.Apps.Core.ConvertContent
             };
         }
 
-        public static FieldConverter ResolveFallbackLanguages(LanguagesConfig languages)
+        public static FieldConverter ResolveFallbackLanguages(LanguagesConfig config)
         {
+            var master = config.Master;
+
             return (data, field) =>
             {
                 if (field.Partitioning.Equals(Partitioning.Language))
                 {
-                    foreach (var languageCode in languages.AllKeys)
+                    foreach (var languageConfig in config)
                     {
+                        var languageCode = languageConfig.Key;
+
                         if (!data.TryGetValue(languageCode, out var value))
                         {
-                            foreach (var fallback in languages.GetPriorities(languageCode))
+                            var dataFound = false;
+
+                            foreach (var fallback in languageConfig.Fallback)
                             {
                                 if (data.TryGetValue(fallback, out value))
                                 {
                                     data[languageCode] = value;
+                                    dataFound = true;
                                     break;
+                                }
+                            }
+
+                            if (!dataFound && languageConfig != master)
+                            {
+                                if (data.TryGetValue(master.Language, out value))
+                                {
+                                    data[languageCode] = value;
                                 }
                             }
                         }
@@ -268,7 +280,7 @@ namespace Squidex.Domain.Apps.Core.ConvertContent
 
             if (languageSet.Count == 0)
             {
-                languageSet.Add(config.Master);
+                languageSet.Add(config.Master.Language.Iso2Code);
             }
 
             return (data, field) =>

@@ -13,7 +13,7 @@ using Squidex.Infrastructure.Collections;
 
 namespace Squidex.Domain.Apps.Core.Apps
 {
-    public sealed class AppPatterns : ImmutableDictionary<Guid, AppPattern>
+    public sealed class AppPatterns : ArrayDictionary<Guid, AppPattern>
     {
         public static readonly AppPatterns Empty = new AppPatterns();
 
@@ -21,19 +21,19 @@ namespace Squidex.Domain.Apps.Core.Apps
         {
         }
 
-        public AppPatterns(Dictionary<Guid, AppPattern> inner)
-            : base(inner)
+        public AppPatterns(KeyValuePair<Guid, AppPattern>[] items)
+            : base(items)
         {
         }
 
         [Pure]
         public AppPatterns Remove(Guid id)
         {
-            return Without<AppPatterns>(id);
+            return new AppPatterns(Without(id));
         }
 
         [Pure]
-        public AppPatterns Add(Guid id, string name, string pattern, string? message = null)
+        public AppPatterns Add(Guid id, string name, string pattern, string? message)
         {
             var newPattern = new AppPattern(name, pattern, message);
 
@@ -42,11 +42,11 @@ namespace Squidex.Domain.Apps.Core.Apps
                 throw new ArgumentException("Id already exists.", nameof(id));
             }
 
-            return With<AppPatterns>(id, newPattern);
+            return new AppPatterns(With(id, newPattern));
         }
 
         [Pure]
-        public AppPatterns Update(Guid id, string name, string pattern, string? message = null)
+        public AppPatterns Update(Guid id, string name, string pattern, string? message)
         {
             Guard.NotNullOrEmpty(name);
             Guard.NotNullOrEmpty(pattern);
@@ -56,7 +56,7 @@ namespace Squidex.Domain.Apps.Core.Apps
                 return this;
             }
 
-            return With<AppPatterns>(id, appPattern.Update(name, pattern, message));
+            return new AppPatterns(With(id, appPattern.Update(name, pattern, message)));
         }
     }
 }

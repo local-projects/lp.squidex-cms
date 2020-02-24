@@ -12,8 +12,9 @@ using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using MongoDB.Driver.GridFS;
 using Squidex.Domain.Apps.Entities.Assets;
+using Squidex.Domain.Apps.Entities.Assets.Commands;
 using Squidex.Domain.Apps.Entities.Assets.Queries;
-using Squidex.Domain.Apps.Entities.Search;
+using Squidex.Domain.Apps.Entities.Tags;
 using Squidex.Infrastructure;
 using Squidex.Infrastructure.Assets;
 using Squidex.Infrastructure.Assets.ImageSharp;
@@ -29,23 +30,8 @@ namespace Squidex.Config.Domain
             services.Configure<AssetOptions>(
                 config.GetSection("assets"));
 
-            if (config.GetValue<bool>("assets:deleteRecursive"))
-            {
-                services.AddTransientAs<RecursiveDeleter>()
-                   .As<IEventConsumer>();
-            }
-
-            services.AddTransientAs<AssetDomainObject>()
-                .AsSelf();
-
-            services.AddTransientAs<AssetFolderDomainObject>()
-                .AsSelf();
-
             services.AddSingletonAs<AssetQueryParser>()
                 .AsSelf();
-
-            services.AddSingletonAs<AssetsSearchSource>()
-                .As<ISearchSource>();
 
             services.AddSingletonAs<DefaultAssetFileStore>()
                 .As<IAssetFileStore>();
@@ -62,14 +48,11 @@ namespace Squidex.Config.Domain
             services.AddSingletonAs<AssetUsageTracker>()
                 .As<IAssetUsageTracker>().As<IEventConsumer>();
 
-            services.AddSingletonAs<FileTypeAssetMetadataSource>()
-                .As<IAssetMetadataSource>();
+            services.AddSingletonAs<FileTypeTagGenerator>()
+                .As<ITagGenerator<CreateAsset>>();
 
-            services.AddSingletonAs<FileTagAssetMetadataSource>()
-                .As<IAssetMetadataSource>();
-
-            services.AddSingletonAs<ImageAssetMetadataSource>()
-                .As<IAssetMetadataSource>();
+            services.AddSingletonAs<ImageTagGenerator>()
+                .As<ITagGenerator<CreateAsset>>();
         }
 
         public static void AddSquidexAssetInfrastructure(this IServiceCollection services, IConfiguration config)
@@ -105,7 +88,7 @@ namespace Squidex.Config.Domain
                 },
                 ["AmazonS3"] = () =>
                 {
-                    var amazonS3Options = config.GetSection("assetStore:amazonS3").Get<AmazonS3Options>();
+                    var amazonS3Options = config.GetSection("assetStore:amazonS3").Get<MyAmazonS3Options>();
 
                     services.AddSingletonAs(c => new AmazonS3AssetStore(amazonS3Options))
                         .As<IAssetStore>();

@@ -13,14 +13,9 @@ namespace Squidex.Infrastructure
 {
     public static class CollectionExtensions
     {
-        public static bool SetEquals<T>(this IReadOnlyCollection<T> source, IReadOnlyCollection<T> other)
+        public static bool SetEquals<T>(this ICollection<T> source, ICollection<T> other)
         {
             return source.Intersect(other).Count() == other.Count;
-        }
-
-        public static bool SetEquals<T>(this IReadOnlyCollection<T> source, IReadOnlyCollection<T> other, IEqualityComparer<T> comparer)
-        {
-            return source.Intersect(other, comparer).Count() == other.Count;
         }
 
         public static IResultList<T> SortSet<T, TKey>(this IResultList<T> input, Func<T, TKey> idProvider, IReadOnlyList<TKey> ids) where T : class
@@ -138,12 +133,12 @@ namespace Squidex.Infrastructure
             return hashCode;
         }
 
-        public static int DictionaryHashCode<TKey, TValue>(this IReadOnlyDictionary<TKey, TValue> dictionary) where TKey : notnull
+        public static int DictionaryHashCode<TKey, TValue>(this IDictionary<TKey, TValue> dictionary) where TKey : notnull
         {
             return DictionaryHashCode(dictionary, EqualityComparer<TKey>.Default, EqualityComparer<TValue>.Default);
         }
 
-        public static int DictionaryHashCode<TKey, TValue>(this IReadOnlyDictionary<TKey, TValue> dictionary, IEqualityComparer<TKey> keyComparer, IEqualityComparer<TValue> valueComparer) where TKey : notnull
+        public static int DictionaryHashCode<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, IEqualityComparer<TKey> keyComparer, IEqualityComparer<TValue> valueComparer) where TKey : notnull
         {
             var hashCode = 17;
 
@@ -167,19 +162,9 @@ namespace Squidex.Infrastructure
 
         public static bool EqualsDictionary<TKey, TValue>(this IReadOnlyDictionary<TKey, TValue> dictionary, IReadOnlyDictionary<TKey, TValue> other, IEqualityComparer<TKey> keyComparer, IEqualityComparer<TValue> valueComparer) where TKey : notnull
         {
-            if (other == null)
-            {
-                return false;
-            }
-
-            if (dictionary.Count != other.Count)
-            {
-                return false;
-            }
-
             var comparer = new KeyValuePairComparer<TKey, TValue>(keyComparer, valueComparer);
 
-            return !dictionary.Except(other, comparer).Any();
+            return other != null && dictionary.Count == other.Count && !dictionary.Except(other, comparer).Any();
         }
 
         public static Dictionary<TKey, TValue> ToDictionary<TKey, TValue>(this IReadOnlyDictionary<TKey, TValue> dictionary) where TKey : notnull

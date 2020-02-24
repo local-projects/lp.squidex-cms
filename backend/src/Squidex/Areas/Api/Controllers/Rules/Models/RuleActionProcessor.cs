@@ -43,9 +43,7 @@ namespace Squidex.Areas.Api.Controllers.Rules.Models
 
                     schema.Properties["actionType"] = new JsonSchemaProperty
                     {
-                        Type = JsonObjectType.String,
-                        IsRequired = true,
-                        IsNullableRaw = null
+                        Type = JsonObjectType.String, IsRequired = true
                     };
 
                     foreach (var (key, value) in ruleRegistry.Actions)

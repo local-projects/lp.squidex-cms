@@ -76,18 +76,7 @@ namespace Squidex.Config.Orleans
             {
                 ["MongoDB"] = () =>
                 {
-                    IPAddress address;
-
-                    var configuredAddress = config.GetOptionalValue("orleans:ipAddress", string.Empty);
-
-                    if (!string.IsNullOrWhiteSpace(configuredAddress))
-                    {
-                        address = IPAddress.Parse(configuredAddress);
-                    }
-                    else
-                    {
-                        address = Helper.ResolveIPAddressAsync(Dns.GetHostName(), AddressFamily.InterNetwork).Result;
-                    }
+                    var address = Helper.ResolveIPAddressAsync(Dns.GetHostName(), AddressFamily.InterNetwork).Result;
 
                     builder.ConfigureEndpoints(
                         address,

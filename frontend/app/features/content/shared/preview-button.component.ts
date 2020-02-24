@@ -18,10 +18,8 @@ import {
 } from '@app/shared';
 
 interface State {
-    // The name of the selected preview config.
     previewNameSelected?: string;
 
-    // All other preview configs.
     previewNamesMore: ReadonlyArray<string>;
 }
 

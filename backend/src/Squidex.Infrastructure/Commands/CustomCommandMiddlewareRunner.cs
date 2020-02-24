@@ -5,6 +5,7 @@
 //  All rights reserved. Licensed under the MIT license.
 // ==========================================================================
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -22,19 +23,19 @@ namespace Squidex.Infrastructure.Commands
             this.extensions = extensions.Reverse().ToList();
         }
 
-        public async Task HandleAsync(CommandContext context, NextDelegate next)
+        public async Task HandleAsync(CommandContext context, Func<Task> next)
         {
             foreach (var handler in extensions)
             {
-                next = Join(handler, next);
+                next = Join(handler, context, next);
             }
 
-            await next(context);
+            await next();
         }
 
-        private static NextDelegate Join(ICommandMiddleware handler, NextDelegate next)
+        private static Func<Task> Join(ICommandMiddleware handler, CommandContext context, Func<Task> next)
         {
-            return context => handler.HandleAsync(context, next);
+            return () => handler.HandleAsync(context, next);
         }
     }
 }

@@ -9,8 +9,7 @@ using System;
 
 namespace Squidex.Infrastructure.Security
 {
-    [Equals(DoNotAddEqualityOperators = true)]
-    public sealed partial class Permission : IComparable<Permission>
+    public sealed partial class Permission : IComparable<Permission>, IEquatable<Permission>
     {
         public const string Any = "*";
         public const string Exclude = "^";
@@ -23,7 +22,6 @@ namespace Squidex.Infrastructure.Security
             get { return id; }
         }
 
-        [IgnoreDuringEquals]
         private Part[] Path
         {
             get { return path ??= Part.ParsePath(id); }

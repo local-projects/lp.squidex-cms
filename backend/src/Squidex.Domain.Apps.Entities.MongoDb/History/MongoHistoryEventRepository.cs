@@ -9,7 +9,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using Squidex.Domain.Apps.Entities.History;
 using Squidex.Domain.Apps.Entities.History.Repositories;
@@ -19,17 +18,6 @@ namespace Squidex.Domain.Apps.Entities.MongoDb.History
 {
     public class MongoHistoryEventRepository : MongoRepositoryBase<HistoryEvent>, IHistoryEventRepository
     {
-        static MongoHistoryEventRepository()
-        {
-            BsonClassMap.RegisterClassMap<HistoryEvent>(cm =>
-            {
-                cm.AutoMap();
-
-                cm.MapProperty(x => x.EventType)
-                    .SetElementName("Message");
-            });
-        }
-
         public MongoHistoryEventRepository(IMongoDatabase database)
             : base(database)
         {
@@ -74,7 +62,7 @@ namespace Squidex.Domain.Apps.Entities.MongoDb.History
 
         public Task InsertAsync(HistoryEvent item)
         {
-            return Collection.ReplaceOneAsync(x => x.Id == item.Id, item, UpsertReplace);
+            return Collection.ReplaceOneAsync(x => x.Id == item.Id, item, Upsert);
         }
 
         public Task RemoveAsync(Guid appId)

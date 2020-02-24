@@ -1,9 +1,8 @@
+@import '_mixins';
+@import '_vars';
+
 .modal {
     display: block;
-}
-
-.modal-header {
-    position: relative;
 }
 
 .flexed {

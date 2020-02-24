@@ -12,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Squidex.Infrastructure.Log;
+using Squidex.Infrastructure.Tasks;
 
 namespace Squidex.Config.Startup
 {
@@ -44,7 +45,7 @@ namespace Squidex.Config.Startup
                     }
                 }));
 
-            return Task.CompletedTask;
+            return TaskHelper.Done;
         }
     }
 }

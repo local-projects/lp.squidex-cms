@@ -9,20 +9,10 @@ using System.Collections.Generic;
 
 namespace Squidex.Domain.Apps.Core
 {
-    public interface IFieldPartitioning
+    public interface IFieldPartitioning : IReadOnlyCollection<IFieldPartitionItem>
     {
-        string Master { get; }
+        IFieldPartitionItem Master { get; }
 
-        IEnumerable<string> AllKeys { get; }
-
-        IEnumerable<string> GetPriorities(string key);
-
-        bool IsMaster(string key);
-
-        bool IsOptional(string key);
-
-        bool Contains(string key);
-
-        string? GetName(string key);
+        bool TryGetItem(string key, out IFieldPartitionItem item);
     }
 }

@@ -36,7 +36,7 @@ namespace Squidex.Infrastructure.Log
 
             channels.Add(channel);
 
-            A.CallTo(() => channel.Log(A<SemanticLogLevel>._, A<string>._))
+            A.CallTo(() => channel.Log(A<SemanticLogLevel>.Ignored, A<string>.Ignored))
                 .Invokes((SemanticLogLevel level, string message) =>
                 {
                     output = message;

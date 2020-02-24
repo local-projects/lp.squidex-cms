@@ -10,7 +10,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Squidex.Domain.Apps.Entities.Rules.Repositories;
 using Squidex.Infrastructure;
-using Squidex.Infrastructure.Caching;
 using Squidex.Infrastructure.Log;
 using Squidex.Infrastructure.Reflection;
 
@@ -19,16 +18,12 @@ namespace Squidex.Domain.Apps.Entities.Rules.Queries
     public sealed class RuleEnricher : IRuleEnricher
     {
         private readonly IRuleEventRepository ruleEventRepository;
-        private readonly IRequestCache requestCache;
 
-        public RuleEnricher(IRuleEventRepository ruleEventRepository, IRequestCache requestCache)
+        public RuleEnricher(IRuleEventRepository ruleEventRepository)
         {
             Guard.NotNull(ruleEventRepository);
-            Guard.NotNull(requestCache);
 
             this.ruleEventRepository = ruleEventRepository;
-
-            this.requestCache = requestCache;
         }
 
         public async Task<IEnrichedRuleEntity> EnrichAsync(IRuleEntity rule, Context context)
@@ -62,8 +57,6 @@ namespace Squidex.Domain.Apps.Entities.Rules.Queries
 
                     foreach (var rule in group)
                     {
-                        requestCache.AddDependency(rule.Id, rule.Version);
-
                         var statistic = statistics.FirstOrDefault(x => x.RuleId == rule.Id);
 
                         if (statistic != null)
@@ -72,7 +65,10 @@ namespace Squidex.Domain.Apps.Entities.Rules.Queries
                             rule.NumFailed = statistic.NumFailed;
                             rule.NumSucceeded = statistic.NumSucceeded;
 
-                            requestCache.AddDependency(rule.LastExecuted);
+                            rule.CacheDependencies = new HashSet<object?>
+                            {
+                                statistic.LastExecuted
+                            };
                         }
                     }
                 }

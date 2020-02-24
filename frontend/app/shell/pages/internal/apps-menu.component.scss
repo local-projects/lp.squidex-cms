@@ -1,3 +1,6 @@
+@import '_vars';
+@import '_mixins';
+
 $color-apps-border: #65a6ff;
 
 $color-nav-shadow: rgba(26, 93, 184, .26);
@@ -11,9 +14,9 @@ $color-nav-shadow: rgba(26, 93, 184, .26);
         .nav-link {
             & {
                 @include border-radius;
-                @include box-shadow-outer(0, 2px, 4px $color-nav-shadow);
                 background: $color-theme-blue;
                 border: 1px solid $color-theme-blue-lighter;
+                box-shadow: 0, 2px, 4px $color-nav-shadow;
                 color: $color-dark-foreground;
                 cursor: pointer;
                 line-height: 1.25rem;
@@ -39,6 +42,11 @@ $color-nav-shadow: rgba(26, 93, 184, .26);
 .dropdown {
     &-button {
         padding: 1rem 1.5rem;
+    }
+
+    &-menu {
+        @include absolute($size-navbar-height - .5rem, auto, auto, 0);
+        margin: 0;
     }
 
     &-item {
@@ -94,7 +102,7 @@ $color-nav-shadow: rgba(26, 93, 184, .26);
     }
 
     .btn-primary {
-        @include box-shadow-outer;
+        @include box-shadow-inner;
         background: $color-theme-blue-dark;
         border: 0;
         pointer-events: none;

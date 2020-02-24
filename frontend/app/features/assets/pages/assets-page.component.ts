@@ -7,7 +7,6 @@
 
 import { Component, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
 
 import {
     AssetsState,
@@ -36,7 +35,6 @@ export class AssetsPageComponent extends ResourceOwner implements OnInit {
     constructor(
         public readonly assetsState: AssetsState,
         private readonly localStore: LocalStoreService,
-        private readonly route: ActivatedRoute,
         private readonly uiState: UIState
     ) {
         super();
@@ -45,11 +43,7 @@ export class AssetsPageComponent extends ResourceOwner implements OnInit {
     }
 
     public ngOnInit() {
-        this.own(
-            this.route.queryParams
-                .subscribe(p => {
-                    this.assetsState.search({ fullText: p['query'] });
-                }));
+        this.assetsState.load();
     }
 
     public reload() {

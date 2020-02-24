@@ -29,8 +29,8 @@ namespace Squidex.Domain.Users
             A.CallTo(() => userFactory.IsId(A<string>.That.StartsWith("id")))
                 .Returns(true);
 
-            A.CallTo(() => userManager.NormalizeEmail(A<string>._))
-                .ReturnsLazily(c => c.GetArgument<string>(0)!.ToUpperInvariant());
+            A.CallTo(() => userManager.NormalizeEmail(A<string>.Ignored))
+                .ReturnsLazily(c => c.GetArgument<string>(0).ToUpperInvariant());
 
             var serviceProvider = A.Fake<IServiceProvider>();
 

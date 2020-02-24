@@ -19,11 +19,11 @@ namespace Squidex.Infrastructure.Assets
     public sealed class AmazonS3AssetStore : DisposableObjectBase, IAssetStore, IInitializable
     {
         private const int BufferSize = 81920;
-        private readonly AmazonS3Options options;
+        private readonly MyAmazonS3Options options;
         private TransferUtility transferUtility;
         private IAmazonS3 s3Client;
 
-        public AmazonS3AssetStore(AmazonS3Options options)
+        public AmazonS3AssetStore(MyAmazonS3Options options)
         {
             Guard.NotNullOrEmpty(options.Bucket);
             Guard.NotNullOrEmpty(options.AccessKey);
@@ -65,12 +65,12 @@ namespace Squidex.Infrastructure.Assets
 
                 if (!exists)
                 {
-                    throw new ConfigurationException($"Cannot connect to Amazon S3 bucket '{options.Bucket}'.");
+                    throw new ConfigurationException($"Cannot connect to Amazon S3 bucket '${options.Bucket}'.");
                 }
             }
             catch (AmazonS3Exception ex)
             {
-                throw new ConfigurationException($"Cannot connect to Amazon S3 bucket '{options.Bucket}'.", ex);
+                throw new ConfigurationException($"Cannot connect to Amazon S3 bucket '${options.Bucket}'.", ex);
             }
         }
 
@@ -142,13 +142,11 @@ namespace Squidex.Infrastructure.Assets
 
                 var request = new TransferUtilityUploadRequest
                 {
+                    AutoCloseStream = false,
+                    BucketName = options.Bucket,
+                    InputStream = stream,
                     Key = GetKey(fileName)
                 };
-
-                ConfigureDefaults(request);
-
-                // Amazon S3 requires a seekable stream, but does not seek anything.
-                request.InputStream = new SeekFakerStream(stream);
 
                 await transferUtility.UploadAsync(request, ct);
             }
@@ -198,12 +196,6 @@ namespace Squidex.Infrastructure.Assets
             }
 
             throw new AssetAlreadyExistsException(fileName);
-        }
-
-        private void ConfigureDefaults(TransferUtilityUploadRequest request)
-        {
-            request.AutoCloseStream = false;
-            request.BucketName = options.Bucket;
         }
     }
 }

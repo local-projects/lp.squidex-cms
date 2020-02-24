@@ -9,7 +9,6 @@ using System.Collections.ObjectModel;
 
 namespace Squidex.Domain.Apps.Core.Schemas
 {
-    [Equals(DoNotAddEqualityOperators = true)]
     public sealed class AssetsFieldProperties : FieldProperties
     {
         public bool MustBeImage { get; set; }

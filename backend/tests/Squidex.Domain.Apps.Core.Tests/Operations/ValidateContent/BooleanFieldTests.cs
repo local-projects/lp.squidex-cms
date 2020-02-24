@@ -65,7 +65,7 @@ namespace Squidex.Domain.Apps.Core.Operations.ValidateContent
             await sut.ValidateAsync(JsonValue.Create("Invalid"), errors);
 
             errors.Should().BeEquivalentTo(
-                new[] { "Invalid json type, expected boolean." });
+                new[] { "Not a valid value." });
         }
 
         private static IJsonValue CreateValue(bool? v)

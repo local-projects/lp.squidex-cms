@@ -8,6 +8,7 @@
 using System.Threading.Tasks;
 using FakeItEasy;
 using Microsoft.Extensions.Options;
+using Squidex.Infrastructure.Tasks;
 using Xunit;
 
 namespace Squidex.Infrastructure.Commands
@@ -50,11 +51,11 @@ namespace Squidex.Infrastructure.Commands
 
         private async Task MakeCallAsync(CommandContext context)
         {
-            await sut.HandleAsync(context, c =>
+            await sut.HandleAsync(context, () =>
             {
                 context.Complete(true);
 
-                return Task.CompletedTask;
+                return TaskHelper.Done;
             });
         }
     }

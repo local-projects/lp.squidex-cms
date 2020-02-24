@@ -6,6 +6,7 @@
 // ==========================================================================
 
 using System.Threading.Tasks;
+using Squidex.Infrastructure.Tasks;
 using Squidex.Shared.Users;
 
 namespace Squidex.Domain.Apps.Entities.History.Notifications
@@ -19,7 +20,7 @@ namespace Squidex.Domain.Apps.Entities.History.Notifications
 
         public Task SendContributorEmailAsync(IUser assigner, IUser assignee, string appName, bool isCreated)
         {
-            return Task.CompletedTask;
+            return TaskHelper.Done;
         }
     }
 }

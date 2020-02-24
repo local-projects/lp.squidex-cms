@@ -7,23 +7,21 @@
 
 using Xunit;
 
-#pragma warning disable SA1300 // Element should begin with upper-case letter
-
 namespace Squidex.Infrastructure.Assets
 {
     [Trait("Category", "Dependencies")]
     public class AzureBlobAssetStoreTests : AssetStoreTests<AzureBlobAssetStore>, IClassFixture<AzureBlobAssetStoreFixture>
     {
-        public AzureBlobAssetStoreFixture _ { get; }
+        private readonly AzureBlobAssetStoreFixture fixture;
 
         public AzureBlobAssetStoreTests(AzureBlobAssetStoreFixture fixture)
         {
-            _ = fixture;
+            this.fixture = fixture;
         }
 
         public override AzureBlobAssetStore CreateStore()
         {
-            return _.AssetStore;
+            return fixture.AssetStore;
         }
 
         [Fact]

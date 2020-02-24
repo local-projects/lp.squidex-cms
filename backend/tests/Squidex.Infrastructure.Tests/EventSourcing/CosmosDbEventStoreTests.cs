@@ -7,25 +7,23 @@
 
 using Xunit;
 
-#pragma warning disable SA1300 // Element should begin with upper-case letter
-
 namespace Squidex.Infrastructure.EventSourcing
 {
     [Trait("Category", "Dependencies")]
     public class CosmosDbEventStoreTests : EventStoreTests<CosmosDbEventStore>, IClassFixture<CosmosDbEventStoreFixture>
     {
-        public CosmosDbEventStoreFixture _ { get; }
+        private readonly CosmosDbEventStoreFixture fixture;
 
         protected override int SubscriptionDelayInMs { get; } = 1000;
 
         public CosmosDbEventStoreTests(CosmosDbEventStoreFixture fixture)
         {
-            _ = fixture;
+            this.fixture = fixture;
         }
 
         public override CosmosDbEventStore CreateStore()
         {
-            return _.EventStore;
+            return fixture.EventStore;
         }
     }
 }

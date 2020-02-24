@@ -25,32 +25,32 @@ namespace Migrate_01
     {
         public static Task RebuildAppsAsync(this Rebuilder rebuilder, CancellationToken ct = default)
         {
-            return rebuilder.RebuildAsync<AppDomainObject, AppState>("^app\\-", ct);
+            return rebuilder.RebuildAsync<AppState, AppGrain>("^app\\-", ct);
         }
 
         public static Task RebuildSchemasAsync(this Rebuilder rebuilder, CancellationToken ct = default)
         {
-            return rebuilder.RebuildAsync<SchemaDomainObject, SchemaState>("^schema\\-", ct);
+            return rebuilder.RebuildAsync<SchemaState, SchemaGrain>("^schema\\-", ct);
         }
 
         public static Task RebuildRulesAsync(this Rebuilder rebuilder, CancellationToken ct = default)
         {
-            return rebuilder.RebuildAsync<RuleDomainObject, RuleState>("^rule\\-", ct);
+            return rebuilder.RebuildAsync<RuleState, RuleGrain>("^rule\\-", ct);
         }
 
         public static Task RebuildAssetsAsync(this Rebuilder rebuilder, CancellationToken ct = default)
         {
-            return rebuilder.RebuildAsync<AssetDomainObject, AssetState>("^asset\\-", ct);
+            return rebuilder.RebuildAsync<AssetState, AssetGrain>("^asset\\-", ct);
         }
 
         public static Task RebuildAssetFoldersAsync(this Rebuilder rebuilder, CancellationToken ct = default)
         {
-            return rebuilder.RebuildAsync<AssetFolderDomainObject, AssetFolderState>("^assetfolder\\-", ct);
+            return rebuilder.RebuildAsync<AssetFolderState, AssetFolderGrain>("^assetfolder\\-", ct);
         }
 
         public static Task RebuildContentAsync(this Rebuilder rebuilder, CancellationToken ct = default)
         {
-            return rebuilder.RebuildAsync<ContentDomainObject, ContentState>("^content\\-", ct);
+            return rebuilder.RebuildAsync<ContentState, ContentGrain>("^content\\-", ct);
         }
     }
 }

@@ -27,11 +27,11 @@ export class FileDropDirective {
     @Input()
     public allowedFiles: ReadonlyArray<string>;
 
-    @Input('sqxDropOnlyImages')
+    @Input()
     public onlyImages: boolean;
 
-    @Input('sqxDropNoPaste')
-    public noPaste: boolean;
+    @Input()
+    public noDrop: boolean;
 
     @Input('sqxDropDisabled')
     public disabled = false;
@@ -47,7 +47,7 @@ export class FileDropDirective {
 
     @HostListener('paste', ['$event'])
     public onPaste(event: ClipboardEvent) {
-        if (this.noPaste) {
+        if (this.noDrop) {
             return;
         }
 

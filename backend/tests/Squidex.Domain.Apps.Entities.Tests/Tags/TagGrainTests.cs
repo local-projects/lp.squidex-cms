@@ -14,8 +14,6 @@ using Squidex.Infrastructure;
 using Squidex.Infrastructure.Orleans;
 using Xunit;
 
-#pragma warning disable IDE0059 // Unnecessary assignment of a value
-
 namespace Squidex.Domain.Apps.Entities.Tags
 {
     public class TagGrainTests
@@ -108,9 +106,7 @@ namespace Squidex.Domain.Apps.Entities.Tags
         public async Task Should_remove_tags_from_grain()
         {
             var result1 = await sut.NormalizeTagsAsync(HashSet.Of("name1", "name2"), null);
-#pragma warning disable IDE0059 // Unnecessary assignment of a value
             var result2 = await sut.NormalizeTagsAsync(HashSet.Of("name2", "name3"), null);
-#pragma warning restore IDE0059 // Unnecessary assignment of a value
 
             await sut.NormalizeTagsAsync(null, new HashSet<string>(result1.Values));
 

@@ -22,11 +22,6 @@ namespace Squidex.Infrastructure.Queries.Json
                 if (parent.Properties.TryGetValue(element, out var p))
                 {
                     schema = p;
-
-                    if (schema.Type == JsonObjectType.None)
-                    {
-                        break;
-                    }
                 }
                 else
                 {

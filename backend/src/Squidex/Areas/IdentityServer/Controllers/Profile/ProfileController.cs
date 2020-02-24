@@ -29,7 +29,6 @@ namespace Squidex.Areas.IdentityServer.Controllers.Profile
     [Authorize]
     public sealed class ProfileController : IdentityServerController
     {
-        private static readonly ResizeOptions ResizeOptions = new ResizeOptions { Width = 128, Height = 128, Mode = ResizeMode.Crop };
         private readonly SignInManager<IdentityUser> signInManager;
         private readonly UserManager<IdentityUser> userManager;
         private readonly IUserPictureStore userPictureStore;
@@ -146,7 +145,7 @@ namespace Squidex.Areas.IdentityServer.Controllers.Profile
             {
                 try
                 {
-                    await assetThumbnailGenerator.CreateThumbnailAsync(file[0].OpenReadStream(), thumbnailStream, ResizeOptions);
+                    await assetThumbnailGenerator.CreateThumbnailAsync(file[0].OpenReadStream(), thumbnailStream, 128, 128, "Crop");
 
                     thumbnailStream.Position = 0;
                 }

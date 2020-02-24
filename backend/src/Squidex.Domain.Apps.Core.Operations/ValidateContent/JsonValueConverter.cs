@@ -14,7 +14,7 @@ using Squidex.Infrastructure.Validation;
 
 namespace Squidex.Domain.Apps.Core.ValidateContent
 {
-    public sealed class JsonValueConverter : IFieldVisitor<(object? Result, JsonError? Error)>
+    public sealed class JsonValueConverter : IFieldVisitor<object>
     {
         private readonly IJsonValue value;
 
@@ -23,67 +23,67 @@ namespace Squidex.Domain.Apps.Core.ValidateContent
             this.value = value;
         }
 
-        public static (object? Result, JsonError? Error) ConvertValue(IField field, IJsonValue json)
+        public static object ConvertValue(IField field, IJsonValue json)
         {
             return field.Accept(new JsonValueConverter(json));
         }
 
-        public (object? Result, JsonError? Error) Visit(IArrayField field)
+        public object Visit(IArrayField field)
         {
             return ConvertToObjectList();
         }
 
-        public (object? Result, JsonError? Error) Visit(IField<AssetsFieldProperties> field)
+        public object Visit(IField<AssetsFieldProperties> field)
         {
             return ConvertToGuidList();
         }
 
-        public (object? Result, JsonError? Error) Visit(IField<ReferencesFieldProperties> field)
+        public object Visit(IField<ReferencesFieldProperties> field)
         {
             return ConvertToGuidList();
         }
 
-        public (object? Result, JsonError? Error) Visit(IField<TagsFieldProperties> field)
+        public object Visit(IField<TagsFieldProperties> field)
         {
             return ConvertToStringList();
         }
 
-        public (object? Result, JsonError? Error) Visit(IField<BooleanFieldProperties> field)
+        public object Visit(IField<BooleanFieldProperties> field)
         {
             if (value is JsonScalar<bool> b)
             {
-                return (b.Value, null);
+                return b.Value;
             }
 
-            return (null, new JsonError("Invalid json type, expected boolean."));
+            throw new InvalidCastException("Invalid json type, expected boolean.");
         }
 
-        public (object? Result, JsonError? Error) Visit(IField<NumberFieldProperties> field)
+        public object Visit(IField<NumberFieldProperties> field)
         {
-            if (value is JsonScalar<double> n)
+            if (value is JsonScalar<double> b)
             {
-                return (n.Value, null);
+                return b.Value;
             }
 
-            return (null, new JsonError("Invalid json type, expected number."));
+            throw new InvalidCastException("Invalid json type, expected number.");
         }
 
-        public (object? Result, JsonError? Error) Visit(IField<StringFieldProperties> field)
+        public object Visit(IField<StringFieldProperties> field)
         {
-            if (value is JsonScalar<string> s)
+            if (value is JsonScalar<string> b)
             {
-                return (s.Value, null);
+                return b.Value;
             }
 
-            return (null, new JsonError("Invalid json type, expected string."));
+            throw new InvalidCastException("Invalid json type, expected string.");
         }
 
-        public (object? Result, JsonError? Error) Visit(IField<UIFieldProperties> field)
+        public object Visit(IField<UIFieldProperties> field)
         {
-            return (value, null);
+            return value;
         }
 
-        public (object? Result, JsonError? Error) Visit(IField<DateTimeFieldProperties> field)
+        public object Visit(IField<DateTimeFieldProperties> field)
         {
             if (value.Type == JsonValueType.String)
             {
@@ -91,16 +91,16 @@ namespace Squidex.Domain.Apps.Core.ValidateContent
 
                 if (!parseResult.Success)
                 {
-                    return (null, new JsonError(parseResult.Exception.Message));
+                    throw parseResult.Exception;
                 }
 
-                return (parseResult.Value, null);
+                return parseResult.Value;
             }
 
-            return (null, new JsonError("Invalid json type, expected string."));
+            throw new InvalidCastException("Invalid json type, expected string.");
         }
 
-        public (object? Result, JsonError? Error) Visit(IField<GeolocationFieldProperties> field)
+        public object Visit(IField<GeolocationFieldProperties> field)
         {
             if (value is JsonObject geolocation)
             {
@@ -109,7 +109,7 @@ namespace Squidex.Domain.Apps.Core.ValidateContent
                     if (!string.Equals(propertyName, "latitude", StringComparison.OrdinalIgnoreCase) &&
                         !string.Equals(propertyName, "longitude", StringComparison.OrdinalIgnoreCase))
                     {
-                        return (null, new JsonError("Geolocation can only have latitude and longitude property."));
+                        throw new InvalidCastException("Geolocation can only have latitude and longitude property.");
                     }
                 }
 
@@ -119,12 +119,12 @@ namespace Squidex.Domain.Apps.Core.ValidateContent
 
                     if (!lat.IsBetween(-90, 90))
                     {
-                        return (null, new JsonError("Latitude must be between -90 and 90."));
+                        throw new InvalidCastException("Latitude must be between -90 and 90.");
                     }
                 }
                 else
                 {
-                    return (null, new JsonError("Invalid json type, expected latitude/longitude object."));
+                    throw new InvalidCastException("Invalid json type, expected latitude/longitude object.");
                 }
 
                 if (geolocation.TryGetValue("longitude", out var lonValue) && lonValue is JsonScalar<double> lonNumber)
@@ -133,30 +133,30 @@ namespace Squidex.Domain.Apps.Core.ValidateContent
 
                     if (!lon.IsBetween(-180, 180))
                     {
-                        return (null, new JsonError("Longitude must be between -180 and 180."));
+                        throw new InvalidCastException("Longitude must be between -180 and 180.");
                     }
                 }
                 else
                 {
-                    return (null, new JsonError("Invalid json type, expected latitude/longitude object."));
+                    throw new InvalidCastException("Invalid json type, expected latitude/longitude object.");
                 }
 
-                return (value, null);
+                return value;
             }
 
-            return (null, new JsonError("Invalid json type, expected latitude/longitude object."));
+            throw new InvalidCastException("Invalid json type, expected latitude/longitude object.");
         }
 
-        public (object? Result, JsonError? Error) Visit(IField<JsonFieldProperties> field)
+        public object Visit(IField<JsonFieldProperties> field)
         {
-            return (value, null);
+            return value;
         }
 
-        private (object? Result, JsonError? Error) ConvertToGuidList()
+        private object ConvertToGuidList()
         {
             if (value is JsonArray array)
             {
-                var result = new List<Guid>(array.Count);
+                var result = new List<Guid>();
 
                 foreach (var item in array)
                 {
@@ -166,21 +166,21 @@ namespace Squidex.Domain.Apps.Core.ValidateContent
                     }
                     else
                     {
-                        return (null, new JsonError("Invalid json type, expected array of guid strings."));
+                        throw new InvalidCastException("Invalid json type, expected array of guid strings.");
                     }
                 }
 
-                return (result, null);
+                return result;
             }
 
-            return (null, new JsonError("Invalid json type, expected array of guid strings."));
+            throw new InvalidCastException("Invalid json type, expected array of guid strings.");
         }
 
-        private (object? Result, JsonError? Error) ConvertToStringList()
+        private object ConvertToStringList()
         {
             if (value is JsonArray array)
             {
-                var result = new List<string?>(array.Count);
+                var result = new List<string?>();
 
                 foreach (var item in array)
                 {
@@ -194,21 +194,21 @@ namespace Squidex.Domain.Apps.Core.ValidateContent
                     }
                     else
                     {
-                        return (null, new JsonError("Invalid json type, expected array of strings."));
+                        throw new InvalidCastException("Invalid json type, expected array of strings.");
                     }
                 }
 
-                return (result, null);
+                return result;
             }
 
-            return (null, new JsonError("Invalid json type, expected array of strings."));
+            throw new InvalidCastException("Invalid json type, expected array of strings.");
         }
 
-        private (object? Result, JsonError? Error) ConvertToObjectList()
+        private object ConvertToObjectList()
         {
             if (value is JsonArray array)
             {
-                var result = new List<JsonObject>(array.Count);
+                var result = new List<JsonObject>();
 
                 foreach (var item in array)
                 {
@@ -218,14 +218,14 @@ namespace Squidex.Domain.Apps.Core.ValidateContent
                     }
                     else
                     {
-                        return (null, new JsonError("Invalid json type, expected array of objects."));
+                        throw new InvalidCastException("Invalid json type, expected array of objects.");
                     }
                 }
 
-                return (result, null);
+                return result;
             }
 
-            return (null, new JsonError("Invalid json type, expected array of objects."));
+            throw new InvalidCastException("Invalid json type, expected array of objects.");
         }
     }
 }

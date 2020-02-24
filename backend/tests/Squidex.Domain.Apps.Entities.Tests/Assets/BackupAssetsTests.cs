@@ -18,6 +18,7 @@ using Squidex.Domain.Apps.Events.Assets;
 using Squidex.Infrastructure;
 using Squidex.Infrastructure.Commands;
 using Squidex.Infrastructure.EventSourcing;
+using Squidex.Infrastructure.Tasks;
 using Xunit;
 
 #pragma warning disable IDE0067 // Dispose objects before losing scope
@@ -56,7 +57,7 @@ namespace Squidex.Domain.Apps.Entities.Assets
 
             await sut.BackupAsync(context);
 
-            A.CallTo(() => context.Writer.WriteJsonAsync(A<string>._, tags))
+            A.CallTo(() => context.Writer.WriteJsonAsync(A<string>.Ignored, tags))
                 .MustHaveHappened();
         }
 
@@ -67,7 +68,7 @@ namespace Squidex.Domain.Apps.Entities.Assets
 
             var context = CreateRestoreContext();
 
-            A.CallTo(() => context.Reader.ReadJsonAttachmentAsync<TagsExport>(A<string>._))
+            A.CallTo(() => context.Reader.ReadJsonAttachmentAsync<TagsExport>(A<string>.Ignored))
                 .Returns(tags);
 
             await sut.RestoreAsync(context);
@@ -99,7 +100,7 @@ namespace Squidex.Domain.Apps.Entities.Assets
 
             var context = CreateBackupContext();
 
-            A.CallTo(() => context.Writer.WriteBlobAsync($"{assetId}_{version}.asset", A<Func<Stream, Task>>._))
+            A.CallTo(() => context.Writer.WriteBlobAsync($"{assetId}_{version}.asset", A<Func<Stream, Task>>.Ignored))
                 .Invokes((string _, Func<Stream, Task> handler) => handler(assetStream));
 
             await sut.BackupEventAsync(Envelope.Create(@event), context);
@@ -136,7 +137,7 @@ namespace Squidex.Domain.Apps.Entities.Assets
             A.CallTo(() => context.Reader.OldGuid(assetId))
                 .Returns(oldId);
 
-            A.CallTo(() => context.Reader.ReadBlobAsync($"{oldId}_{version}.asset", A<Func<Stream, Task>>._))
+            A.CallTo(() => context.Reader.ReadBlobAsync($"{oldId}_{version}.asset", A<Func<Stream, Task>>.Ignored))
                 .Invokes((string _, Func<Stream, Task> handler) => handler(assetStream));
 
             await sut.RestoreEventAsync(Envelope.Create(@event), context);
@@ -174,10 +175,10 @@ namespace Squidex.Domain.Apps.Entities.Assets
             {
                 rebuildAssets.Add(id);
 
-                return Task.CompletedTask;
+                return TaskHelper.Done;
             });
 
-            A.CallTo(() => rebuilder.InsertManyAsync<AssetDomainObject, AssetState>(A<IdSource>._, A<CancellationToken>._))
+            A.CallTo(() => rebuilder.InsertManyAsync<AssetState, AssetGrain>(A<IdSource>.Ignored, A<CancellationToken>.Ignored))
                 .Invokes((IdSource source, CancellationToken _) => source(add));
 
             await sut.RestoreAsync(context);
@@ -218,10 +219,10 @@ namespace Squidex.Domain.Apps.Entities.Assets
             {
                 rebuildAssets.Add(id);
 
-                return Task.CompletedTask;
+                return TaskHelper.Done;
             });
 
-            A.CallTo(() => rebuilder.InsertManyAsync<AssetFolderDomainObject, AssetFolderState>(A<IdSource>._, A<CancellationToken>._))
+            A.CallTo(() => rebuilder.InsertManyAsync<AssetFolderState, AssetFolderGrain>(A<IdSource>.Ignored, A<CancellationToken>.Ignored))
                 .Invokes((IdSource source, CancellationToken _) => source(add));
 
             await sut.RestoreAsync(context);

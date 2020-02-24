@@ -25,14 +25,14 @@ namespace Squidex.Domain.Apps.Entities.MongoDb.Rules
         {
             var guidSerializer = new GuidSerializer().WithRepresentation(BsonType.String);
 
-            BsonClassMap.RegisterClassMap<RuleStatistics>(cm =>
+            BsonClassMap.RegisterClassMap<RuleStatistics>(map =>
             {
-                cm.AutoMap();
+                map.AutoMap();
 
-                cm.MapProperty(x => x.AppId).SetSerializer(guidSerializer);
-                cm.MapProperty(x => x.RuleId).SetSerializer(guidSerializer);
+                map.MapProperty(x => x.AppId).SetSerializer(guidSerializer);
+                map.MapProperty(x => x.RuleId).SetSerializer(guidSerializer);
 
-                cm.SetIgnoreExtraElements(true);
+                map.SetIgnoreExtraElements(true);
             });
         }
 

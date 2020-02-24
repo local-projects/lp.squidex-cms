@@ -92,6 +92,8 @@ namespace Squidex.Areas.Api.Controllers.Rules
                 return RulesDto.FromRules(rules, this, app);
             });
 
+            Response.Headers[HeaderNames.ETag] = rules.ToEtag();
+
             return Ok(response);
         }
 
@@ -154,6 +156,7 @@ namespace Squidex.Areas.Api.Controllers.Rules
         /// <param name="id">The id of the rule to enable.</param>
         /// <returns>
         /// 200 => Rule enabled.
+        /// 400 => Rule already enabled.
         /// 404 => Rule or app not found.
         /// </returns>
         [HttpPut]
@@ -177,6 +180,7 @@ namespace Squidex.Areas.Api.Controllers.Rules
         /// <param name="id">The id of the rule to disable.</param>
         /// <returns>
         /// 200 => Rule disabled.
+        /// 400 => Rule already disabled.
         /// 404 => Rule or app not found.
         /// </returns>
         [HttpPut]

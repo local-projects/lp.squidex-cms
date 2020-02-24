@@ -39,7 +39,7 @@ export class AuthInterceptor implements HttpInterceptor {
     }
 
     private makeRequest(req: HttpRequest<any>, next: HttpHandler, user: Profile | null, renew = false): Observable<HttpEvent<any>> {
-        const token = user?.authorization || '';
+        const token = user ? user.authToken : '';
 
         req = req.clone({
             headers: req.headers

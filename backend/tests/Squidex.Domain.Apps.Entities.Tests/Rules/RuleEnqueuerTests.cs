@@ -74,8 +74,8 @@ namespace Squidex.Domain.Apps.Entities.Rules
 
             var job = new RuleJob { Created = now };
 
-            A.CallTo(() => ruleService.CreateJobsAsync(rule.RuleDef, rule.Id, @event))
-                .Returns(new List<RuleJob> { job });
+            A.CallTo(() => ruleService.CreateJobAsync(rule.RuleDef, rule.Id, @event))
+                .Returns(job);
 
             await sut.Enqueue(rule.RuleDef, rule.Id, @event);
 
@@ -96,11 +96,11 @@ namespace Squidex.Domain.Apps.Entities.Rules
             A.CallTo(() => appProvider.GetRulesAsync(appId.Id))
                 .Returns(new List<IRuleEntity> { rule1, rule2 });
 
-            A.CallTo(() => ruleService.CreateJobsAsync(rule1.RuleDef, rule1.Id, @event))
-                .Returns(new List<RuleJob> { job1 });
+            A.CallTo(() => ruleService.CreateJobAsync(rule1.RuleDef, rule1.Id, @event))
+                .Returns(job1);
 
-            A.CallTo(() => ruleService.CreateJobsAsync(rule2.RuleDef, rule2.Id, @event))
-                .Returns(new List<RuleJob>());
+            A.CallTo(() => ruleService.CreateJobAsync(rule2.RuleDef, rule2.Id, @event))
+                .Returns(Task.FromResult<RuleJob?>(null));
 
             await sut.On(@event);
 

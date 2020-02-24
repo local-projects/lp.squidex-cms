@@ -13,7 +13,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Squidex.Domain.Apps.Entities;
 using Squidex.Domain.Apps.Entities.Apps;
-using Squidex.Infrastructure;
 using Squidex.Infrastructure.Security;
 using Squidex.Shared;
 using Squidex.Shared.Identity;
@@ -26,8 +25,6 @@ namespace Squidex.Web.Pipeline
 
         public AppResolver(IAppProvider appProvider)
         {
-            Guard.NotNull(appProvider);
-
             this.appProvider = appProvider;
         }
 

@@ -107,7 +107,7 @@ namespace Squidex.Infrastructure.Assets
 
             streams.TryRemove(fileName, out _);
 
-            return Task.CompletedTask;
+            return TaskHelper.Done;
         }
     }
 }

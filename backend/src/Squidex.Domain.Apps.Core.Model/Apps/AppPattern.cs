@@ -10,7 +10,6 @@ using Squidex.Infrastructure;
 
 namespace Squidex.Domain.Apps.Core.Apps
 {
-    [Equals(DoNotAddEqualityOperators = true)]
     public sealed class AppPattern : Named
     {
         public string Pattern { get; }

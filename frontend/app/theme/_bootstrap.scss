@@ -131,6 +131,25 @@ a {
     }
 }
 
+//
+// Fix navbar.
+// 
+.navbar {
+    // Use fixed height to reduce problems with dynamic elements.
+    & {
+        height: $size-navbar-height;
+    }
+
+    &-nav {
+        line-height: 2.2rem;
+    }
+
+    // Ensure that dropdown is always under nav bar.
+    .dropdown-menu {
+        top: 2.6rem;
+    }
+}
+
 .navbar-nav {
     .nav-link {
         cursor: pointer;
@@ -158,7 +177,7 @@ a {
         }
 
         .badge {
-            @include absolute(-.25rem, auto, auto, -.375rem);
+            @include absolute(-.5rem, auto, auto, -.375rem);
             background: $color-theme-error;
             font-size: .75rem;
             font-weight: normal;
@@ -173,7 +192,7 @@ a {
 .dropdown-menu {
     // White dropdown menu without border and shadow.
     & {
-        @include box-shadow-outer(0, 3px, 16px, .2);
+        @include box-shadow(0, 3px, 16px, .2);
         background: $panel-light-background;
         border: 0;
         z-index: 1200;
@@ -574,7 +593,7 @@ a {
         }
 
         &-secondary2 {
-            @include build-text-button($color-text);
+            @include build-text-button(#777c7b);
         }
     }
 }
@@ -645,10 +664,9 @@ $icon-size: 4.5rem;
         h4 {
             font-size: 1rem;
             font-weight: normal;
-            line-height: 2.25rem;
         }
 
-        .btn-close {
+        .close {
             & {
                 color: $color-modal-header-foreground;
             }
@@ -660,9 +678,9 @@ $icon-size: 4.5rem;
     }
 
     &-content {
-        @include box-shadow-outer(0, 8px, 16px, .3);
+        @include box-shadow(0, 6px, 16px, .4);
         border: 0;
-        border-radius: .4rem .35rem .35rem .4rem;
+        border-radius: .4rem, .35rem, .35rem, .4rem;
         max-height: 100%;
     }
 
@@ -692,9 +710,6 @@ $icon-size: 4.5rem;
     }
 
     &-footer {
-        padding-bottom: 1.25rem;
-        padding-top: 1.25rem;
-
         .clearfix {
             width: 100%;
         }

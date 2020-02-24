@@ -7,7 +7,6 @@
 
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Squidex.Infrastructure;
 
 namespace Squidex.Web.Pipeline
 {
@@ -17,8 +16,6 @@ namespace Squidex.Web.Pipeline
 
         public CleanupHostMiddleware(RequestDelegate next)
         {
-            Guard.NotNull(next);
-
             this.next = next;
         }
 

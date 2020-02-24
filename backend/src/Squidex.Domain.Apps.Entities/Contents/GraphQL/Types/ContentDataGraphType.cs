@@ -24,7 +24,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.GraphQL.Types
 
             foreach (var (field, fieldName, typeName) in schema.SchemaDef.Fields.SafeFields())
             {
-                var (resolvedType, valueResolver, args) = model.GetGraphType(schema, field, fieldName);
+                var (resolvedType, valueResolver) = model.GetGraphType(schema, field, fieldName);
 
                 if (valueResolver != null)
                 {
@@ -35,15 +35,16 @@ namespace Squidex.Domain.Apps.Entities.Contents.GraphQL.Types
                         Name = $"{schemaType}Data{typeName}Dto"
                     };
 
-                    var partitioning = model.ResolvePartition(field.Partitioning);
+                    var partition = model.ResolvePartition(field.Partitioning);
 
-                    foreach (var partitionKey in partitioning.AllKeys)
+                    foreach (var partitionItem in partition)
                     {
+                        var key = partitionItem.Key;
+
                         fieldGraphType.AddField(new FieldType
                         {
-                            Name = partitionKey.EscapePartition(),
-                            Arguments = args,
-                            Resolver = PartitionResolver(valueResolver, partitionKey),
+                            Name = key.EscapePartition(),
+                            Resolver = PartitionResolver(valueResolver, key),
                             ResolvedType = resolvedType,
                             Description = field.RawProperties.Hints
                         });

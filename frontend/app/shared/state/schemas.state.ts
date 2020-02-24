@@ -16,8 +16,7 @@ import {
     shareMapSubscribed,
     shareSubscribed,
     State,
-    Types,
-    Version
+    Types
 } from '@app/framework';
 
 import { AppsState } from './apps.state';
@@ -95,11 +94,11 @@ export class SchemasState extends State<Snapshot> {
         this.projectFrom2(this.schemas, this.categoriesPlain, (s, c) => buildCategories(c, s));
 
     public get schemaId() {
-        return this.snapshot.selectedSchema?.id || '';
+        return this.snapshot.selectedSchema ? this.snapshot.selectedSchema.id : '';
     }
 
     public get schemaName() {
-        return this.snapshot.selectedSchema?.name || '';
+        return this.snapshot.selectedSchema ? this.snapshot.selectedSchema.name : '';
     }
 
     constructor(
@@ -196,11 +195,7 @@ export class SchemasState extends State<Snapshot> {
             tap(() => {
                 this.next(s => {
                     const schemas = s.schemas.filter(x => x.id !== schema.id);
-
-                    const selectedSchema =
-                        s.selectedSchema?.id !== schema.id ?
-                        s.selectedSchema :
-                        null;
+                    const selectedSchema = s.selectedSchema && s.selectedSchema.id === schema.id ? null : s.selectedSchema;
 
                     return { ...s, schemas, selectedSchema };
                 });
@@ -251,7 +246,7 @@ export class SchemasState extends State<Snapshot> {
     public configurePreviewUrls(schema: SchemaDto, request: {}): Observable<SchemaDetailsDto> {
         return this.schemasService.putPreviewUrls(this.appName, schema, request, schema.version).pipe(
             tap(updated => {
-                this.replaceSchema(updated, schema.version, 'Schema saved successfully.');
+                this.replaceSchema(updated);
             }),
             shareSubscribed(this.dialogs));
     }
@@ -259,7 +254,7 @@ export class SchemasState extends State<Snapshot> {
     public configureScripts(schema: SchemaDto, request: {}): Observable<SchemaDetailsDto> {
         return this.schemasService.putScripts(this.appName, schema, request, schema.version).pipe(
             tap(updated => {
-                this.replaceSchema(updated, schema.version, 'Schema saved successfully.');
+                this.replaceSchema(updated);
             }),
             shareSubscribed(this.dialogs));
     }
@@ -267,7 +262,7 @@ export class SchemasState extends State<Snapshot> {
     public synchronize(schema: SchemaDto, request: {}): Observable<SchemaDetailsDto> {
         return this.schemasService.putSchemaSync(this.appName, schema, request, schema.version).pipe(
             tap(updated => {
-                this.replaceSchema(updated, schema.version, 'Schema synchronized successfully.');
+                this.replaceSchema(updated);
             }),
             shareSubscribed(this.dialogs));
     }
@@ -275,7 +270,7 @@ export class SchemasState extends State<Snapshot> {
     public update(schema: SchemaDto, request: UpdateSchemaDto): Observable<SchemaDetailsDto> {
         return this.schemasService.putSchema(this.appName, schema, request, schema.version).pipe(
             tap(updated => {
-                this.replaceSchema(updated, schema.version, 'Schema saved successfully.');
+                this.replaceSchema(updated);
             }),
             shareSubscribed(this.dialogs));
     }
@@ -291,7 +286,7 @@ export class SchemasState extends State<Snapshot> {
     public configureUIFields(schema: SchemaDto, request: UpdateUIFields): Observable<SchemaDetailsDto> {
         return this.schemasService.putUIFields(this.appName, schema, request, schema.version).pipe(
             tap(updated => {
-                this.replaceSchema(updated, schema.version, 'Schema saved successfully.');
+                this.replaceSchema(updated);
             }),
             shareSubscribed(this.dialogs));
     }
@@ -299,7 +294,7 @@ export class SchemasState extends State<Snapshot> {
     public orderFields(schema: SchemaDto, fields: ReadonlyArray<any>, parent?: RootFieldDto): Observable<SchemaDetailsDto> {
         return this.schemasService.putFieldOrdering(this.appName, parent || schema, fields.map(t => t.fieldId), schema.version).pipe(
             tap(updated => {
-                this.replaceSchema(updated, schema.version, 'Schema saved successfully.');
+                this.replaceSchema(updated);
             }),
             shareSubscribed(this.dialogs));
     }
@@ -347,7 +342,7 @@ export class SchemasState extends State<Snapshot> {
     public updateField<T extends FieldDto>(schema: SchemaDto, field: T, request: UpdateFieldDto): Observable<SchemaDetailsDto> {
         return this.schemasService.putField(this.appName, field, request, schema.version).pipe(
             tap(updated => {
-                this.replaceSchema(updated, schema.version, 'Schema saved successfully.');
+                this.replaceSchema(updated);
             }),
             shareSubscribed(this.dialogs));
     }
@@ -360,30 +355,20 @@ export class SchemasState extends State<Snapshot> {
             shareSubscribed(this.dialogs));
     }
 
-    private replaceSchema(schema: SchemaDto, oldVersion?: Version, updateText?: string) {
-        if (!oldVersion || !oldVersion.eq(schema.version)) {
-            if (updateText) {
-                this.dialogs.notifyInfo(updateText);
-            }
+    private replaceSchema(schema: SchemaDto) {
+        return this.next(s => {
+            const schemas = s.schemas.replaceBy('id', schema).sortedByString(x => x.displayName);
 
-            this.next(s => {
-                const schemas = s.schemas.replaceBy('id', schema).sortedByString(x => x.displayName);
+            const selectedSchema =
+                Types.is(schema, SchemaDetailsDto) &&
+                schema &&
+                s.selectedSchema &&
+                s.selectedSchema.id === schema.id ?
+                schema :
+                s.selectedSchema;
 
-                const selectedSchema =
-                    Types.is(schema, SchemaDetailsDto) &&
-                    schema &&
-                    s.selectedSchema &&
-                    s.selectedSchema.id === schema.id ?
-                    schema :
-                    s.selectedSchema;
-
-                return { ...s, schemas, selectedSchema };
-            });
-        } else {
-            if (updateText) {
-                this.dialogs.notifyInfo('Nothing has been changed.');
-            }
-        }
+            return { ...s, schemas, selectedSchema };
+        });
     }
 
     private get appName() {

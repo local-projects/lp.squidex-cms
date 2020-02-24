@@ -10,7 +10,6 @@ using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
-using Squidex.Domain.Apps.Entities.Contents.Text.Lucene;
 using Xunit;
 
 namespace Squidex.Domain.Apps.Entities.Contents.Text
@@ -32,7 +31,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.Text
                 {
                     var document = new Document();
 
-                    document.AddBinaryDocValuesField("field", new BytesRef(new[] { i }));
+                    document.AddBinaryDocValuesField("field", new BytesRef(new byte[] { i }));
 
                     indexWriter.AddDocument(document);
                 }

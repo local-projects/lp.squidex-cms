@@ -7,23 +7,21 @@
 
 // tslint:disable:prefer-for-of
 
-import { FormArray, FormBuilder, FormGroup, ValidatorFn, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, ValidatorFn, Validators } from '@angular/forms';
 import { BehaviorSubject } from 'rxjs';
 
 import {
     DateTime,
     Form,
     formControls,
-    StringFormControl,
     Types,
-    ValidatorsEx,
-    value$
+    ValidatorsEx
 } from '@app/framework';
 
+import { ContentDto, ContentReferencesValue } from '../services/contents.service';
+import { LanguageDto } from '../services/languages.service';
 import { AppLanguageDto } from './../services/app-languages.service';
-import { ContentDto, ContentReferencesValue } from './../services/contents.service';
-import { LanguageDto } from './../services/languages.service';
-import { FieldDto, RootFieldDto, SchemaDetailsDto, TableField } from './../services/schemas.service';
+import { FieldDto, RootFieldDto, SchemaDetailsDto } from './../services/schemas.service';
 import {
     ArrayFieldPropertiesDto,
     AssetsFieldPropertiesDto,
@@ -47,9 +45,7 @@ export class HtmlValue {
     }
 }
 
-type SaveQueryFormType = { name: string, user: boolean };
-
-export class SaveQueryForm extends Form<FormGroup, SaveQueryFormType> {
+export class SaveQueryForm extends Form<FormGroup, any> {
     constructor(formBuilder: FormBuilder) {
         super(formBuilder.group({
             name: ['',
@@ -101,7 +97,7 @@ export function getContentValue(content: ContentDto, language: LanguageDto, fiel
         }
     }
 
-    const contentField = content.data[field.name];
+    const contentField = content.dataDraft[field.name];
 
     if (contentField) {
         let value: any;
@@ -142,11 +138,19 @@ export class FieldFormatter implements FieldPropertiesVisitor<FieldValue> {
     }
 
     public visitArray(_: ArrayFieldPropertiesDto): string {
-        return this.formatArray('Item', 'Items');
+        if (this.value.length) {
+            return `${this.value.length} Item(s)`;
+        } else {
+            return '0 Items';
+        }
     }
 
     public visitAssets(_: AssetsFieldPropertiesDto): string {
-        return this.formatArray('Asset', 'Assets');
+        if (this.value.length) {
+            return `${this.value.length} Asset(s)`;
+        } else {
+            return '0 Assets';
+        }
     }
 
     public visitBoolean(_: BooleanFieldPropertiesDto): string {
@@ -193,7 +197,15 @@ export class FieldFormatter implements FieldPropertiesVisitor<FieldValue> {
     }
 
     public visitReferences(_: ReferencesFieldPropertiesDto): string {
-        return this.formatArray('Reference', 'References');
+        if (this.value.length) {
+            return `${this.value.length} Reference(s)`;
+        } else {
+            return '0 References';
+        }
+    }
+
+    public visitString(_: StringFieldPropertiesDto): any {
+        return this.value;
     }
 
     public visitTags(_: TagsFieldPropertiesDto): string {
@@ -204,47 +216,9 @@ export class FieldFormatter implements FieldPropertiesVisitor<FieldValue> {
         }
     }
 
-    public visitString(properties: StringFieldPropertiesDto): any {
-        if (properties.editor === 'StockPhoto' && this.allowHtml && this.value) {
-            const src = thumbnail(this.value, undefined, 50);
-
-            if (src) {
-                return new HtmlValue(`<img src="${src}" />`);
-            }
-        }
-
-        return this.value;
-    }
-
     public visitUI(_: UIFieldPropertiesDto): any {
         return '';
     }
-
-    private formatArray(singularName: string, pluralName: string) {
-        if (Types.isArray(this.value)) {
-            if (this.value.length > 1) {
-                return `${this.value.length} ${pluralName}`;
-            } else if (this.value.length === 1) {
-                return `1 ${singularName}`;
-            }
-        }
-
-        return `0 ${pluralName}`;
-    }
-}
-
-export function thumbnail(url: string, width?: number, height?: number) {
-    if (url && url.startsWith('https://images.unsplash.com')) {
-        if (width) {
-            return `${url}&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=${width}&fit=max`;
-        }
-
-        if (height) {
-            return `${url}&q=80&fm=jpg&crop=entropy&cs=tinysrgb&h=${height}&fit=max`;
-        }
-    }
-
-    return undefined;
 }
 
 export class FieldsValidators implements FieldPropertiesVisitor<ReadonlyArray<ValidatorFn>> {
@@ -470,7 +444,7 @@ export class EditContentForm extends Form<FormGroup, any> {
     ) {
         super(new FormGroup({}));
 
-        value$(this.form).subscribe(value => {
+        this.form.valueChanges.subscribe(value => {
             this.value.next(value);
         });
 
@@ -484,12 +458,11 @@ export class EditContentForm extends Form<FormGroup, any> {
                 for (const { key, isOptional } of this.partitions.getAll(field)) {
                     const fieldValidators = FieldsValidators.create(field, isOptional);
 
-                    const control =
-                        field.isArray ?
-                            new FormArray([], fieldValidators) :
-                            new StringFormControl(fieldDefault, fieldValidators);
-
-                    fieldForm.setControl(key, control);
+                    if (field.isArray) {
+                        fieldForm.setControl(key, new FormArray([], fieldValidators));
+                    } else {
+                        fieldForm.setControl(key, new FormControl(fieldDefault, fieldValidators));
+                    }
                 }
 
                 this.form.setControl(field.name, fieldForm);
@@ -503,13 +476,13 @@ export class EditContentForm extends Form<FormGroup, any> {
     public hasChanged() {
         const currentValue = this.form.getRawValue();
 
-        return !Types.equals(this.initialData, currentValue, true);
+        return !Types.jsJsonEquals(this.initialData, currentValue);
     }
 
     public hasChanges(changes: any) {
         const currentValue = this.form.getRawValue();
 
-        return !Types.equals(changes, currentValue, true);
+        return !Types.jsJsonEquals(changes, currentValue);
     }
 
     public arrayItemRemove(field: RootFieldDto, language: AppLanguageDto, index: number) {
@@ -548,7 +521,7 @@ export class EditContentForm extends Form<FormGroup, any> {
                 }
 
                 const nestedValidators = FieldsValidators.create(nestedField, partition.isOptional);
-                const nestedForm = new StringFormControl(value, nestedValidators);
+                const nestedForm = new FormControl(value, nestedValidators);
 
                 if (nestedField.isDisabled) {
                     nestedForm.disable(NO_EMIT);
@@ -579,7 +552,7 @@ export class EditContentForm extends Form<FormGroup, any> {
                 const fieldForm = this.form.get(field.name) as FormGroup;
 
                 if (fieldForm) {
-                    const fieldValue = value?.[field.name] || {};
+                    const fieldValue = value ? value[field.name] || {} : {};
 
                     for (const partition of this.partitions.getAll(field)) {
                         const { key, isOptional } = partition;
@@ -662,20 +635,16 @@ export class EditContentForm extends Form<FormGroup, any> {
 }
 
 export class PatchContentForm extends Form<FormGroup, any> {
-    private readonly editableFields: ReadonlyArray<RootFieldDto>;
-
     constructor(
-        private readonly listFields: ReadonlyArray<TableField>,
+        private readonly schema: SchemaDetailsDto,
         private readonly language: AppLanguageDto
     ) {
         super(new FormGroup({}));
 
-        this.editableFields = <any>this.listFields.filter(x => Types.is(x, RootFieldDto) && x.isInlineEditable);
-
-        for (const field of this.editableFields) {
+        for (const field of this.schema.listFieldsEditable) {
             const validators = FieldsValidators.create(field, this.language.isOptional);
 
-            this.form.setControl(field.name, new StringFormControl(undefined, validators));
+            this.form.setControl(field.name, new FormControl(undefined, validators));
         }
     }
 
@@ -685,7 +654,7 @@ export class PatchContentForm extends Form<FormGroup, any> {
         if (result) {
             const request = {};
 
-            for (const field of this.editableFields) {
+            for (const field of this.schema.listFieldsEditable) {
                 const value = result[field.name];
 
                 if (field.isLocalizable) {

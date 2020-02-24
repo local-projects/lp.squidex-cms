@@ -11,10 +11,6 @@ import { distinctUntilChanged, map, startWith } from 'rxjs/operators';
 
 import { Types } from './../../utils/types';
 
-export interface FocusComponent {
-    focus(): void;
-}
-
 export function formControls(form: AbstractControl): ReadonlyArray<AbstractControl> {
     if (Types.is(form, FormGroup)) {
         return Object.values(form.controls);
@@ -30,7 +26,7 @@ export function invalid$(form: AbstractControl): Observable<boolean> {
 }
 
 export function value$<T = any>(form: AbstractControl): Observable<T> {
-    return form.valueChanges.pipe(startWith(form.value), distinctUntilChanged());
+    return form.valueChanges.pipe(startWith(form.value));
 }
 
 export function hasValue$(form: AbstractControl): Observable<boolean> {

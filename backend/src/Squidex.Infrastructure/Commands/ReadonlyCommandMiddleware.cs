@@ -5,6 +5,7 @@
 //  All rights reserved. Licensed under the MIT license.
 // ==========================================================================
 
+using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 
@@ -21,14 +22,14 @@ namespace Squidex.Infrastructure.Commands
             this.options = options.Value;
         }
 
-        public Task HandleAsync(CommandContext context, NextDelegate next)
+        public Task HandleAsync(CommandContext context, Func<Task> next)
         {
             if (options.IsReadonly)
             {
                 throw new DomainException("Application is in readonly mode at the moment.");
             }
 
-            return next(context);
+            return next();
         }
     }
 }

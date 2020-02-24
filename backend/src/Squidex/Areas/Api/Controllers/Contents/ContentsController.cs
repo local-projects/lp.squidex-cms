@@ -6,9 +6,11 @@
 // ==========================================================================
 
 using System;
-using System.Linq;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using Microsoft.Net.Http.Headers;
 using Squidex.Areas.Api.Controllers.Contents.Models;
 using Squidex.Domain.Apps.Core.Contents;
 using Squidex.Domain.Apps.Entities;
@@ -23,6 +25,7 @@ namespace Squidex.Areas.Api.Controllers.Contents
 {
     public sealed class ContentsController : ApiController
     {
+        private readonly MyContentsControllerOptions controllerOptions;
         private readonly IContentQueryService contentQuery;
         private readonly IContentWorkflow contentWorkflow;
         private readonly IGraphQLService graphQl;
@@ -30,11 +33,13 @@ namespace Squidex.Areas.Api.Controllers.Contents
         public ContentsController(ICommandBus commandBus,
             IContentQueryService contentQuery,
             IContentWorkflow contentWorkflow,
-            IGraphQLService graphQl)
+            IGraphQLService graphQl,
+            IOptions<MyContentsControllerOptions> controllerOptions)
             : base(commandBus)
         {
             this.contentQuery = contentQuery;
             this.contentWorkflow = contentWorkflow;
+            this.controllerOptions = controllerOptions.Value;
 
             this.graphQl = graphQl;
         }
@@ -127,6 +132,13 @@ namespace Squidex.Areas.Api.Controllers.Contents
                 return ContentsDto.FromContentsAsync(contents, Context, this, null, contentWorkflow);
             });
 
+            if (ShouldProvideSurrogateKeys(contents))
+            {
+                Response.Headers["Surrogate-Key"] = contents.ToSurrogateKeys();
+            }
+
+            Response.Headers[HeaderNames.ETag] = contents.ToEtag();
+
             return Ok(response);
         }
 
@@ -164,6 +176,13 @@ namespace Squidex.Areas.Api.Controllers.Contents
                 return await ContentsDto.FromContentsAsync(contents, Context, this, schema, contentWorkflow);
             });
 
+            if (ShouldProvideSurrogateKeys(contents))
+            {
+                Response.Headers["Surrogate-Key"] = contents.ToSurrogateKeys();
+            }
+
+            Response.Headers[HeaderNames.ETag] = contents.ToEtag();
+
             return Ok(response);
         }
 
@@ -190,6 +209,13 @@ namespace Squidex.Areas.Api.Controllers.Contents
             var content = await contentQuery.FindContentAsync(Context, name, id);
 
             var response = ContentDto.FromContent(Context, content, this);
+
+            if (controllerOptions.EnableSurrogateKeys)
+            {
+                Response.Headers["Surrogate-Key"] = content.ToSurrogateKey();
+            }
+
+            Response.Headers[HeaderNames.ETag] = content.ToEtag();
 
             return Ok(response);
         }
@@ -219,6 +245,13 @@ namespace Squidex.Areas.Api.Controllers.Contents
 
             var response = ContentDto.FromContent(Context, content, this);
 
+            if (controllerOptions.EnableSurrogateKeys)
+            {
+                Response.Headers["Surrogate-Key"] = content.ToSurrogateKey();
+            }
+
+            Response.Headers[HeaderNames.ETag] = content.ToEtag();
+
             return Ok(response.Data);
         }
 
@@ -228,7 +261,7 @@ namespace Squidex.Areas.Api.Controllers.Contents
         /// <param name="app">The name of the app.</param>
         /// <param name="name">The name of the schema.</param>
         /// <param name="request">The full data for the content item.</param>
-        /// <param name="publish">True to automatically publish the content.</param>
+        /// <param name="publish">Indicates whether the content should be published immediately.</param>
         /// <returns>
         /// 201 => Content created.
         /// 404 => Content, schema or app not found.
@@ -254,48 +287,16 @@ namespace Squidex.Areas.Api.Controllers.Contents
         }
 
         /// <summary>
-        /// Import content items.
-        /// </summary>
-        /// <param name="app">The name of the app.</param>
-        /// <param name="name">The name of the schema.</param>
-        /// <param name="request">The import request.</param>
-        /// <returns>
-        /// 201 => Contents created.
-        /// 404 => Content references, schema or app not found.
-        /// 400 => Content data is not valid.
-        /// </returns>
-        /// <remarks>
-        /// You can read the generated documentation for your app at /api/content/{appName}/docs.
-        /// </remarks>
-        [HttpPost]
-        [Route("content/{app}/{name}/import")]
-        [ProducesResponseType(typeof(ImportResultDto[]), 200)]
-        [ApiPermission(Permissions.AppContentsCreate)]
-        [ApiCosts(5)]
-        public async Task<IActionResult> PostContent(string app, string name, [FromBody] ImportContentsDto request)
-        {
-            await contentQuery.GetSchemaOrThrowAsync(Context, name);
-
-            var command = request.ToCommand();
-
-            var context = await CommandBus.PublishAsync(command);
-
-            var result = context.Result<ImportResult>();
-            var response = result.Select(x => ImportResultDto.FromImportResult(x, HttpContext)).ToArray();
-
-            return Ok(response);
-        }
-
-        /// <summary>
         /// Update a content item.
         /// </summary>
         /// <param name="app">The name of the app.</param>
         /// <param name="name">The name of the schema.</param>
         /// <param name="id">The id of the content item to update.</param>
         /// <param name="request">The full data for the content item.</param>
+        /// <param name="asDraft">Indicates whether the update is a proposal.</param>
         /// <returns>
         /// 200 => Content updated.
-        /// 404 => Content references, schema or app not found.
+        /// 404 => Content, schema or app not found.
         /// 400 => Content data is not valid.
         /// </returns>
         /// <remarks>
@@ -306,11 +307,11 @@ namespace Squidex.Areas.Api.Controllers.Contents
         [ProducesResponseType(typeof(ContentsDto), 200)]
         [ApiPermission(Permissions.AppContentsUpdate)]
         [ApiCosts(1)]
-        public async Task<IActionResult> PutContent(string app, string name, Guid id, [FromBody] NamedContentData request)
+        public async Task<IActionResult> PutContent(string app, string name, Guid id, [FromBody] NamedContentData request, [FromQuery] bool asDraft = false)
         {
             await contentQuery.GetSchemaOrThrowAsync(Context, name);
 
-            var command = new UpdateContent { ContentId = id, Data = request.ToCleaned() };
+            var command = new UpdateContent { ContentId = id, Data = request.ToCleaned(), AsDraft = asDraft };
 
             var response = await InvokeCommandAsync(command);
 
@@ -324,6 +325,7 @@ namespace Squidex.Areas.Api.Controllers.Contents
         /// <param name="name">The name of the schema.</param>
         /// <param name="id">The id of the content item to patch.</param>
         /// <param name="request">The patch for the content item.</param>
+        /// <param name="asDraft">Indicates whether the patch is a proposal.</param>
         /// <returns>
         /// 200 => Content patched.
         /// 404 => Content, schema or app not found.
@@ -337,11 +339,11 @@ namespace Squidex.Areas.Api.Controllers.Contents
         [ProducesResponseType(typeof(ContentsDto), 200)]
         [ApiPermission(Permissions.AppContentsUpdate)]
         [ApiCosts(1)]
-        public async Task<IActionResult> PatchContent(string app, string name, Guid id, [FromBody] NamedContentData request)
+        public async Task<IActionResult> PatchContent(string app, string name, Guid id, [FromBody] NamedContentData request, [FromQuery] bool asDraft = false)
         {
             await contentQuery.GetSchemaOrThrowAsync(Context, name);
 
-            var command = new PatchContent { ContentId = id, Data = request.ToCleaned() };
+            var command = new PatchContent { ContentId = id, Data = request.ToCleaned(), AsDraft = asDraft };
 
             var response = await InvokeCommandAsync(command);
 
@@ -380,35 +382,6 @@ namespace Squidex.Areas.Api.Controllers.Contents
         }
 
         /// <summary>
-        /// Create a new version.
-        /// </summary>
-        /// <param name="app">The name of the app.</param>
-        /// <param name="name">The name of the schema.</param>
-        /// <param name="id">The id of the content item to discard changes.</param>
-        /// <returns>
-        /// 200 => Content restored.
-        /// 404 => Content, schema or app not found.
-        /// </returns>
-        /// <remarks>
-        /// You can read the generated documentation for your app at /api/content/{appName}/docs.
-        /// </remarks>
-        [HttpPost]
-        [Route("content/{app}/{name}/{id}/draft/")]
-        [ProducesResponseType(typeof(ContentsDto), 200)]
-        [ApiPermission(Permissions.AppContentsVersionCreate)]
-        [ApiCosts(1)]
-        public async Task<IActionResult> CreateDraft(string app, string name, Guid id)
-        {
-            await contentQuery.GetSchemaOrThrowAsync(Context, name);
-
-            var command = new CreateContentDraft { ContentId = id };
-
-            var response = await InvokeCommandAsync(command);
-
-            return Ok(response);
-        }
-
-        /// <summary>
         /// Discard changes.
         /// </summary>
         /// <param name="app">The name of the app.</param>
@@ -417,20 +390,21 @@ namespace Squidex.Areas.Api.Controllers.Contents
         /// <returns>
         /// 200 => Content restored.
         /// 404 => Content, schema or app not found.
+        /// 400 => Content was not archived.
         /// </returns>
         /// <remarks>
         /// You can read the generated documentation for your app at /api/content/{appName}/docs.
         /// </remarks>
-        [HttpDelete]
-        [Route("content/{app}/{name}/{id}/draft/")]
+        [HttpPut]
+        [Route("content/{app}/{name}/{id}/discard/")]
         [ProducesResponseType(typeof(ContentsDto), 200)]
-        [ApiPermission(Permissions.AppContentsDelete)]
+        [ApiPermission(Permissions.AppContentsDraftDiscard)]
         [ApiCosts(1)]
-        public async Task<IActionResult> DeleteVersion(string app, string name, Guid id)
+        public async Task<IActionResult> DiscardDraft(string app, string name, Guid id)
         {
             await contentQuery.GetSchemaOrThrowAsync(Context, name);
 
-            var command = new DeleteContentDraft { ContentId = id };
+            var command = new DiscardChanges { ContentId = id };
 
             var response = await InvokeCommandAsync(command);
 
@@ -473,6 +447,11 @@ namespace Squidex.Areas.Api.Controllers.Contents
             var response = ContentDto.FromContent(Context, result, this);
 
             return response;
+        }
+
+        private bool ShouldProvideSurrogateKeys(IReadOnlyList<IContentEntity> response)
+        {
+            return controllerOptions.EnableSurrogateKeys && response.Count <= controllerOptions.MaxItemsForSurrogateKeys;
         }
     }
 }

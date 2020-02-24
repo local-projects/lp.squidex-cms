@@ -13,7 +13,7 @@ using Squidex.Infrastructure.Collections;
 
 namespace Squidex.Domain.Apps.Core.Apps
 {
-    public sealed class AppClients : ImmutableDictionary<string, AppClient>
+    public sealed class AppClients : ArrayDictionary<string, AppClient>
     {
         public static readonly AppClients Empty = new AppClients();
 
@@ -21,8 +21,8 @@ namespace Squidex.Domain.Apps.Core.Apps
         {
         }
 
-        public AppClients(Dictionary<string, AppClient> inner)
-            : base(inner)
+        public AppClients(KeyValuePair<string, AppClient>[] items)
+            : base(items)
         {
         }
 
@@ -31,7 +31,7 @@ namespace Squidex.Domain.Apps.Core.Apps
         {
             Guard.NotNullOrEmpty(id);
 
-            return Without<AppClients>(id);
+            return new AppClients(Without(id));
         }
 
         [Pure]
@@ -45,7 +45,7 @@ namespace Squidex.Domain.Apps.Core.Apps
                 throw new ArgumentException("Id already exists.", nameof(id));
             }
 
-            return With<AppClients>(id, client);
+            return new AppClients(With(id, client));
         }
 
         [Pure]
@@ -58,7 +58,7 @@ namespace Squidex.Domain.Apps.Core.Apps
                 throw new ArgumentException("Id already exists.", nameof(id));
             }
 
-            return With<AppClients>(id, new AppClient(id, secret, Role.Editor));
+            return new AppClients(With(id, new AppClient(id, secret, Role.Editor)));
         }
 
         [Pure]
@@ -71,7 +71,7 @@ namespace Squidex.Domain.Apps.Core.Apps
                 return this;
             }
 
-            return With<AppClients>(id, client.Rename(newName));
+            return new AppClients(With(id, client.Rename(newName)));
         }
 
         [Pure]
@@ -84,7 +84,7 @@ namespace Squidex.Domain.Apps.Core.Apps
                 return this;
             }
 
-            return With<AppClients>(id, client.Update(role));
+            return new AppClients(With(id, client.Update(role)));
         }
     }
 }

@@ -16,7 +16,6 @@ import {
     Pager,
     shareSubscribed,
     State,
-    Types,
     Version,
     Versioned
 } from '@app/framework';
@@ -25,7 +24,7 @@ import { ContentDto, ContentsService, StatusInfo } from './../services/contents.
 import { SchemaDto } from './../services/schemas.service';
 import { AppsState } from './apps.state';
 import { SavedQuery } from './queries';
-import { Query } from './query';
+import { encodeQuery, Query } from './query';
 import { SchemasState } from './schemas.state';
 
 interface Snapshot {
@@ -37,6 +36,9 @@ interface Snapshot {
 
     // The query to filter and sort contents.
     contentsQuery?: Query;
+
+    // The raw content query.
+    contentsQueryJson: string;
 
     // Indicates if the contents are loaded.
     isLoaded?: boolean;
@@ -57,11 +59,15 @@ interface Snapshot {
     canCreateAndPublish?: boolean;
 }
 
+function sameContent(lhs: ContentDto, rhs?: ContentDto): boolean {
+    return lhs === rhs || (!!lhs && !!rhs && lhs.id === rhs.id && lhs.version.eq(rhs.version));
+}
+
 export abstract class ContentsStateBase extends State<Snapshot> {
     private previousId: string;
 
-    public selectedContent: Observable<ContentDto | null | undefined> =
-        this.project(x => x.selectedContent, Types.equals);
+    public selectedContent =
+        this.project(x => x.selectedContent, sameContent);
 
     public contents =
         this.project(x => x.contents);
@@ -91,7 +97,7 @@ export abstract class ContentsStateBase extends State<Snapshot> {
         this.project(x => x.statuses);
 
     public statusQueries =
-        this.projectFrom(this.statuses, x => buildStatusQueries(x));
+        this.projectFrom(this.statuses, x => buildQueries(x));
 
     constructor(
         private readonly appsState: AppsState,
@@ -101,7 +107,8 @@ export abstract class ContentsStateBase extends State<Snapshot> {
     ) {
         super({
             contents: [],
-            contentsPager: Pager.fromLocalStore('contents', localStore)
+            contentsPager: Pager.fromLocalStore('contents', localStore),
+            contentsQueryJson: ''
         });
 
         this.contentsPager.subscribe(pager => {
@@ -257,10 +264,22 @@ export abstract class ContentsStateBase extends State<Snapshot> {
             shareSubscribed(this.dialogs, { silent: true }));
     }
 
+    public publishDraft(content: ContentDto, dueTime: string | null): Observable<ContentDto> {
+        return this.contentsService.publishDraft(this.appName, content, dueTime, content.version).pipe(
+            tap(updated => {
+                this.dialogs.notifyInfo('Content updated successfully.');
+
+                this.replaceContent(updated);
+            }),
+            shareSubscribed(this.dialogs));
+    }
+
     public changeStatus(content: ContentDto, status: string, dueTime: string | null): Observable<ContentDto> {
         return this.contentsService.putStatus(this.appName, content, status, dueTime, content.version).pipe(
             tap(updated => {
-                this.replaceContent(updated, content.version, 'Content updated successfully.');
+                this.dialogs.notifyInfo('Content updated successfully.');
+
+                this.replaceContent(updated);
             }),
             shareSubscribed(this.dialogs));
     }
@@ -268,23 +287,29 @@ export abstract class ContentsStateBase extends State<Snapshot> {
     public update(content: ContentDto, request: any): Observable<ContentDto> {
         return this.contentsService.putContent(this.appName, content, request, content.version).pipe(
             tap(updated => {
-                this.replaceContent(updated, content.version, 'Content updated successfully.');
+                this.dialogs.notifyInfo('Content updated successfully.');
+
+                this.replaceContent(updated, content.version);
             }),
             shareSubscribed(this.dialogs, { silent: true }));
     }
 
-    public createDraft(content: ContentDto): Observable<ContentDto> {
-        return this.contentsService.createVersion(this.appName, content, content.version).pipe(
+    public proposeDraft(content: ContentDto, request: any): Observable<ContentDto> {
+        return this.contentsService.proposeDraft(this.appName, content, request, content.version).pipe(
             tap(updated => {
-                this.replaceContent(updated, content.version, 'Content updated successfully.');
+                this.dialogs.notifyInfo('Content updated successfully.');
+
+                this.replaceContent(updated, content.version);
             }),
             shareSubscribed(this.dialogs, { silent: true }));
     }
 
-    public deleteDraft(content: ContentDto): Observable<ContentDto> {
-        return this.contentsService.deleteVersion(this.appName, content, content.version).pipe(
+    public discardDraft(content: ContentDto): Observable<ContentDto> {
+        return this.contentsService.discardDraft(this.appName, content, content.version).pipe(
             tap(updated => {
-                this.replaceContent(updated, content.version, 'Content updated successfully.');
+                this.dialogs.notifyInfo('Content updated successfully.');
+
+                this.replaceContent(updated, content.version);
             }),
             shareSubscribed(this.dialogs));
     }
@@ -292,13 +317,15 @@ export abstract class ContentsStateBase extends State<Snapshot> {
     public patch(content: ContentDto, request: any): Observable<ContentDto> {
         return this.contentsService.patchContent(this.appName, content, request, content.version).pipe(
             tap(updated => {
-                this.replaceContent(updated, content.version, 'Content updated successfully.');
+                this.dialogs.notifyInfo('Content updated successfully.');
+
+                this.replaceContent(updated, content.version);
             }),
             shareSubscribed(this.dialogs));
     }
 
     public search(contentsQuery?: Query): Observable<any> {
-        this.next(s => ({ ...s, contentsPager: s.contentsPager.reset(), contentsQuery }));
+        this.next(s => ({ ...s, contentsPager: s.contentsPager.reset(), contentsQuery, contentsQueryJson: encodeQuery(contentsQuery) }));
 
         return this.loadInternal(false);
     }
@@ -308,16 +335,17 @@ export abstract class ContentsStateBase extends State<Snapshot> {
 
         return this.loadInternal(false);
     }
+
+    public isQueryUsed(saved: SavedQuery) {
+        return this.snapshot.contentsQueryJson === saved.queryJson;
+    }
+
     private get appName() {
         return this.appsState.appName;
     }
 
-    private replaceContent(content: ContentDto, oldVersion?: Version, updateText?: string) {
+    private replaceContent(content: ContentDto, oldVersion?: Version) {
         if (!oldVersion || !oldVersion.eq(content.version)) {
-            if (updateText) {
-                this.dialogs.notifyInfo(updateText);
-            }
-
             return this.next(s => {
                 const contents = s.contents.replaceBy('id', content);
 
@@ -363,11 +391,13 @@ export class ManualContentsState extends ContentsStateBase {
     }
 }
 
-function buildStatusQueries(statuses: ReadonlyArray<StatusInfo> | undefined): ReadonlyArray<SavedQuery> {
-    return statuses?.map(s => buildStatusQuery(s)) || [];
+export type ContentQuery =  { color: string; } & SavedQuery;
+
+function buildQueries(statuses: ReadonlyArray<StatusInfo> | undefined): ReadonlyArray<ContentQuery> {
+    return statuses ? statuses.map(s => buildQuery(s)) : [];
 }
 
-function buildStatusQuery(s: StatusInfo) {
+function buildQuery(s: StatusInfo) {
     const query = {
         filter: {
             and: [
@@ -376,5 +406,5 @@ function buildStatusQuery(s: StatusInfo) {
         }
     };
 
-    return ({ name: s.status, color: s.color, query });
+    return ({ name: s.status, color: s.color, query, queryJson: encodeQuery(query) });
 }

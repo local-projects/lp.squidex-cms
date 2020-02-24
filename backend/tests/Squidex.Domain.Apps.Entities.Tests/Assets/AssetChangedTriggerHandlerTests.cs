@@ -7,11 +7,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using FakeItEasy;
 using Squidex.Domain.Apps.Core.HandleRules;
-using Squidex.Domain.Apps.Core.Rules.EnrichedEvents;
+using Squidex.Domain.Apps.Core.HandleRules.EnrichedEvents;
 using Squidex.Domain.Apps.Core.Rules.Triggers;
 using Squidex.Domain.Apps.Core.Scripting;
 using Squidex.Domain.Apps.Events;
@@ -32,37 +31,35 @@ namespace Squidex.Domain.Apps.Entities.Assets
 
         public AssetChangedTriggerHandlerTests()
         {
-            A.CallTo(() => scriptEngine.Evaluate("event", A<object>._, "true"))
+            A.CallTo(() => scriptEngine.Evaluate("event", A<object>.Ignored, "true"))
                 .Returns(true);
 
-            A.CallTo(() => scriptEngine.Evaluate("event", A<object>._, "false"))
+            A.CallTo(() => scriptEngine.Evaluate("event", A<object>.Ignored, "false"))
                 .Returns(false);
 
             sut = new AssetChangedTriggerHandler(scriptEngine, assetLoader);
         }
 
-        public static IEnumerable<object[]> TestEvents()
+        public static IEnumerable<object[]> TestEvents = new[]
         {
-            yield return new object[] { new AssetCreated(), EnrichedAssetEventType.Created };
-            yield return new object[] { new AssetUpdated(), EnrichedAssetEventType.Updated };
-            yield return new object[] { new AssetAnnotated(), EnrichedAssetEventType.Annotated };
-            yield return new object[] { new AssetDeleted(), EnrichedAssetEventType.Deleted };
-        }
+            new object[] { new AssetCreated(), EnrichedAssetEventType.Created },
+            new object[] { new AssetUpdated(), EnrichedAssetEventType.Updated },
+            new object[] { new AssetAnnotated(), EnrichedAssetEventType.Annotated },
+            new object[] { new AssetDeleted(), EnrichedAssetEventType.Deleted }
+        };
 
         [Theory]
         [MemberData(nameof(TestEvents))]
-        public async Task Should_create_enriched_events(AssetEvent @event, EnrichedAssetEventType type)
+        public async Task Should_enrich_events(AssetEvent @event, EnrichedAssetEventType type)
         {
             var envelope = Envelope.Create<AppEvent>(@event).SetEventStreamNumber(12);
 
             A.CallTo(() => assetLoader.GetAsync(@event.AssetId, 12))
                 .Returns(new AssetEntity());
 
-            var result = await sut.CreateEnrichedEventsAsync(envelope);
+            var result = await sut.CreateEnrichedEventAsync(envelope) as EnrichedAssetEvent;
 
-            var enrichedEvent = result.Single() as EnrichedAssetEvent;
-
-            Assert.Equal(type, enrichedEvent!.Type);
+            Assert.Equal(type, result!.Type);
         }
 
         [Fact]
@@ -70,9 +67,9 @@ namespace Squidex.Domain.Apps.Entities.Assets
         {
             var envelope = Envelope.Create<AppEvent>(new AssetMoved());
 
-            var result = await sut.CreateEnrichedEventsAsync(envelope);
+            var result = await sut.CreateEnrichedEventAsync(envelope);
 
-            Assert.Empty(result);
+            Assert.Null(result);
         }
 
         [Fact]
@@ -149,12 +146,12 @@ namespace Squidex.Domain.Apps.Entities.Assets
 
             if (string.IsNullOrWhiteSpace(condition))
             {
-                A.CallTo(() => scriptEngine.Evaluate("event", A<object>._, condition))
+                A.CallTo(() => scriptEngine.Evaluate("event", A<object>.Ignored, condition))
                     .MustNotHaveHappened();
             }
             else
             {
-                A.CallTo(() => scriptEngine.Evaluate("event", A<object>._, condition))
+                A.CallTo(() => scriptEngine.Evaluate("event", A<object>.Ignored, condition))
                     .MustHaveHappened();
             }
         }

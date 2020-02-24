@@ -6,6 +6,7 @@
 // ==========================================================================
 
 using System;
+using System.Runtime.Serialization;
 using Squidex.Domain.Apps.Core;
 using Squidex.Domain.Apps.Core.Schemas;
 using Squidex.Domain.Apps.Events.Schemas;
@@ -18,18 +19,22 @@ using Squidex.Infrastructure.States;
 namespace Squidex.Domain.Apps.Entities.Schemas.State
 {
     [CollectionName("Schemas")]
-    public sealed class SchemaState : DomainObjectState<SchemaState>, ISchemaEntity
+    public class SchemaState : DomainObjectState<SchemaState>, ISchemaEntity
     {
+        [DataMember]
         public NamedId<Guid> AppId { get; set; }
 
-        public Schema SchemaDef { get; set; }
-
+        [DataMember]
         public long SchemaFieldsTotal { get; set; }
 
-        public override bool ApplyEvent(IEvent @event)
-        {
-            var previousSchema = SchemaDef;
+        [DataMember]
+        public bool IsDeleted { get; set; }
 
+        [DataMember]
+        public Schema SchemaDef { get; set; }
+
+        public void ApplyEvent(IEvent @event)
+        {
             switch (@event)
             {
                 case SchemaCreated e:
@@ -39,7 +44,7 @@ namespace Squidex.Domain.Apps.Entities.Schemas.State
 
                         AppId = e.AppId;
 
-                        return true;
+                        break;
                     }
 
                 case FieldAdded e:
@@ -69,12 +74,12 @@ namespace Squidex.Domain.Apps.Entities.Schemas.State
                     {
                         if (e.FieldsInLists != null)
                         {
-                            SchemaDef = SchemaDef.SetFieldsInLists(e.FieldsInLists);
+                            SchemaDef = SchemaDef.ConfigureFieldsInLists(e.FieldsInLists);
                         }
 
                         if (e.FieldsInReferences != null)
                         {
-                            SchemaDef = SchemaDef.SetFieldsInReferences(e.FieldsInReferences);
+                            SchemaDef = SchemaDef.ConfigureFieldsInReferences(e.FieldsInReferences);
                         }
 
                         break;
@@ -89,14 +94,14 @@ namespace Squidex.Domain.Apps.Entities.Schemas.State
 
                 case SchemaPreviewUrlsConfigured e:
                     {
-                        SchemaDef = SchemaDef.SetPreviewUrls(e.PreviewUrls);
+                        SchemaDef = SchemaDef.ConfigurePreviewUrls(e.PreviewUrls);
 
                         break;
                     }
 
                 case SchemaScriptsConfigured e:
                     {
-                        SchemaDef = SchemaDef.SetScripts(e.Scripts);
+                        SchemaDef = SchemaDef.ConfigureScripts(e.Scripts);
 
                         break;
                     }
@@ -182,11 +187,14 @@ namespace Squidex.Domain.Apps.Entities.Schemas.State
                     {
                         IsDeleted = true;
 
-                        return true;
+                        break;
                     }
             }
+        }
 
-            return !ReferenceEquals(previousSchema, SchemaDef);
+        public override SchemaState Apply(Envelope<IEvent> @event)
+        {
+            return Clone().Update(@event, (e, s) => s.ApplyEvent(e));
         }
     }
 }

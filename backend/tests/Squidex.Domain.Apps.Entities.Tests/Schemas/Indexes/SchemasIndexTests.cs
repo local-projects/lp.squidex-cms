@@ -131,7 +131,7 @@ namespace Squidex.Domain.Apps.Entities.Schemas.Indexes
             A.CallTo(() => index.AddAsync(token))
                 .MustHaveHappened();
 
-            A.CallTo(() => index.RemoveReservationAsync(A<string>._))
+            A.CallTo(() => index.RemoveReservationAsync(A<string>.Ignored))
                 .MustNotHaveHappened();
         }
 
@@ -167,10 +167,10 @@ namespace Squidex.Domain.Apps.Entities.Schemas.Indexes
 
             await Assert.ThrowsAsync<ValidationException>(() => sut.HandleAsync(context));
 
-            A.CallTo(() => index.AddAsync(A<string>._))
+            A.CallTo(() => index.AddAsync(A<string>.Ignored))
                 .MustNotHaveHappened();
 
-            A.CallTo(() => index.RemoveReservationAsync(A<string>._))
+            A.CallTo(() => index.RemoveReservationAsync(A<string>.Ignored))
                 .MustNotHaveHappened();
         }
 
@@ -183,10 +183,10 @@ namespace Squidex.Domain.Apps.Entities.Schemas.Indexes
 
             await sut.HandleAsync(context);
 
-            A.CallTo(() => index.ReserveAsync(schemaId.Id, A<string>._))
+            A.CallTo(() => index.ReserveAsync(schemaId.Id, A<string>.Ignored))
                 .MustNotHaveHappened();
 
-            A.CallTo(() => index.RemoveReservationAsync(A<string>._))
+            A.CallTo(() => index.RemoveReservationAsync(A<string>.Ignored))
                 .MustNotHaveHappened();
         }
 
@@ -195,10 +195,8 @@ namespace Squidex.Domain.Apps.Entities.Schemas.Indexes
         {
             var schema = SetupSchema(0, isDeleted);
 
-            var command = new DeleteSchema { SchemaId = schema.Id };
-
             var context =
-                new CommandContext(command, commandBus)
+                new CommandContext(new DeleteSchema { SchemaId = schema.Id }, commandBus)
                     .Complete();
 
             await sut.HandleAsync(context);

@@ -7,7 +7,6 @@
 
 namespace Squidex.Domain.Apps.Core.Schemas
 {
-    [Equals(DoNotAddEqualityOperators = true)]
     public sealed class BooleanFieldProperties : FieldProperties
     {
         public bool? DefaultValue { get; set; }

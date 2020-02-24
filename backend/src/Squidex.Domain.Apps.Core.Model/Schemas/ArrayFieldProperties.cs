@@ -9,7 +9,6 @@ using System;
 
 namespace Squidex.Domain.Apps.Core.Schemas
 {
-    [Equals(DoNotAddEqualityOperators = true)]
     public sealed class ArrayFieldProperties : FieldProperties
     {
         public int? MinItems { get; set; }

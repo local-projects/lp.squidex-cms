@@ -20,7 +20,7 @@ namespace Squidex.Domain.Apps.Entities.Apps.Templates
     {
         private readonly ICommandBus commandBus = A.Fake<ICommandBus>();
 
-        public static readonly IEnumerable<object[]> TemplateTests = new[]
+        public static readonly IEnumerable<object[]> TemplateTests = new object[][]
         {
             new object[] { new CreateBlogCommandMiddleware(), "blog" },
             new object[] { new CreateIdentityCommandMiddleware(), "identity" },
@@ -39,7 +39,7 @@ namespace Squidex.Domain.Apps.Entities.Apps.Templates
 
             await middleware.HandleAsync(context);
 
-            A.CallTo(() => commandBus.PublishAsync(A<CreateSchema>._))
+            A.CallTo(() => commandBus.PublishAsync(A<CreateSchema>.Ignored))
                 .MustHaveHappened();
         }
     }

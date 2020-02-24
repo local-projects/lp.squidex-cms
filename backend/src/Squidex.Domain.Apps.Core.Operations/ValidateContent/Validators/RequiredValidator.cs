@@ -6,6 +6,7 @@
 // ==========================================================================
 
 using System.Threading.Tasks;
+using Squidex.Infrastructure.Tasks;
 
 namespace Squidex.Domain.Apps.Core.ValidateContent.Validators
 {
@@ -18,7 +19,7 @@ namespace Squidex.Domain.Apps.Core.ValidateContent.Validators
                 addError(context.Path, "Field is required.");
             }
 
-            return Task.CompletedTask;
+            return TaskHelper.Done;
         }
     }
 }

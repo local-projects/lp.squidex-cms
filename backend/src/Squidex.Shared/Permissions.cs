@@ -102,7 +102,6 @@ namespace Squidex.Shared
         public const string AppAssets = "squidex.apps.{app}.assets";
         public const string AppAssetsRead = "squidex.apps.{app}.assets.read";
         public const string AppAssetsCreate = "squidex.apps.{app}.assets.create";
-        public const string AppAssetsUpload = "squidex.apps.{app}.assets.upload";
         public const string AppAssetsUpdate = "squidex.apps.{app}.assets.update";
         public const string AppAssetsDelete = "squidex.apps.{app}.assets.delete";
 
@@ -125,9 +124,8 @@ namespace Squidex.Shared
         public const string AppContentsRead = "squidex.apps.{app}.contents.{name}.read";
         public const string AppContentsCreate = "squidex.apps.{app}.contents.{name}.create";
         public const string AppContentsUpdate = "squidex.apps.{app}.contents.{name}.update";
-        public const string AppContentsUpdatePartial = "squidex.apps.{app}.contents.{name}.update.partial";
-        public const string AppContentsVersionCreate = "squidex.apps.{app}.contents.{name}.version.create";
-        public const string AppContentsVersionDelete = "squidex.apps.{app}.contents.{name}.version.delete";
+        public const string AppContentsDraftDiscard = "squidex.apps.{app}.contents.{name}.draft.discard";
+        public const string AppContentsDraftPublish = "squidex.apps.{app}.contents.{name}.draft.publish";
         public const string AppContentsDelete = "squidex.apps.{app}.contents.{name}.delete";
 
         public const string AppApi = "squidex.apps.{app}.api";

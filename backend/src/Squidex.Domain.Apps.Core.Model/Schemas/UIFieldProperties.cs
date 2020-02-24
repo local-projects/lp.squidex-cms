@@ -7,7 +7,6 @@
 
 namespace Squidex.Domain.Apps.Core.Schemas
 {
-    [Equals(DoNotAddEqualityOperators = true)]
     public sealed class UIFieldProperties : FieldProperties
     {
         public UIFieldEditor Editor { get; set; }

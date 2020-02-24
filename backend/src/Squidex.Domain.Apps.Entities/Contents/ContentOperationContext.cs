@@ -9,7 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Squidex.Domain.Apps.Core.Contents;
-using Squidex.Domain.Apps.Core.DefaultValues;
+using Squidex.Domain.Apps.Core.EnrichContent;
 using Squidex.Domain.Apps.Core.Schemas;
 using Squidex.Domain.Apps.Core.Scripting;
 using Squidex.Domain.Apps.Core.ValidateContent;
@@ -19,6 +19,7 @@ using Squidex.Domain.Apps.Entities.Contents.Commands;
 using Squidex.Domain.Apps.Entities.Contents.Repositories;
 using Squidex.Domain.Apps.Entities.Schemas;
 using Squidex.Infrastructure.Queries;
+using Squidex.Infrastructure.Tasks;
 
 namespace Squidex.Domain.Apps.Entities.Contents
 {
@@ -75,23 +76,23 @@ namespace Squidex.Domain.Apps.Entities.Contents
             return context;
         }
 
-        public Task GenerateDefaultValuesAsync(NamedContentData data)
+        public Task EnrichAsync(NamedContentData data)
         {
-            data.GenerateDefaultValues(schemaEntity.SchemaDef, appEntity.PartitionResolver());
+            data.Enrich(schemaEntity.SchemaDef, appEntity.PartitionResolver());
 
-            return Task.CompletedTask;
+            return TaskHelper.Done;
         }
 
-        public Task ValidateAsync(NamedContentData data, bool optimized)
+        public Task ValidateAsync(NamedContentData data)
         {
-            var ctx = CreateValidationContext(optimized);
+            var ctx = CreateValidationContext();
 
             return data.ValidateAsync(ctx, schemaEntity.SchemaDef, appEntity.PartitionResolver(), message);
         }
 
-        public Task ValidatePartialAsync(NamedContentData data, bool optimized)
+        public Task ValidatePartialAsync(NamedContentData data)
         {
-            var ctx = CreateValidationContext(optimized);
+            var ctx = CreateValidationContext();
 
             return data.ValidatePartialAsync(ctx, schemaEntity.SchemaDef, appEntity.PartitionResolver(), message);
         }
@@ -111,7 +112,7 @@ namespace Squidex.Domain.Apps.Entities.Contents
 
             scriptEngine.Execute(context, GetScript(script));
 
-            return Task.CompletedTask;
+            return TaskHelper.Done;
         }
 
         private void Enrich(ScriptContext context)
@@ -121,13 +122,12 @@ namespace Squidex.Domain.Apps.Entities.Contents
             context.User = command.User;
         }
 
-        private ValidationContext CreateValidationContext(bool optimized)
+        private ValidationContext CreateValidationContext()
         {
             return new ValidationContext(command.ContentId, schemaId,
-                    QueryContentsAsync,
-                    QueryContentsAsync,
-                    QueryAssetsAsync)
-                .Optimized(optimized);
+                QueryContentsAsync,
+                QueryContentsAsync,
+                QueryAssetsAsync);
         }
 
         private async Task<IReadOnlyList<IAssetInfo>> QueryAssetsAsync(IEnumerable<Guid> assetIds)
@@ -142,7 +142,7 @@ namespace Squidex.Domain.Apps.Entities.Contents
 
         private async Task<IReadOnlyList<(Guid SchemaId, Guid Id)>> QueryContentsAsync(HashSet<Guid> ids)
         {
-            return await contentRepository.QueryIdsAsync(appEntity.Id, ids, SearchScope.All);
+            return await contentRepository.QueryIdsAsync(appEntity.Id, ids);
         }
 
         private string GetScript(Func<SchemaScripts, string> script)

@@ -25,6 +25,7 @@ import {
 import { createAsset, createAssetFolder } from './../services/assets.service.spec';
 
 import { TestValues } from './_test-helpers';
+import { encodeQuery } from './query';
 
 describe('AssetsState', () => {
     const {
@@ -105,7 +106,7 @@ describe('AssetsState', () => {
             assetsState.toggleTag('tag1').subscribe();
             assetsState.toggleTag('tag1').subscribe();
 
-            expect(assetsState.snapshot.tagsSelected).toEqual({});
+            expect(assetsState.isTagSelected('tag1')).toBeFalsy();
         });
 
         it('should load without tags when tags reset', () => {
@@ -114,7 +115,7 @@ describe('AssetsState', () => {
 
             assetsState.resetTags().subscribe();
 
-            expect(assetsState.snapshot.tagsSelected).toEqual({});
+            expect(assetsState.isTagSelectionEmpty()).toBeTruthy();
         });
 
         it('should load with new pagination when paging', () => {
@@ -188,7 +189,7 @@ describe('AssetsState', () => {
 
             assetsState.toggleTag('tag1').subscribe();
 
-            expect(assetsState.snapshot.tagsSelected).toEqual({ tag1: true });
+            expect(assetsState.isTagSelected('tag1')).toBeTruthy();
         });
 
         it('should load with tags when tags selected', () => {
@@ -197,7 +198,7 @@ describe('AssetsState', () => {
 
             assetsState.selectTags(['tag1', 'tag2']).subscribe();
 
-            expect(assetsState.snapshot.tagsSelected).toEqual({ tag1: true, tag2: true });
+            expect(assetsState.isTagSelected('tag1')).toBeTruthy();
         });
 
         it('should load with query when searching', () => {
@@ -209,6 +210,7 @@ describe('AssetsState', () => {
             assetsState.search(query).subscribe();
 
             expect(assetsState.snapshot.assetsQuery).toEqual(query);
+            expect(assetsState.isQueryUsed({ name: 'name', query, queryJson: encodeQuery(query) })).toBeTruthy();
         });
     });
 

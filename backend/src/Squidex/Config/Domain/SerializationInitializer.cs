@@ -15,6 +15,7 @@ using Squidex.Infrastructure;
 using Squidex.Infrastructure.Json;
 using Squidex.Infrastructure.MongoDb;
 using Squidex.Infrastructure.Orleans;
+using Squidex.Infrastructure.Tasks;
 
 namespace Squidex.Config.Domain
 {
@@ -38,7 +39,7 @@ namespace Squidex.Config.Domain
             SetupOrleans();
             SetupActions();
 
-            return Task.CompletedTask;
+            return TaskHelper.Done;
         }
 
         private void SetupActions()

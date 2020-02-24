@@ -7,23 +7,21 @@
 
 using Xunit;
 
-#pragma warning disable SA1300 // Element should begin with upper-case letter
-
 namespace Squidex.Infrastructure.Assets
 {
     [Trait("Category", "Dependencies")]
     public class FTPAssetStoreTests : AssetStoreTests<FTPAssetStore>, IClassFixture<FTPAssetStoreFixture>
     {
-        public FTPAssetStoreFixture _ { get; }
+        private readonly FTPAssetStoreFixture fixture;
 
         public FTPAssetStoreTests(FTPAssetStoreFixture fixture)
         {
-            _ = fixture;
+            this.fixture = fixture;
         }
 
         public override FTPAssetStore CreateStore()
         {
-            return _.AssetStore;
+            return fixture.AssetStore;
         }
 
         [Fact]

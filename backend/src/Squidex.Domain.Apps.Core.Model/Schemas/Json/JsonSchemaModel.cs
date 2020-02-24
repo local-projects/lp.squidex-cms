@@ -105,22 +105,22 @@ namespace Squidex.Domain.Apps.Core.Schemas.Json
 
             if (Scripts != null)
             {
-                schema = schema.SetScripts(Scripts);
+                schema = schema.ConfigureScripts(Scripts);
             }
 
             if (FieldsInLists?.Count > 0)
             {
-                schema = schema.SetFieldsInLists(FieldsInLists);
+                schema = schema.ConfigureFieldsInLists(FieldsInLists);
             }
 
             if (FieldsInReferences?.Count > 0)
             {
-                schema = schema.SetFieldsInReferences(FieldsInReferences);
+                schema = schema.ConfigureFieldsInReferences(FieldsInReferences);
             }
 
             if (PreviewUrls?.Count > 0)
             {
-                schema = schema.SetPreviewUrls(PreviewUrls);
+                schema = schema.ConfigurePreviewUrls(PreviewUrls);
             }
 
             return schema;

@@ -7,9 +7,8 @@
 
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Squidex.Infrastructure.Tasks;
 using Xunit;
-
-#pragma warning disable RECS0092 // Convert field to readonly
 
 namespace Squidex.Web.Pipeline
 {
@@ -24,7 +23,7 @@ namespace Squidex.Web.Pipeline
             {
                 isNextCalled = true;
 
-                return Task.CompletedTask;
+                return TaskHelper.Done;
             }
 
             sut = new CleanupHostMiddleware(Next);

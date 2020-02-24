@@ -6,6 +6,7 @@
 // ==========================================================================
 
 using System;
+using System.Runtime.Serialization;
 using Squidex.Domain.Apps.Core.Rules;
 using Squidex.Domain.Apps.Events.Rules;
 using Squidex.Infrastructure;
@@ -17,16 +18,19 @@ using Squidex.Infrastructure.States;
 namespace Squidex.Domain.Apps.Entities.Rules.State
 {
     [CollectionName("Rules")]
-    public sealed class RuleState : DomainObjectState<RuleState>, IRuleEntity
+    public class RuleState : DomainObjectState<RuleState>, IRuleEntity
     {
+        [DataMember]
         public NamedId<Guid> AppId { get; set; }
 
+        [DataMember]
         public Rule RuleDef { get; set; }
 
-        public override bool ApplyEvent(IEvent @event)
-        {
-            var previousRule = RuleDef;
+        [DataMember]
+        public bool IsDeleted { get; set; }
 
+        public void ApplyEvent(IEvent @event)
+        {
             switch (@event)
             {
                 case RuleCreated e:
@@ -36,7 +40,7 @@ namespace Squidex.Domain.Apps.Entities.Rules.State
 
                         AppId = e.AppId;
 
-                        return true;
+                        break;
                     }
 
                 case RuleUpdated e:
@@ -77,11 +81,14 @@ namespace Squidex.Domain.Apps.Entities.Rules.State
                     {
                         IsDeleted = true;
 
-                        return true;
+                        break;
                     }
             }
+        }
 
-            return !ReferenceEquals(previousRule, RuleDef);
+        public override RuleState Apply(Envelope<IEvent> @event)
+        {
+            return Clone().Update(@event, (e, s) => s.ApplyEvent(e));
         }
     }
 }

@@ -626,13 +626,11 @@ describe('SchemasService', () => {
             version: `${id}`,
             properties: {
                 label: `label${id}${suffix}`,
-                tags: [
-                    `tags${id}${suffix}`
-                ],
-                hints: `hints${id}${suffix}`
+                hints: `hints${id}${suffix}`,
+                tags: [`tags${id}${suffix}`]
             },
             previewUrls: {
-                Default: 'url'
+                'Default': 'url'
             },
             fields: [
                 {
@@ -810,7 +808,7 @@ export function createSchema(id: number, suffix = '') {
         id % 3 === 0,
         DateTime.parseISO_UTC(`${id % 1000 + 2000}-12-12T10:10:00`), `creator${id}`,
         DateTime.parseISO_UTC(`${id % 1000 + 2000}-11-11T10:10:00`), `modifier${id}`,
-        new Version(`${id}${suffix}`));
+        new Version(`${id}`));
 }
 
 export function createSchemaDetails(id: number, suffix = '') {
@@ -827,7 +825,7 @@ export function createSchemaDetails(id: number, suffix = '') {
         id % 3 === 0,
         DateTime.parseISO_UTC(`${id % 1000 + 2000}-12-12T10:10:00`), `creator${id}`,
         DateTime.parseISO_UTC(`${id % 1000 + 2000}-11-11T10:10:00`), `modifier${id}`,
-        new Version(`${id}${suffix}`),
+        new Version(`${id}`),
         [
             new RootFieldDto({}, 11, 'field11', createProperties('Array'), 'language', true, true, true, [
                 new NestedFieldDto({}, 101, 'field101', createProperties('String'), 11, true, true, true),
@@ -853,6 +851,6 @@ export function createSchemaDetails(id: number, suffix = '') {
             update: '<script-update>'
         },
         {
-            Default: 'url'
+            'Default': 'url'
         });
 }

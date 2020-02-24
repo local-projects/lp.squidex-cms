@@ -11,24 +11,18 @@ using System.Threading.Tasks;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Processing.Transforms;
 using SixLabors.Primitives;
-using ISResizeMode = SixLabors.ImageSharp.Processing.ResizeMode;
-using ISResizeOptions = SixLabors.ImageSharp.Processing.ResizeOptions;
 
 namespace Squidex.Infrastructure.Assets.ImageSharp
 {
     public sealed class ImageSharpAssetThumbnailGenerator : IAssetThumbnailGenerator
     {
-        public Task CreateThumbnailAsync(Stream source, Stream destination, ResizeOptions options)
+        public Task CreateThumbnailAsync(Stream source, Stream destination, int? width = null, int? height = null, string? mode = null, int? quality = null)
         {
-            Guard.NotNull(options);
-
             return Task.Run(() =>
             {
-                var w = options.Width ?? 0;
-                var h = options.Height ?? 0;
-
-                if (w <= 0 && h <= 0 && !options.Quality.HasValue)
+                if (!width.HasValue && !height.HasValue && !quality.HasValue)
                 {
                     source.CopyTo(destination);
 
@@ -39,9 +33,9 @@ namespace Squidex.Infrastructure.Assets.ImageSharp
                 {
                     var encoder = Configuration.Default.ImageFormatsManager.FindEncoder(format);
 
-                    if (options.Quality.HasValue)
+                    if (quality.HasValue)
                     {
-                        encoder = new JpegEncoder { Quality = options.Quality.Value };
+                        encoder = new JpegEncoder { Quality = quality.Value };
                     }
 
                     if (encoder == null)
@@ -49,37 +43,31 @@ namespace Squidex.Infrastructure.Assets.ImageSharp
                         throw new NotSupportedException();
                     }
 
-                    if (w > 0 || h > 0)
+                    if (width.HasValue || height.HasValue)
                     {
-                        var isCropUpsize = options.Mode == ResizeMode.CropUpsize;
+                        var isCropUpsize = string.Equals("CropUpsize", mode, StringComparison.OrdinalIgnoreCase);
 
-                        if (!Enum.TryParse<ISResizeMode>(options.Mode.ToString(), true, out var resizeMode))
+                        if (!Enum.TryParse<ResizeMode>(mode, true, out var resizeMode))
                         {
-                            resizeMode = ISResizeMode.Max;
+                            resizeMode = ResizeMode.Max;
                         }
 
                         if (isCropUpsize)
                         {
-                            resizeMode = ISResizeMode.Crop;
+                            resizeMode = ResizeMode.Crop;
                         }
 
-                        if (w >= sourceImage.Width && h >= sourceImage.Height && resizeMode == ISResizeMode.Crop && !isCropUpsize)
+                        var resizeWidth = width ?? 0;
+                        var resizeHeight = height ?? 0;
+
+                        if (resizeWidth >= sourceImage.Width && resizeHeight >= sourceImage.Height && resizeMode == ResizeMode.Crop && !isCropUpsize)
                         {
-                            resizeMode = ISResizeMode.BoxPad;
+                            resizeMode = ResizeMode.BoxPad;
                         }
 
-                        var resizeOptions = new ISResizeOptions { Size = new Size(w, h), Mode = resizeMode };
+                        var options = new ResizeOptions { Size = new Size(resizeWidth, resizeHeight), Mode = resizeMode };
 
-                        if (options.FocusX.HasValue && options.FocusY.HasValue)
-                        {
-                            resizeOptions.CenterCoordinates = new float[]
-                            {
-                                +(options.FocusX.Value / 2f) + 0.5f,
-                                -(options.FocusX.Value / 2f) + 0.5f
-                            };
-                        }
-
-                        sourceImage.Mutate(x => x.Resize(resizeOptions));
+                        sourceImage.Mutate(x => x.Resize(options));
                     }
 
                     sourceImage.Save(destination, encoder);
@@ -89,23 +77,19 @@ namespace Squidex.Infrastructure.Assets.ImageSharp
 
         public Task<ImageInfo?> GetImageInfoAsync(Stream source)
         {
-            ImageInfo? result = null;
-
-            try
+            return Task.Run(() =>
             {
-                var image = Image.Identify(source);
-
-                if (image != null)
+                try
                 {
-                    result = new ImageInfo(image.Width, image.Height);
-                }
-            }
-            catch
-            {
-                result = null;
-            }
+                    var image = Image.Load(source);
 
-            return Task.FromResult(result);
+                    return new ImageInfo(image.Width, image.Height);
+                }
+                catch
+                {
+                    return null;
+                }
+            });
         }
     }
 }

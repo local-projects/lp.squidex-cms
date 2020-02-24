@@ -6,8 +6,8 @@
 // ==========================================================================
 
 using System.Collections.Generic;
-using System.Linq;
 using Newtonsoft.Json;
+using Squidex.Infrastructure;
 
 namespace Squidex.Domain.Apps.Core.Apps.Json
 {
@@ -17,7 +17,7 @@ namespace Squidex.Domain.Apps.Core.Apps.Json
         public Dictionary<string, JsonLanguageConfig> Languages { get; set; }
 
         [JsonProperty]
-        public string Master { get; set; }
+        public Language? Master { get; set; }
 
         public JsonLanguagesConfig()
         {
@@ -25,18 +25,38 @@ namespace Squidex.Domain.Apps.Core.Apps.Json
 
         public JsonLanguagesConfig(LanguagesConfig value)
         {
-            Languages = value.Languages.ToDictionary(x => x.Key, x => new JsonLanguageConfig(x.Value));
+            Languages = new Dictionary<string, JsonLanguageConfig>(value.Count);
 
-            Master = value.Master;
+            foreach (LanguageConfig config in value)
+            {
+                Languages.Add(config.Language, new JsonLanguageConfig(config));
+            }
+
+            Master = value.Master?.Language;
         }
 
         public LanguagesConfig ToConfig()
         {
-            var languages = Languages.ToDictionary(x => x.Key, x => x.Value.ToConfig());
+            var languagesConfig = new LanguageConfig[Languages?.Count ?? 0];
 
-            var master = Master ?? languages.Keys.FirstOrDefault();
+            if (Languages != null)
+            {
+                var i = 0;
 
-            return new LanguagesConfig(languages, master);
+                foreach (var (key, value) in Languages)
+                {
+                    languagesConfig[i++] = value.ToConfig(key);
+                }
+            }
+
+            var result = LanguagesConfig.Build(languagesConfig);
+
+            if (Master != null)
+            {
+                result = result.MakeMaster(Master);
+            }
+
+            return result;
         }
     }
 }

@@ -14,6 +14,6 @@ namespace Squidex.Infrastructure.Assets
     {
         Task<ImageInfo?> GetImageInfoAsync(Stream source);
 
-        Task CreateThumbnailAsync(Stream source, Stream destination, ResizeOptions options);
+        Task CreateThumbnailAsync(Stream source, Stream destination, int? width = null, int? height = null, string? mode = null, int? quality = null);
     }
 }

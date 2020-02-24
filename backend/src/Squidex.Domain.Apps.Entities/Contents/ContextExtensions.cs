@@ -9,104 +9,118 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Squidex.Infrastructure;
-using Squidex.Infrastructure.Caching;
-
-#pragma warning disable IDE0060 // Remove unused parameter
 
 namespace Squidex.Domain.Apps.Entities.Contents
 {
     public static class ContextExtensions
     {
+        private const string HeaderUnpublished = "X-Unpublished";
         private const string HeaderFlatten = "X-Flatten";
         private const string HeaderLanguages = "X-Languages";
-        private const string HeaderNoCleanup = "X-NoCleanup";
-        private const string HeaderNoEnrichment = "X-NoEnrichment";
-        private const string HeaderNoResolveLanguages = "X-NoResolveLanguages";
         private const string HeaderResolveFlow = "X-ResolveFlow";
-        private const string HeaderResolveUrls = "X-Resolve-Urls";
-        private const string HeaderUnpublished = "X-Unpublished";
+        private const string HeaderResolveAssetUrls = "X-Resolve-Urls";
+        private const string HeaderNoResolveLanguages = "X-NoResolveLanguages";
+        private const string HeaderNoEnrichment = "X-NoEnrichment";
         private static readonly char[] Separators = { ',', ';' };
 
-        public static void AddCacheHeaders(this Context context, IRequestCache cache)
+        public static bool IsNoEnrichment(this Context context)
         {
-            cache.AddHeader(HeaderFlatten);
-            cache.AddHeader(HeaderLanguages);
-            cache.AddHeader(HeaderNoCleanup);
-            cache.AddHeader(HeaderNoEnrichment);
-            cache.AddHeader(HeaderNoResolveLanguages);
-            cache.AddHeader(HeaderResolveFlow);
-            cache.AddHeader(HeaderResolveUrls);
-            cache.AddHeader(HeaderUnpublished);
-        }
-
-        public static bool ShouldCleanup(this Context context)
-        {
-            return !context.Headers.ContainsKey(HeaderNoCleanup);
-        }
-
-        public static Context WithoutCleanup(this Context context, bool value = true)
-        {
-            return SetBoolean(context, HeaderNoCleanup, value);
-        }
-
-        public static bool ShouldEnrichContent(this Context context)
-        {
-            return !context.Headers.ContainsKey(HeaderNoEnrichment);
+            return context.Headers.ContainsKey(HeaderNoEnrichment);
         }
 
         public static Context WithoutContentEnrichment(this Context context, bool value = true)
         {
-            return SetBoolean(context, HeaderNoEnrichment, value);
+            if (value)
+            {
+                context.Headers[HeaderNoEnrichment] = "1";
+            }
+            else
+            {
+                context.Headers.Remove(HeaderNoEnrichment);
+            }
+
+            return context;
         }
 
-        public static bool ShouldProvideUnpublished(this Context context)
+        public static bool IsUnpublished(this Context context)
         {
             return context.Headers.ContainsKey(HeaderUnpublished);
         }
 
         public static Context WithUnpublished(this Context context, bool value = true)
         {
-            return SetBoolean(context, HeaderUnpublished, value);
+            if (value)
+            {
+                context.Headers[HeaderUnpublished] = "1";
+            }
+            else
+            {
+                context.Headers.Remove(HeaderUnpublished);
+            }
+
+            return context;
         }
 
-        public static bool ShouldFlatten(this Context context)
+        public static bool IsFlatten(this Context context)
         {
             return context.Headers.ContainsKey(HeaderFlatten);
         }
 
         public static Context WithFlatten(this Context context, bool value = true)
         {
-            return SetBoolean(context, HeaderFlatten, value);
+            if (value)
+            {
+                context.Headers[HeaderFlatten] = "1";
+            }
+            else
+            {
+                context.Headers.Remove(HeaderFlatten);
+            }
+
+            return context;
         }
 
-        public static bool ShouldResolveFlow(this Context context)
+        public static bool IsResolveFlow(this Context context)
         {
             return context.Headers.ContainsKey(HeaderResolveFlow);
         }
 
         public static Context WithResolveFlow(this Context context, bool value = true)
         {
-            return SetBoolean(context, HeaderResolveFlow, value);
+            if (value)
+            {
+                context.Headers[HeaderResolveFlow] = "1";
+            }
+            else
+            {
+                context.Headers.Remove(HeaderResolveFlow);
+            }
+
+            return context;
         }
 
-        public static bool ShouldResolveLanguages(this Context context)
+        public static bool IsNoResolveLanguages(this Context context)
         {
-            return !context.Headers.ContainsKey(HeaderNoResolveLanguages);
+            return context.Headers.ContainsKey(HeaderNoResolveLanguages);
         }
 
         public static Context WithoutResolveLanguages(this Context context, bool value = true)
         {
-            return SetBoolean(context, HeaderNoResolveLanguages, value);
-        }
+            if (value)
+            {
+                context.Headers[HeaderNoResolveLanguages] = "1";
+            }
+            else
+            {
+                context.Headers.Remove(HeaderNoResolveLanguages);
+            }
 
-        public static SearchScope Scope(this Context context)
-        {
-            return context.ShouldProvideUnpublished() || context.IsFrontendClient ? SearchScope.All : SearchScope.Published;
+            return context;
         }
 
         public static IEnumerable<string> AssetUrls(this Context context)
         {
-            if (context.Headers.TryGetValue(HeaderResolveUrls, out var value))
+            if (context.Headers.TryGetValue(HeaderResolveAssetUrls, out var value))
             {
                 return value.Split(Separators, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).ToHashSet();
             }
@@ -118,11 +132,11 @@ namespace Squidex.Domain.Apps.Entities.Contents
         {
             if (fieldNames?.Any() == true)
             {
-                context.Headers[HeaderResolveUrls] = string.Join(",", fieldNames);
+                context.Headers[HeaderResolveAssetUrls] = string.Join(",", fieldNames);
             }
             else
             {
-                context.Headers.Remove(HeaderResolveUrls);
+                context.Headers.Remove(HeaderResolveAssetUrls);
             }
 
             return context;
@@ -157,20 +171,6 @@ namespace Squidex.Domain.Apps.Entities.Contents
             else
             {
                 context.Headers.Remove(HeaderLanguages);
-            }
-
-            return context;
-        }
-
-        private static Context SetBoolean(Context context, string key, bool value)
-        {
-            if (value)
-            {
-                context.Headers[key] = "1";
-            }
-            else
-            {
-                context.Headers.Remove(key);
             }
 
             return context;

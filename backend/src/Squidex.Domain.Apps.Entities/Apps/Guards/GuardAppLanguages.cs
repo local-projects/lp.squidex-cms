@@ -20,13 +20,11 @@ namespace Squidex.Domain.Apps.Entities.Apps.Guards
 
             Validate.It(() => "Cannot add language.", e =>
             {
-                var language = command.Language;
-
-                if (language == null)
+                if (command.Language == null)
                 {
                     e(Not.Defined("Language code"), nameof(command.Language));
                 }
-                else if (languages.Contains(language))
+                else if (languages.Contains(command.Language))
                 {
                     e("Language has already been added.");
                 }
@@ -37,22 +35,18 @@ namespace Squidex.Domain.Apps.Entities.Apps.Guards
         {
             Guard.NotNull(command);
 
+            var config = GetConfigOrThrow(languages, command.Language);
+
             Validate.It(() => "Cannot remove language.", e =>
             {
-                var language = command.Language;
-
-                if (language == null)
+                if (command.Language == null)
                 {
                     e(Not.Defined("Language code"), nameof(command.Language));
                 }
-                else
-                {
-                    EnsureConfigExists(languages, language);
 
-                    if (languages.IsMaster(language))
-                    {
-                        e("Master language cannot be removed.");
-                    }
+                if (languages.Master == config)
+                {
+                    e("Master language cannot be removed.");
                 }
             });
         }
@@ -61,53 +55,48 @@ namespace Squidex.Domain.Apps.Entities.Apps.Guards
         {
             Guard.NotNull(command);
 
+            var config = GetConfigOrThrow(languages, command.Language);
+
             Validate.It(() => "Cannot update language.", e =>
             {
-                var language = command.Language;
-
-                if (language == null)
+                if (command.Language == null)
                 {
                     e(Not.Defined("Language code"), nameof(command.Language));
                 }
-                else
+
+                if ((languages.Master == config || command.IsMaster) && command.IsOptional)
                 {
-                    EnsureConfigExists(languages, language);
+                    e("Master language cannot be made optional.", nameof(command.IsMaster));
+                }
 
-                    if (languages.IsMaster(language) || command.IsMaster)
+                if (command.Fallback == null)
+                {
+                    return;
+                }
+
+                foreach (var fallback in command.Fallback)
+                {
+                    if (!languages.Contains(fallback))
                     {
-                        if (command.IsOptional)
-                        {
-                            e("Master language cannot be made optional.", nameof(command.IsMaster));
-                        }
-
-                        if (command.Fallback?.Count > 0)
-                        {
-                            e("Master language cannot have fallback languages.", nameof(command.Fallback));
-                        }
-                    }
-
-                    if (command.Fallback == null)
-                    {
-                        return;
-                    }
-
-                    foreach (var fallback in command.Fallback)
-                    {
-                        if (!languages.Contains(fallback))
-                        {
-                            e($"App does not have fallback language '{fallback}'.", nameof(command.Fallback));
-                        }
+                        e($"App does not have fallback language '{fallback}'.", nameof(command.Fallback));
                     }
                 }
             });
         }
 
-        private static void EnsureConfigExists(LanguagesConfig languages, Language language)
+        private static LanguageConfig? GetConfigOrThrow(LanguagesConfig languages, Language language)
         {
-            if (!languages.Contains(language))
+            if (language == null)
+            {
+                return null;
+            }
+
+            if (!languages.TryGetConfig(language, out var languageConfig))
             {
                 throw new DomainObjectNotFoundException(language, "Languages", typeof(IAppEntity));
             }
+
+            return languageConfig;
         }
     }
 }

@@ -22,11 +22,11 @@ namespace Squidex.Domain.Users.MongoDb.Infrastructure
     {
         static MongoPersistedGrantStore()
         {
-            BsonClassMap.RegisterClassMap<PersistedGrant>(cm =>
+            BsonClassMap.RegisterClassMap<PersistedGrant>(map =>
             {
-                cm.AutoMap();
+                map.AutoMap();
 
-                cm.MapIdProperty(x => x.Key).SetSerializer(new StringSerializer(BsonType.ObjectId));
+                map.MapIdProperty(x => x.Key).SetSerializer(new StringSerializer(BsonType.ObjectId));
             });
         }
 
@@ -51,7 +51,7 @@ namespace Squidex.Domain.Users.MongoDb.Infrastructure
 
         public Task StoreAsync(PersistedGrant grant)
         {
-            return Collection.ReplaceOneAsync(x => x.Key == grant.Key, grant, UpsertReplace);
+            return Collection.ReplaceOneAsync(x => x.Key == grant.Key, grant, new UpdateOptions { IsUpsert = true });
         }
 
         public Task<IEnumerable<PersistedGrant>> GetAllAsync(string subjectId)

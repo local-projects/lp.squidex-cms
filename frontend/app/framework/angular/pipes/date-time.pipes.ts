@@ -131,7 +131,7 @@ export class FullDateTimePipe implements PipeTransform {
             return fallback;
         }
 
-        return value.toStringFormat('LLL');
+        return value.toStringFormat('LLLL');
     }
 }
 

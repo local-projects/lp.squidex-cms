@@ -1,3 +1,6 @@
+@import '_vars';
+@import '_mixins';
+
 .content {
     cursor: pointer;
 }
@@ -11,21 +14,6 @@
 
 .icon-plus {
     font-size: .8rem;
-}
-
-.hidden {
-    display: none !important;
-}
-
-.settings {
-    &-container {
-        position: relative;
-    }
-
-    &-button {
-        @include absolute(null, 1rem, -2.375rem);
-        z-index: 1000;
-    }
 }
 
 .btn-status {

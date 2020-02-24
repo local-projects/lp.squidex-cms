@@ -9,24 +9,21 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
-using Squidex.Infrastructure;
 
 namespace Squidex.Web.Pipeline
 {
     public sealed class EnforceHttpsMiddleware : IMiddleware
     {
-        private readonly UrlsOptions urlsOptions;
+        private readonly UrlsOptions urls;
 
-        public EnforceHttpsMiddleware(IOptions<UrlsOptions> urlsOptions)
+        public EnforceHttpsMiddleware(IOptions<UrlsOptions> urls)
         {
-            Guard.NotNull(urlsOptions);
-
-            this.urlsOptions = urlsOptions.Value;
+            this.urls = urls.Value;
         }
 
         public async Task InvokeAsync(HttpContext context, RequestDelegate next)
         {
-            if (!urlsOptions.EnforceHTTPS)
+            if (!urls.EnforceHTTPS)
             {
                 await next(context);
             }

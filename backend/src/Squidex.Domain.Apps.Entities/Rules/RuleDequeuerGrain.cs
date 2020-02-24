@@ -56,7 +56,7 @@ namespace Squidex.Domain.Apps.Entities.Rules
             RegisterOrUpdateReminder("Default", TimeSpan.Zero, TimeSpan.FromMinutes(10));
             RegisterTimer(x => QueryAsync(), null, TimeSpan.Zero, TimeSpan.FromSeconds(10));
 
-            return Task.CompletedTask;
+            return Task.FromResult(true);
         }
 
         public override Task OnDeactivateAsync()
@@ -68,7 +68,7 @@ namespace Squidex.Domain.Apps.Entities.Rules
 
         public Task ActivateAsync()
         {
-            return Task.CompletedTask;
+            return TaskHelper.Done;
         }
 
         public async Task QueryAsync()
@@ -82,7 +82,7 @@ namespace Squidex.Domain.Apps.Entities.Rules
             catch (Exception ex)
             {
                 log.LogError(ex, w => w
-                    .WriteProperty("action", "QueryRuleEvents")
+                    .WriteProperty("action", "QueueWebhookEvents")
                     .WriteProperty("status", "Failed"));
             }
         }
@@ -100,17 +100,17 @@ namespace Squidex.Domain.Apps.Entities.Rules
 
                 var (response, elapsed) = await ruleService.InvokeAsync(job.ActionName, job.ActionData);
 
-                var jobDelay = ComputeJobDelay(response.Status, @event, job);
-                var jobResult = ComputeJobResult(response.Status, jobDelay);
+                var jobInvoke = ComputeJobInvoke(response.Status, @event, job);
+                var jobResult = ComputeJobResult(response.Status, jobInvoke);
 
                 var now = clock.GetCurrentInstant();
 
-                await ruleEventRepository.MarkSentAsync(@event.Job, response.Dump, response.Status, jobResult, elapsed, now, jobDelay);
+                await ruleEventRepository.MarkSentAsync(@event.Job, response.Dump, response.Status, jobResult, elapsed, now, jobInvoke);
             }
             catch (Exception ex)
             {
                 log.LogError(ex, w => w
-                    .WriteProperty("action", "SendRuleEvent")
+                    .WriteProperty("action", "SendWebhookEvent")
                     .WriteProperty("status", "Failed"));
             }
             finally
@@ -135,7 +135,7 @@ namespace Squidex.Domain.Apps.Entities.Rules
             }
         }
 
-        private static Instant? ComputeJobDelay(RuleResult result, IRuleEventEntity @event, RuleJob job)
+        private static Instant? ComputeJobInvoke(RuleResult result, IRuleEventEntity @event, RuleJob job)
         {
             if (result != RuleResult.Success)
             {
@@ -157,7 +157,7 @@ namespace Squidex.Domain.Apps.Entities.Rules
 
         public Task ReceiveReminder(string reminderName, TickStatus status)
         {
-            return Task.CompletedTask;
+            return TaskHelper.Done;
         }
     }
 }

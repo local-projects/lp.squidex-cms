@@ -5,6 +5,7 @@
 //  All rights reserved. Licensed under the MIT license.
 // ==========================================================================
 
+using System;
 using System.Threading.Tasks;
 using Orleans;
 using Squidex.Domain.Apps.Entities.Apps.Commands;
@@ -37,7 +38,7 @@ namespace Squidex.Domain.Apps.Entities.Apps
             this.contextProvider = contextProvider;
         }
 
-        public override async Task HandleAsync(CommandContext context, NextDelegate next)
+        public override async Task HandleAsync(CommandContext context, Func<Task> next)
         {
             if (context.Command is UploadAppImage uploadImage)
             {
@@ -51,27 +52,21 @@ namespace Squidex.Domain.Apps.Entities.Apps
                 contextProvider.Context.App = app;
             }
 
-            await next(context);
+            await next();
         }
 
         private async Task UploadAsync(UploadAppImage uploadImage)
         {
             var file = uploadImage.File;
 
-            using (var uploadStream = file.OpenRead())
-            {
-                var image = await assetThumbnailGenerator.GetImageInfoAsync(uploadStream);
+            var image = await assetThumbnailGenerator.GetImageInfoAsync(file.OpenRead());
 
-                if (image == null)
-                {
-                    throw new ValidationException("File is not an image.");
-                }
+            if (image == null)
+            {
+                throw new ValidationException("File is not an image.");
             }
 
-            using (var uploadStream = file.OpenRead())
-            {
-                await appImageStore.UploadAsync(uploadImage.AppId, uploadStream);
-            }
+            await appImageStore.UploadAsync(uploadImage.AppId, file.OpenRead());
         }
     }
 }

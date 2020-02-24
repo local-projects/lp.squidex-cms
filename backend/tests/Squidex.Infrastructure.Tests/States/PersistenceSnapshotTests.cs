@@ -122,17 +122,6 @@ namespace Squidex.Infrastructure.States
         }
 
         [Fact]
-        public async Task Should_write_snapshot_to_store_with_empty_version()
-        {
-            var persistence = sut.WithSnapshots<int>(None.Type, key, null);
-
-            await persistence.WriteSnapshotAsync(100);
-
-            A.CallTo(() => snapshotStore.WriteAsync(key, 100, EtagVersion.Empty, 0))
-                .MustHaveHappened();
-        }
-
-        [Fact]
         public async Task Should_not_wrap_exception_when_writing_to_store_with_previous_version()
         {
             A.CallTo(() => snapshotStore.ReadAsync(key))
@@ -157,7 +146,7 @@ namespace Squidex.Infrastructure.States
 
             await persistence.DeleteAsync();
 
-            A.CallTo(() => eventStore.DeleteStreamAsync(A<string>._))
+            A.CallTo(() => eventStore.DeleteStreamAsync(A<string>.Ignored))
                 .MustNotHaveHappened();
 
             A.CallTo(() => snapshotStore.RemoveAsync(key))
@@ -178,7 +167,7 @@ namespace Squidex.Infrastructure.States
         {
             await sut.RemoveSnapshotAsync<string, int>(key);
 
-            A.CallTo(() => eventStore.DeleteStreamAsync(A<string>._))
+            A.CallTo(() => eventStore.DeleteStreamAsync(A<string>.Ignored))
                 .MustNotHaveHappened();
 
             A.CallTo(() => snapshotStore.RemoveAsync(key))

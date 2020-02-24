@@ -42,16 +42,7 @@ namespace Squidex.Domain.Apps.Core.ValidateContent.Validators
                     }
                     else
                     {
-                        var (json, error) = JsonValueConverter.ConvertValue(field, jsonValue);
-
-                        if (error != null)
-                        {
-                            addError(context.Path, error.Error);
-                        }
-                        else
-                        {
-                            typedValue = json;
-                        }
+                        typedValue = JsonValueConverter.ConvertValue(field, jsonValue);
                     }
                 }
 

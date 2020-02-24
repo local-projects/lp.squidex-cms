@@ -25,7 +25,6 @@ import {
     AssetsEditorComponent,
     CommentsPageComponent,
     ContentComponent,
-    ContentEventComponent,
     ContentFieldComponent,
     ContentHistoryPageComponent,
     ContentListCellDirective,
@@ -33,22 +32,21 @@ import {
     ContentListHeaderComponent,
     ContentListWidthPipe,
     ContentPageComponent,
-    ContentSelectorComponent,
+    ContentReferencesWidthPipe,
     ContentSelectorItemComponent,
     ContentsFiltersPageComponent,
     ContentsPageComponent,
+    ContentsSelectorComponent,
     ContentStatusComponent,
     ContentValueComponent,
     ContentValueEditorComponent,
-    CustomViewEditorComponent,
     DueTimeSelectorComponent,
     FieldEditorComponent,
     FieldLanguagesComponent,
     PreviewButtonComponent,
     ReferenceItemComponent,
     ReferencesEditorComponent,
-    SchemasPageComponent,
-    StockPhotoEditorComponent
+    SchemasPageComponent
 } from './declarations';
 
 const routes: Routes = [
@@ -108,9 +106,9 @@ const routes: Routes = [
 
 @NgModule({
     imports: [
-        RouterModule.forChild(routes),
         SqxFrameworkModule,
-        SqxSharedModule
+        SqxSharedModule,
+        RouterModule.forChild(routes)
     ],
     declarations: [
         ArrayEditorComponent,
@@ -118,30 +116,28 @@ const routes: Routes = [
         AssetsEditorComponent,
         CommentsPageComponent,
         ContentComponent,
-        ContentEventComponent,
         ContentFieldComponent,
-        ContentHistoryPageComponent,
         ContentListCellDirective,
+        ContentReferencesWidthPipe,
+        ContentListWidthPipe,
         ContentListFieldComponent,
         ContentListHeaderComponent,
-        ContentListWidthPipe,
+        ContentHistoryPageComponent,
         ContentPageComponent,
-        ContentSelectorComponent,
         ContentSelectorItemComponent,
         ContentsFiltersPageComponent,
         ContentsPageComponent,
+        ContentsSelectorComponent,
         ContentStatusComponent,
         ContentValueComponent,
         ContentValueEditorComponent,
-        CustomViewEditorComponent,
         DueTimeSelectorComponent,
         FieldEditorComponent,
         FieldLanguagesComponent,
         PreviewButtonComponent,
         ReferenceItemComponent,
         ReferencesEditorComponent,
-        SchemasPageComponent,
-        StockPhotoEditorComponent
+        SchemasPageComponent
     ]
 })
 export class SqxFeatureContentModule {}

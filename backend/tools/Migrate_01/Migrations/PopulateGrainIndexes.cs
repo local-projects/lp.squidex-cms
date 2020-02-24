@@ -18,6 +18,7 @@ using Squidex.Domain.Apps.Events.Schemas;
 using Squidex.Infrastructure;
 using Squidex.Infrastructure.EventSourcing;
 using Squidex.Infrastructure.Migrations;
+using Squidex.Infrastructure.Tasks;
 
 namespace Migrate_01.Migrations
 {
@@ -82,19 +83,19 @@ namespace Migrate_01.Migrations
 
                 switch (@event.Payload)
                 {
-                    case AppCreated created:
+                    case AppCreated appCreated:
                         {
-                            RemoveApp(created.AppId, false);
+                            RemoveApp(appCreated.AppId, false);
 
-                            appsByName[created.Name] = created.AppId.Id;
+                            appsByName[appCreated.Name] = appCreated.AppId.Id;
                             break;
                         }
 
-                    case AppContributorAssigned contributorAssigned:
+                    case AppContributorAssigned appContributorAssigned:
                         {
-                            if (HasApp(contributorAssigned.AppId, true, out _))
+                            if (HasApp(appContributorAssigned.AppId, true, out _))
                             {
-                                Index(contributorAssigned.ContributorId).Add(contributorAssigned.AppId.Id);
+                                Index(appContributorAssigned.ContributorId).Add(appContributorAssigned.AppId.Id);
                             }
 
                             break;
@@ -103,12 +104,12 @@ namespace Migrate_01.Migrations
                     case AppContributorRemoved contributorRemoved:
                         Index(contributorRemoved.ContributorId).Remove(contributorRemoved.AppId.Id);
                         break;
-                    case AppArchived archived:
-                        RemoveApp(archived.AppId, true);
+                    case AppArchived appArchived:
+                        RemoveApp(appArchived.AppId, true);
                         break;
                 }
 
-                return Task.CompletedTask;
+                return TaskHelper.Done;
             }, "^app\\-");
 
             await indexApps.RebuildAsync(appsByName);
@@ -134,15 +135,15 @@ namespace Migrate_01.Migrations
 
                 switch (@event.Payload)
                 {
-                    case RuleCreated created:
-                        Index(created).Add(created.RuleId);
+                    case RuleCreated ruleCreated:
+                        Index(ruleCreated).Add(ruleCreated.RuleId);
                         break;
-                    case RuleDeleted deleted:
-                        Index(deleted).Remove(deleted.RuleId);
+                    case RuleDeleted ruleDeleted:
+                        Index(ruleDeleted).Remove(ruleDeleted.RuleId);
                         break;
                 }
 
-                return Task.CompletedTask;
+                return TaskHelper.Done;
             }, "^rule\\-");
 
             foreach (var (appId, rules) in rulesByApp)
@@ -166,15 +167,15 @@ namespace Migrate_01.Migrations
 
                 switch (@event.Payload)
                 {
-                    case SchemaCreated created:
-                        Index(created)[created.SchemaId.Name] = created.SchemaId.Id;
+                    case SchemaCreated schemaCreated:
+                        Index(schemaCreated)[schemaCreated.SchemaId.Name] = schemaCreated.SchemaId.Id;
                         break;
-                    case SchemaDeleted deleted:
-                        Index(deleted).Remove(deleted.SchemaId.Name);
+                    case SchemaDeleted schemaDeleted:
+                        Index(schemaDeleted).Remove(schemaDeleted.SchemaId.Name);
                         break;
                 }
 
-                return Task.CompletedTask;
+                return TaskHelper.Done;
             }, "^schema\\-");
 
             foreach (var (appId, schemas) in schemasByApp)

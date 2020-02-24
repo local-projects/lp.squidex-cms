@@ -44,7 +44,7 @@ export class SchemaFormComponent implements OnInit {
     }
 
     public ngOnInit() {
-        this.createForm.load({ ...this.import, name: '' });
+        this.createForm.load({ name: '', import: this.import });
 
         this.showImport = !!this.import;
     }
@@ -59,11 +59,17 @@ export class SchemaFormComponent implements OnInit {
         this.complete.emit(value);
     }
 
+    public emitCancel() {
+        this.cancel.emit();
+    }
+
     public createSchema() {
         const value = this.createForm.submit();
 
         if (value) {
-            this.schemasState.create(value)
+            const schemaDto = Object.assign(value.import || {}, { name: value.name, isSingleton: value.isSingleton });
+
+            this.schemasState.create(schemaDto)
                 .subscribe(dto => {
                     this.emitComplete(dto);
                 }, error => {

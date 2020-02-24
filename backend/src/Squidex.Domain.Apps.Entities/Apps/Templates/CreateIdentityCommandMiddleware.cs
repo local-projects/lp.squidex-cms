@@ -18,7 +18,7 @@ namespace Squidex.Domain.Apps.Entities.Apps.Templates
     {
         private const string TemplateName = "Identity";
 
-        public async Task HandleAsync(CommandContext context, NextDelegate next)
+        public async Task HandleAsync(CommandContext context, Func<Task> next)
         {
             if (context.IsCompleted && context.Command is CreateApp createApp && IsRightTemplate(createApp))
             {
@@ -43,7 +43,7 @@ namespace Squidex.Domain.Apps.Entities.Apps.Templates
                     CreateUsersSchemaAsync(publish));
             }
 
-            await next(context);
+            await next();
         }
 
         private static bool IsRightTemplate(CreateApp createApp)

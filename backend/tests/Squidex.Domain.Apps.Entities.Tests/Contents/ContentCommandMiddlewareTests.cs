@@ -9,7 +9,6 @@ using System;
 using System.Threading.Tasks;
 using FakeItEasy;
 using Orleans;
-using Squidex.Domain.Apps.Entities.Contents.Queries;
 using Squidex.Domain.Apps.Entities.Contents.State;
 using Squidex.Domain.Apps.Entities.TestHelpers;
 using Squidex.Infrastructure.Commands;
@@ -52,7 +51,7 @@ namespace Squidex.Domain.Apps.Entities.Contents
 
             await sut.HandleAsync(context);
 
-            A.CallTo(() => contentEnricher.EnrichAsync(A<IEnrichedContentEntity>._, requestContext))
+            A.CallTo(() => contentEnricher.EnrichAsync(A<IEnrichedContentEntity>.Ignored, requestContext))
                 .MustNotHaveHappened();
         }
 
@@ -70,7 +69,7 @@ namespace Squidex.Domain.Apps.Entities.Contents
 
             Assert.Same(result, context.Result<IEnrichedContentEntity>());
 
-            A.CallTo(() => contentEnricher.EnrichAsync(A<IEnrichedContentEntity>._, requestContext))
+            A.CallTo(() => contentEnricher.EnrichAsync(A<IEnrichedContentEntity>.Ignored, requestContext))
                 .MustNotHaveHappened();
         }
 

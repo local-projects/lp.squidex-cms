@@ -44,12 +44,27 @@ namespace Squidex.Areas.Api.Controllers.Contents.Models
         /// The data of the content item.
         /// </summary>
         [Required]
-        public object Data { get; set; }
+        public object? Data { get; set; }
+
+        /// <summary>
+        /// The pending changes of the content item.
+        /// </summary>
+        public object? DataDraft { get; set; }
 
         /// <summary>
         /// The reference data for the frontend UI.
         /// </summary>
         public NamedContentData? ReferenceData { get; set; }
+
+        /// <summary>
+        /// Indicates if the draft data is pending.
+        /// </summary>
+        public bool IsPending { get; set; }
+
+        /// <summary>
+        /// The scheduled status.
+        /// </summary>
+        public ScheduleJobDto? ScheduleJob { get; set; }
 
         /// <summary>
         /// The date and time when the content item has been created.
@@ -67,24 +82,9 @@ namespace Squidex.Areas.Api.Controllers.Contents.Models
         public Status Status { get; set; }
 
         /// <summary>
-        /// The new status of the content.
-        /// </summary>
-        public Status? NewStatus { get; set; }
-
-        /// <summary>
         /// The color of the status.
         /// </summary>
         public string StatusColor { get; set; }
-
-        /// <summary>
-        /// The color of the new status.
-        /// </summary>
-        public string? NewStatusColor { get; set; }
-
-        /// <summary>
-        /// The scheduled status.
-        /// </summary>
-        public ScheduleJobDto? ScheduleJob { get; set; }
 
         /// <summary>
         /// The name of the schema.
@@ -110,13 +110,15 @@ namespace Squidex.Areas.Api.Controllers.Contents.Models
         {
             var response = SimpleMapper.Map(content, new ContentDto());
 
-            if (context.ShouldFlatten())
+            if (context.IsFlatten())
             {
-                response.Data = content.Data.ToFlatten();
+                response.Data = content.Data?.ToFlatten();
+                response.DataDraft = content.DataDraft?.ToFlatten();
             }
             else
             {
                 response.Data = content.Data;
+                response.DataDraft = content.DataDraft;
             }
 
             if (content.ReferenceFields != null)
@@ -126,12 +128,7 @@ namespace Squidex.Areas.Api.Controllers.Contents.Models
 
             if (content.ScheduleJob != null)
             {
-                response.ScheduleJob = new ScheduleJobDto
-                {
-                    Color = content.ScheduledStatusColor!
-                };
-
-                SimpleMapper.Map(content.ScheduleJob, response.ScheduleJob);
+                response.ScheduleJob = SimpleMapper.Map(content.ScheduleJob, new ScheduleJobDto());
             }
 
             return response.CreateLinksAsync(content, controller, content.AppId.Name, content.SchemaId.Name);
@@ -147,51 +144,48 @@ namespace Squidex.Areas.Api.Controllers.Contents.Models
             {
                 var versioned = new { app, name = schema, id = Id, version = Version - 1 };
 
-                AddGetLink("previous", controller.Url<ContentsController>(x => nameof(x.GetContentVersion), versioned));
+                AddGetLink("prev", controller.Url<ContentsController>(x => nameof(x.GetContentVersion), versioned));
             }
 
-            if (!content.IsSingleton)
+            if (IsPending)
             {
-                if (NewStatus.HasValue)
+                if (controller.HasPermission(Permissions.AppContentsDraftDiscard, app, schema))
                 {
-                    if (controller.HasPermission(Permissions.AppContentsVersionDelete, app, schema))
-                    {
-                        AddDeleteLink("draft/delete", controller.Url<ContentsController>(x => nameof(x.DeleteVersion), values));
-                    }
-                }
-                else if (Status == Status.Published)
-                {
-                    if (controller.HasPermission(Permissions.AppContentsVersionCreate, app, schema))
-                    {
-                        AddPostLink("draft/create", controller.Url<ContentsController>(x => nameof(x.CreateDraft), values));
-                    }
+                    AddPutLink("draft/discard", controller.Url<ContentsController>(x => nameof(x.DiscardDraft), values));
                 }
 
-                if (content.NextStatuses != null)
+                if (controller.HasPermission(Permissions.AppContentsDraftPublish, app, schema))
                 {
-                    foreach (var next in content.NextStatuses)
-                    {
-                        AddPutLink($"status/{next.Status}", controller.Url<ContentsController>(x => nameof(x.PutContentStatus), values), next.Color);
-                    }
-                }
-
-                if (controller.HasPermission(Permissions.AppContentsDelete, app, schema))
-                {
-                    AddDeleteLink("delete", controller.Url<ContentsController>(x => nameof(x.DeleteContent), values));
+                    AddPutLink("draft/publish", controller.Url<ContentsController>(x => nameof(x.PutContentStatus), values));
                 }
             }
 
-            if (content.CanUpdate)
+            if (controller.HasPermission(Permissions.AppContentsUpdate, app, schema))
             {
-                if (controller.HasPermission(Permissions.AppContentsUpdate, app, schema))
+                if (content.CanUpdate)
                 {
                     AddPutLink("update", controller.Url<ContentsController>(x => nameof(x.PutContent), values));
                 }
 
-                if (controller.HasPermission(Permissions.AppContentsUpdatePartial, app, schema))
+                if (Status == Status.Published)
                 {
-                    AddPatchLink("patch", controller.Url<ContentsController>(x => nameof(x.PatchContent), values));
+                    AddPutLink("draft/propose", controller.Url<ContentsController>(x => nameof(x.PutContent), values) + "?asDraft=true");
                 }
+
+                AddPatchLink("patch", controller.Url<ContentsController>(x => nameof(x.PatchContent), values));
+
+                if (content.Nexts != null)
+                {
+                    foreach (var next in content.Nexts)
+                    {
+                        AddPutLink($"status/{next.Status}", controller.Url<ContentsController>(x => nameof(x.PutContentStatus), values), next.Color);
+                    }
+                }
+            }
+
+            if (controller.HasPermission(Permissions.AppContentsDelete, app, schema))
+            {
+                AddDeleteLink("delete", controller.Url<ContentsController>(x => nameof(x.DeleteContent), values));
             }
 
             return this;

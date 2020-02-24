@@ -55,7 +55,7 @@ namespace Squidex.Infrastructure.Orleans
             CreateGuidGrain();
             CreateGuidGrain();
 
-            A.CallTo(() => grainRuntime.DeactivateOnIdle(A<Grain>._))
+            A.CallTo(() => grainRuntime.DeactivateOnIdle(A<Grain>.Ignored))
                 .MustNotHaveHappened();
         }
 

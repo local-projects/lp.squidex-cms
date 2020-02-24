@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using EventStore.ClientAPI;
 using EventStore.ClientAPI.Exceptions;
 using Squidex.Infrastructure.Json;
+using Squidex.Infrastructure.Tasks;
 
 namespace Squidex.Infrastructure.EventSourcing
 {
@@ -47,7 +48,7 @@ namespace Squidex.Infrastructure.EventSourcing
         {
             subscription.Stop();
 
-            return Task.CompletedTask;
+            return TaskHelper.Done;
         }
 
         public void WakeUp()

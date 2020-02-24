@@ -13,6 +13,7 @@ using Squidex.Domain.Apps.Entities.Comments.Commands;
 using Squidex.Infrastructure;
 using Squidex.Infrastructure.Commands;
 using Squidex.Infrastructure.Orleans;
+using Squidex.Infrastructure.Tasks;
 using Squidex.Shared.Users;
 using Xunit;
 
@@ -31,7 +32,7 @@ namespace Squidex.Domain.Apps.Entities.Comments
 
         public CommentsCommandMiddlewareTests()
         {
-            A.CallTo(() => userResolver.FindByIdOrEmailAsync(A<string>._))
+            A.CallTo(() => userResolver.FindByIdOrEmailAsync(A<string>.Ignored))
                 .Returns(Task.FromResult<IUser?>(null));
 
             sut = new CommentsCommandMiddleware(grainFactory, userResolver);
@@ -55,11 +56,11 @@ namespace Squidex.Domain.Apps.Entities.Comments
 
             var isNextCalled = false;
 
-            await sut.HandleAsync(context, c =>
+            await sut.HandleAsync(context, () =>
             {
                 isNextCalled = true;
 
-                return Task.CompletedTask;
+                return TaskHelper.Done;
             });
 
             Assert.True(isNextCalled);
@@ -120,7 +121,7 @@ namespace Squidex.Domain.Apps.Entities.Comments
 
             await sut.HandleAsync(context);
 
-            A.CallTo(() => userResolver.FindByIdOrEmailAsync(A<string>._))
+            A.CallTo(() => userResolver.FindByIdOrEmailAsync(A<string>.Ignored))
                 .MustNotHaveHappened();
         }
 
@@ -136,7 +137,7 @@ namespace Squidex.Domain.Apps.Entities.Comments
 
             await sut.HandleAsync(context);
 
-            A.CallTo(() => userResolver.FindByIdOrEmailAsync(A<string>._))
+            A.CallTo(() => userResolver.FindByIdOrEmailAsync(A<string>.Ignored))
                 .MustNotHaveHappened();
         }
 

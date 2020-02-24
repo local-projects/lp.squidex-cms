@@ -5,7 +5,6 @@
 //  All rights reserved. Licensed under the MIT license.
 // ==========================================================================
 
-using IdentityModel.AspNetCore.OAuth2Introspection;
 using IdentityServer4.AccessTokenValidation;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -45,16 +44,6 @@ namespace Squidex.Config.Authentication
                     options.ApiSecret = null;
                     options.RequireHttpsMetadata = identityOptions.RequiresHttps;
                     options.SupportedTokens = SupportedTokens.Jwt;
-
-                    var fromHeader = TokenRetrieval.FromAuthorizationHeader();
-                    var fromQuery = TokenRetrieval.FromQueryString();
-
-                    options.TokenRetriever = request =>
-                    {
-                        var result = fromHeader(request) ?? fromQuery(request);
-
-                        return result;
-                    };
                 });
 
                 authBuilder.AddOpenIdConnect(options =>

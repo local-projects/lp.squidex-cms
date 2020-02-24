@@ -11,6 +11,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Squidex.Infrastructure.Tasks;
 using Xunit;
 
 namespace Squidex.Infrastructure.EventSourcing
@@ -37,7 +38,7 @@ namespace Squidex.Infrastructure.EventSourcing
 
                 Events.Add(storedEvent);
 
-                return Task.CompletedTask;
+                return TaskHelper.Done;
             }
         }
 
@@ -322,7 +323,7 @@ namespace Squidex.Infrastructure.EventSourcing
                 {
                     var readEvents = new List<StoredEvent>();
 
-                    await Sut.QueryAsync(x => { readEvents.Add(x); return Task.CompletedTask; }, property, value, null, cts.Token);
+                    await Sut.QueryAsync(x => { readEvents.Add(x); return TaskHelper.Done; }, property, value, null, cts.Token);
 
                     await Task.Delay(500, cts.Token);
 
@@ -346,7 +347,7 @@ namespace Squidex.Infrastructure.EventSourcing
                 {
                     var readEvents = new List<StoredEvent>();
 
-                    await Sut.QueryAsync(x => { readEvents.Add(x); return Task.CompletedTask; }, streamFilter, position, cts.Token);
+                    await Sut.QueryAsync(x => { readEvents.Add(x); return TaskHelper.Done; }, streamFilter, position, cts.Token);
 
                     await Task.Delay(500, cts.Token);
 

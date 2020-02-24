@@ -59,14 +59,6 @@ namespace Squidex.Domain.Apps.Core.Model.Apps
         }
 
         [Fact]
-        public void Should_return_same_clients_if_client_is_updated_with_the_same_values()
-        {
-            var clients_1 = clients_0.Rename("2", "2");
-
-            Assert.Same(clients_0, clients_1);
-        }
-
-        [Fact]
         public void Should_return_same_clients_if_client_to_rename_not_found()
         {
             var clients_1 = clients_0.Rename("2", "new-name");
@@ -93,11 +85,9 @@ namespace Squidex.Domain.Apps.Core.Model.Apps
         [Fact]
         public void Should_revoke_client()
         {
-            var clients_1 = clients_0.Add("2", "secret2");
-            var clients_2 = clients_1.Add("3", "secret3");
-            var clients_3 = clients_2.Revoke("2");
+            var clients_1 = clients_0.Revoke("1");
 
-            Assert.Equal(new[] { "1", "3" }, clients_3.Keys);
+            Assert.Empty(clients_1);
         }
 
         [Fact]
@@ -105,7 +95,7 @@ namespace Squidex.Domain.Apps.Core.Model.Apps
         {
             var clients_1 = clients_0.Revoke("2");
 
-            Assert.Same(clients_0, clients_1);
+            Assert.NotEmpty(clients_1);
         }
     }
 }

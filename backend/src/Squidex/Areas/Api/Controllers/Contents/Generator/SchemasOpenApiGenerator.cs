@@ -21,7 +21,6 @@ using Squidex.Areas.Api.Controllers.Contents.Models;
 using Squidex.Domain.Apps.Entities.Apps;
 using Squidex.Domain.Apps.Entities.Schemas;
 using Squidex.Infrastructure;
-using Squidex.Infrastructure.Caching;
 using Squidex.Pipeline.OpenApi;
 
 namespace Squidex.Areas.Api.Controllers.Contents.Generator
@@ -29,13 +28,12 @@ namespace Squidex.Areas.Api.Controllers.Contents.Generator
     public sealed class SchemasOpenApiGenerator
     {
         private readonly OpenApiDocumentGeneratorSettings settings = new OpenApiDocumentGeneratorSettings();
-        private readonly IRequestCache requestCache;
         private OpenApiSchemaGenerator schemaGenerator;
         private OpenApiDocument document;
         private JsonSchema statusSchema;
         private JsonSchemaResolver schemaResolver;
 
-        public SchemasOpenApiGenerator(IEnumerable<IDocumentProcessor> documentProcessors, IRequestCache requestCache)
+        public SchemasOpenApiGenerator(IEnumerable<IDocumentProcessor> documentProcessors)
         {
             settings.ConfigureSchemaSettings();
 
@@ -43,8 +41,6 @@ namespace Squidex.Areas.Api.Controllers.Contents.Generator
             {
                 settings.DocumentProcessors.Add(processor);
             }
-
-            this.requestCache = requestCache;
         }
 
         public OpenApiDocument Generate(HttpContext httpContext, IAppEntity app, IEnumerable<ISchemaEntity> schemas)
@@ -83,17 +79,13 @@ namespace Squidex.Areas.Api.Controllers.Contents.Generator
 
         private void GenerateSchemasOperations(IEnumerable<ISchemaEntity> schemas, IAppEntity app)
         {
-            requestCache.AddDependency(app.Id, app.Version);
-
             var appBasePath = $"/content/{app.Name}";
 
-            foreach (var schema in schemas.Where(x => x.SchemaDef.IsPublished))
+            foreach (var schema in schemas.Select(x => x.SchemaDef).Where(x => x.IsPublished))
             {
-                requestCache.AddDependency(schema.Id, schema.Version);
-
                 var partition = app.PartitionResolver();
 
-                new SchemaOpenApiGenerator(document, app.Name, appBasePath, schema.SchemaDef, AppendSchema, statusSchema, partition)
+                new SchemaOpenApiGenerator(document, app.Name, appBasePath, schema, AppendSchema, statusSchema, partition)
                     .GenerateSchemaOperations();
             }
         }

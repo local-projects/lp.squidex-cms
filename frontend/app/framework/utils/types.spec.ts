@@ -5,9 +5,16 @@
  * Copyright (c) Squidex UG (haftungsbeschränkt). All rights reserved.
  */
 
-import { Types } from './types';
+import { mergeInto, Types } from './types';
 
 describe('Types', () => {
+    it('should calculate hash string', () => {
+        expect(Types.hash(null)).toBe('null');
+        expect(Types.hash(undefined)).toBeUndefined();
+
+        expect(Types.hash(new RegExp('.*'))).toEqual('{}');
+    });
+
     it('should make string check', () => {
         expect(Types.isString('')).toBeTruthy();
         expect(Types.isString('string')).toBeTruthy();
@@ -96,6 +103,12 @@ describe('Types', () => {
         expect(Types.is(1, MyClass)).toBeFalsy();
     });
 
+    it('should make json equals check', () => {
+        expect(Types.jsJsonEquals({ a: 1, b: 2 }, { a: 1, b: 2 })).toBeTruthy();
+
+        expect(Types.jsJsonEquals({ a: 1, b: 2 }, { b: 2, a: 1 })).toBeFalsy();
+    });
+
     it('should not treat zero as empty', () => {
         expect(Types.isEmpty(0)).toBeFalsy();
     });
@@ -140,103 +153,10 @@ describe('Types', () => {
         expect(Types.isEmpty({ a: null, b: null })).toBeTruthy();
     });
 
-    it('should compare undefined', () => {
-        expect(Types.equals(undefined, undefined)).toBeTruthy();
-    });
-
-    it('should compare null', () => {
-        expect(Types.equals(null, null)).toBeTruthy();
-    });
-
-    it('should compare invalid', () => {
-        expect(Types.equals(null, undefined)).toBeFalsy();
-    });
-
-    it('should compare scalars', () => {
-        expect(Types.equals(1, false)).toBeFalsy();
-        expect(Types.equals(1, 2)).toBeFalsy();
-        expect(Types.equals(2, 2)).toBeTruthy();
-    });
-
-    it('should compare arrays', () => {
-        expect(Types.equals([1, 2], [2, 3])).toBeFalsy();
-        expect(Types.equals([1, 2], [1, 2])).toBeTruthy();
-    });
-
-    it('should compare objects', () => {
-        expect(Types.equals({ a: 1, b: 2 }, { a: 2, b: 3 })).toBeFalsy();
-        expect(Types.equals({ a: 1, b: 2 }, { a: 1, b: 2 })).toBeTruthy();
-    });
-
-    it('should compare nested objects', () => {
-        expect(Types.equals({ a: [1, 2] }, { a: [2, 3] })).toBeFalsy();
-        expect(Types.equals({ a: [1, 2] }, { a: [1, 2] })).toBeTruthy();
-    });
-
-    const FalsyValues = [false, null, 0];
-
-    it('should compare empty string with undefined', () => {
-        expect(Types.equals('', undefined, true)).toBeTruthy();
-        expect(Types.equals('', undefined, false)).toBeFalsy();
-
-        expect(Types.equals(undefined, '', true)).toBeTruthy();
-        expect(Types.equals(undefined, '', false)).toBeFalsy();
-    });
-
-    FalsyValues.forEach(x => {
-        it(`should compare empty string with {x}`, () => {
-            expect(Types.equals('', x, true)).toBeFalsy();
-            expect(Types.equals('', x, false)).toBeFalsy();
-
-            expect(Types.equals(x, '', true)).toBeFalsy();
-            expect(Types.equals(x, '', false)).toBeFalsy();
-        });
-    });
-
-    it('should clone array', () => {
-        const source = [1, 2, 3];
-        const result = Types.clone(source);
-
-        expect(result).toEqual(source);
-        expect(result).not.toBe(source);
-    });
-
-    it('should compare arrays', () => {
-        const source = 13;
-        const result = Types.clone(source);
-
-        expect(result).toEqual(source);
-    });
-
-    it('should clone value', () => {
-        const source = 13;
-        const result = Types.clone(source);
-
-        expect(result).toEqual(source);
-    });
-
-    it('should clone object', () => {
-        const source = { a: 1, b: 2 };
-        const result = Types.clone(source);
-
-        expect(result).toEqual(source);
-        expect(result).not.toBe(source);
-    });
-
-    it('should clone object of array', () => {
-        const source = { a: [1, 2], b: [3, 4] };
-        const result = Types.clone(source);
-
-        expect(result).toEqual(source);
-        expect(result).not.toBe(source);
-        expect(result.a).not.toBe(source.a);
-        expect(result.b).not.toBe(source.b);
-    });
-
     it('should merge deeply', () => {
         const source = {};
 
-        Types.mergeInto(source, {
+        mergeInto(source, {
             rootShared: 1,
             rootA: 2,
             nested: {
@@ -245,7 +165,7 @@ describe('Types', () => {
             array: [4]
         });
 
-        Types.mergeInto(source, {
+        mergeInto(source, {
             rootShared: 5,
             rootB: 6,
             nested: {

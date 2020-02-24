@@ -8,6 +8,7 @@
 using System;
 using System.Threading.Tasks;
 using FakeItEasy;
+using Squidex.Infrastructure.Tasks;
 using Xunit;
 
 namespace Squidex.Infrastructure.Commands
@@ -20,13 +21,13 @@ namespace Squidex.Infrastructure.Commands
         {
             public ICommand LastCommand { get; private set; }
 
-            public Task HandleAsync(CommandContext context, NextDelegate next)
+            public Task HandleAsync(CommandContext context, Func<Task> next)
             {
                 LastCommand = context.Command;
 
                 context.Complete(true);
 
-                return Task.FromResult(true);
+                return TaskHelper.True;
             }
         }
 
@@ -34,11 +35,11 @@ namespace Squidex.Infrastructure.Commands
         {
             public ICommand LastCommand { get; private set; }
 
-            public Task HandleAsync(CommandContext context, NextDelegate next)
+            public Task HandleAsync(CommandContext context, Func<Task> next)
             {
                 LastCommand = context.Command;
 
-                return Task.CompletedTask;
+                return TaskHelper.Done;
             }
         }
 
@@ -46,7 +47,7 @@ namespace Squidex.Infrastructure.Commands
         {
             public ICommand LastCommand { get; private set; }
 
-            public Task HandleAsync(CommandContext context, NextDelegate next)
+            public Task HandleAsync(CommandContext context, Func<Task> next)
             {
                 LastCommand = context.Command;
 

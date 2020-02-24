@@ -10,7 +10,6 @@ namespace Squidex.Infrastructure.Queries
     public enum ClrValueType
     {
         Boolean,
-        Dynamic,
         Guid,
         Double,
         Instant,

@@ -6,81 +6,48 @@
 // ==========================================================================
 
 using System;
+using System.Runtime.Serialization;
 using NodaTime;
-using Squidex.Domain.Apps.Events;
 using Squidex.Infrastructure;
 using Squidex.Infrastructure.Commands;
 using Squidex.Infrastructure.EventSourcing;
 
 namespace Squidex.Domain.Apps.Entities
 {
-    public abstract class DomainObjectState<T> :
+    public abstract class DomainObjectState<T> : Cloneable<T>,
         IDomainState<T>,
         IEntity,
         IEntityWithCreatedBy,
         IEntityWithLastModifiedBy,
-        IEntityWithVersion
-        where T : class
+        IEntityWithVersion,
+        IUpdateableEntity,
+        IUpdateableEntityWithCreatedBy,
+        IUpdateableEntityWithLastModifiedBy
+        where T : Cloneable
     {
+        [DataMember]
         public Guid Id { get; set; }
 
+        [DataMember]
         public RefToken CreatedBy { get; set; }
 
+        [DataMember]
         public RefToken LastModifiedBy { get; set; }
 
+        [DataMember]
         public Instant Created { get; set; }
 
+        [DataMember]
         public Instant LastModified { get; set; }
 
-        public bool IsDeleted { get; set; }
+        [DataMember]
+        public long Version { get; set; } = EtagVersion.Empty;
 
-        public long Version { get; set; }
+        public abstract T Apply(Envelope<IEvent> @event);
 
-        protected DomainObjectState()
+        public T Clone()
         {
-            Version = EtagVersion.Empty;
-        }
-
-        public virtual bool ApplyEvent(IEvent @event, EnvelopeHeaders headers)
-        {
-            return ApplyEvent(@event);
-        }
-
-        public virtual bool ApplyEvent(IEvent @event)
-        {
-            return false;
-        }
-
-        public T Apply(Envelope<IEvent> @event)
-        {
-            var payload = (SquidexEvent)@event.Payload;
-
-            var clone = (DomainObjectState<T>)MemberwiseClone();
-
-            if (!clone.ApplyEvent(@event.Payload, @event.Headers))
-            {
-                return (this as T)!;
-            }
-
-            var headers = @event.Headers;
-
-            if (clone.Id == default)
-            {
-                clone.Id = headers.AggregateId();
-            }
-
-            var timestamp = headers.Timestamp();
-
-            if (clone.CreatedBy == null)
-            {
-                clone.Created = timestamp;
-                clone.CreatedBy = payload.Actor;
-            }
-
-            clone.LastModified = timestamp;
-            clone.LastModifiedBy = payload.Actor;
-
-            return (clone as T)!;
+            return Clone(x => { });
         }
     }
 }

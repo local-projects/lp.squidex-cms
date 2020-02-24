@@ -7,6 +7,7 @@
 
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Squidex.Infrastructure.Tasks;
 using Xunit;
 using Options = Microsoft.Extensions.Options.Options;
 
@@ -25,7 +26,7 @@ namespace Squidex.Web.Pipeline
             {
                 isNextCalled = true;
 
-                return Task.CompletedTask;
+                return TaskHelper.Done;
             };
 
             sut = new EnforceHttpsMiddleware(Options.Create(options));

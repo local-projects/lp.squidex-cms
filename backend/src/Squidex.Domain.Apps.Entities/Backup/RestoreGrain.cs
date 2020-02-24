@@ -7,7 +7,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using NodaTime;
@@ -85,7 +84,7 @@ namespace Squidex.Domain.Apps.Entities.Backup
         {
             RecoverAfterRestartAsync().Forget();
 
-            return Task.CompletedTask;
+            return TaskHelper.Done;
         }
 
         private async Task RecoverAfterRestartAsync()
@@ -203,17 +202,13 @@ namespace Squidex.Domain.Apps.Entities.Backup
                 }
                 catch (Exception ex)
                 {
-                    switch (ex)
+                    if (ex is BackupRestoreException backupException)
                     {
-                        case BackupRestoreException backupException:
-                            Log(backupException.Message);
-                            break;
-                        case FileNotFoundException fileNotFoundException:
-                            Log(fileNotFoundException.Message);
-                            break;
-                        default:
-                            Log("Failed with internal error");
-                            break;
+                        Log(backupException.Message);
+                    }
+                    else
+                    {
+                        Log("Failed with internal error");
                     }
 
                     await CleanupAsync(handlers);

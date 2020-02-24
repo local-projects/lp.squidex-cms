@@ -14,7 +14,7 @@ using Squidex.Infrastructure.Collections;
 
 namespace Squidex.Domain.Apps.Core.Contents
 {
-    public sealed class Workflows : ImmutableDictionary<Guid, Workflow>
+    public sealed class Workflows : ArrayDictionary<Guid, Workflow>
     {
         public static readonly Workflows Empty = new Workflows();
 
@@ -22,15 +22,15 @@ namespace Squidex.Domain.Apps.Core.Contents
         {
         }
 
-        public Workflows(Dictionary<Guid, Workflow> inner)
-            : base(inner)
+        public Workflows(KeyValuePair<Guid, Workflow>[] items)
+            : base(items)
         {
         }
 
         [Pure]
         public Workflows Remove(Guid id)
         {
-            return Without<Workflows>(id);
+            return new Workflows(Without(id));
         }
 
         [Pure]
@@ -38,7 +38,7 @@ namespace Squidex.Domain.Apps.Core.Contents
         {
             Guard.NotNullOrEmpty(name);
 
-            return With<Workflows>(workflowId, Workflow.CreateDefault(name));
+            return new Workflows(With(workflowId, Workflow.CreateDefault(name)));
         }
 
         [Pure]
@@ -46,7 +46,7 @@ namespace Squidex.Domain.Apps.Core.Contents
         {
             Guard.NotNull(workflow);
 
-            return With<Workflows>(Guid.Empty, workflow);
+            return new Workflows(With(Guid.Empty, workflow));
         }
 
         [Pure]
@@ -54,7 +54,7 @@ namespace Squidex.Domain.Apps.Core.Contents
         {
             Guard.NotNull(workflow);
 
-            return With<Workflows>(id, workflow);
+            return new Workflows(With(id, workflow));
         }
 
         [Pure]
@@ -72,7 +72,7 @@ namespace Squidex.Domain.Apps.Core.Contents
                 return this;
             }
 
-            return With<Workflows>(id, workflow);
+            return new Workflows(With(id, workflow));
         }
 
         public Workflow GetFirst()

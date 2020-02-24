@@ -10,17 +10,11 @@ using Squidex.Domain.Apps.Core.Schemas;
 
 namespace Squidex.Domain.Apps.Entities.Contents
 {
-    public interface IEnrichedContentEntity : IContentEntity
+    public interface IEnrichedContentEntity : IContentEntity, IEntityWithCacheDependencies
     {
         bool CanUpdate { get; }
 
-        bool IsSingleton { get; }
-
         string StatusColor { get; }
-
-        string? NewStatusColor { get; }
-
-        string? ScheduledStatusColor { get; }
 
         string SchemaName { get; }
 
@@ -28,7 +22,7 @@ namespace Squidex.Domain.Apps.Entities.Contents
 
         RootField[]? ReferenceFields { get; }
 
-        StatusInfo[]? NextStatuses { get; }
+        StatusInfo[]? Nexts { get; }
 
         NamedContentData? ReferenceData { get; }
     }

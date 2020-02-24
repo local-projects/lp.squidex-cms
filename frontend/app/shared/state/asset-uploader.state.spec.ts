@@ -12,7 +12,6 @@ import { IMock, Mock } from 'typemoq';
 import {
     AssetDto,
     AssetsService,
-    AssetsState,
     AssetUploaderState,
     DialogService,
     ofForever,
@@ -22,6 +21,7 @@ import {
 import { createAsset } from './../services/assets.service.spec';
 
 import { TestValues } from './_test-helpers';
+import { AssetsState } from './assets.state';
 
 describe('AssetUploaderState', () => {
     const {

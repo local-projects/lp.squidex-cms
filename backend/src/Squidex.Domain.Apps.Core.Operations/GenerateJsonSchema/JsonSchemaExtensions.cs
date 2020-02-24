@@ -21,27 +21,23 @@ namespace Squidex.Domain.Apps.Core.GenerateJsonSchema
             var schemaName = schema.Name.ToPascalCase();
 
             var jsonTypeVisitor = new JsonTypeVisitor(schemaResolver, withHidden);
-            var jsonSchema = SchemaBuilder.Object();
+            var jsonSchema = Builder.Object();
 
             foreach (var field in schema.Fields.ForApi(withHidden))
             {
-                var partitionObject = SchemaBuilder.Object();
-                var partitioning = partitionResolver(field.Partitioning);
+                var partitionObject = Builder.Object();
+                var partitionSet = partitionResolver(field.Partitioning);
 
-                foreach (var partitionKey in partitioning.AllKeys)
+                foreach (var partitionItem in partitionSet)
                 {
                     var partitionItemProperty = field.Accept(jsonTypeVisitor);
 
                     if (partitionItemProperty != null)
                     {
-                        var isOptional = partitioning.IsOptional(partitionKey);
+                        partitionItemProperty.Description = partitionItem.Name;
+                        partitionItemProperty.IsRequired = field.RawProperties.IsRequired && !partitionItem.IsOptional;
 
-                        var name = partitioning.GetName(partitionKey);
-
-                        partitionItemProperty.Description = name;
-                        partitionItemProperty.SetRequired(field.RawProperties.IsRequired && !isOptional);
-
-                        partitionObject.Properties.Add(partitionKey, partitionItemProperty);
+                        partitionObject.Properties.Add(partitionItem.Key, partitionItemProperty);
                     }
                 }
 
@@ -58,7 +54,7 @@ namespace Squidex.Domain.Apps.Core.GenerateJsonSchema
 
         public static JsonSchemaProperty CreateProperty(IField field, JsonSchema reference)
         {
-            var jsonProperty = SchemaBuilder.ObjectProperty(reference);
+            var jsonProperty = Builder.ObjectProperty(reference);
 
             if (!string.IsNullOrWhiteSpace(field.RawProperties.Hints))
             {

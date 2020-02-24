@@ -12,7 +12,6 @@ using Microsoft.Extensions.Options;
 using Squidex.Domain.Apps.Core.Tags;
 using Squidex.Domain.Apps.Entities.TestHelpers;
 using Squidex.Infrastructure;
-using Squidex.Infrastructure.Queries;
 using Squidex.Infrastructure.Validation;
 using Xunit;
 
@@ -32,16 +31,6 @@ namespace Squidex.Domain.Apps.Entities.Assets.Queries
             var options = Options.Create(new AssetOptions { DefaultPageSize = 30 });
 
             sut = new AssetQueryParser(JsonHelper.DefaultSerializer, tagService, options);
-        }
-
-        [Fact]
-        public void Should_use_existing_query()
-        {
-            var clrQuery = new ClrQuery();
-
-            var parsed = sut.ParseQuery(requestContext, Q.Empty.WithQuery(clrQuery));
-
-            Assert.Same(parsed, clrQuery);
         }
 
         [Fact]

@@ -6,10 +6,9 @@
 // ==========================================================================
 
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
+using Squidex.Domain.Apps.Core.HandleRules.EnrichedEvents;
 using Squidex.Domain.Apps.Core.Rules;
-using Squidex.Domain.Apps.Core.Rules.EnrichedEvents;
 using Squidex.Domain.Apps.Events;
 using Squidex.Infrastructure.EventSourcing;
 
@@ -19,7 +18,7 @@ namespace Squidex.Domain.Apps.Core.HandleRules
     {
         Type TriggerType { get; }
 
-        Task<List<EnrichedEvent>> CreateEnrichedEventsAsync(Envelope<AppEvent> @event);
+        Task<EnrichedEvent?> CreateEnrichedEventAsync(Envelope<AppEvent> @event);
 
         bool Trigger(EnrichedEvent @event, RuleTrigger trigger);
 

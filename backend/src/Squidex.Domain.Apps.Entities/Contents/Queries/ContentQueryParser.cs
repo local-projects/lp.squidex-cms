@@ -49,26 +49,15 @@ namespace Squidex.Domain.Apps.Entities.Contents.Queries
 
             using (Profiler.TraceMethod<ContentQueryParser>())
             {
-                ClrQuery result;
+                var result = new ClrQuery();
 
-                if (q.Query != null)
+                if (!string.IsNullOrWhiteSpace(q?.JsonQuery))
                 {
-                    result = q.Query;
+                    result = ParseJson(context, schema, q.JsonQuery);
                 }
-                else
+                else if (!string.IsNullOrWhiteSpace(q?.ODataQuery))
                 {
-                    if (!string.IsNullOrWhiteSpace(q?.JsonQuery))
-                    {
-                        result = ParseJson(context, schema, q.JsonQuery);
-                    }
-                    else if (!string.IsNullOrWhiteSpace(q?.ODataQuery))
-                    {
-                        result = ParseOData(context, schema, q.ODataQuery);
-                    }
-                    else
-                    {
-                        result = new ClrQuery();
-                    }
+                    result = ParseOData(context, schema, q.ODataQuery);
                 }
 
                 if (result.Sort.Count == 0)

@@ -7,23 +7,21 @@
 
 using Xunit;
 
-#pragma warning disable SA1300 // Element should begin with upper-case letter
-
 namespace Squidex.Infrastructure.Assets
 {
     [Trait("Category", "Dependencies")]
     public class GoogleCloudAssetStoreTests : AssetStoreTests<GoogleCloudAssetStore>, IClassFixture<GoogleCloudAssetStoreFixture>
     {
-        public GoogleCloudAssetStoreFixture _ { get; }
+        private readonly GoogleCloudAssetStoreFixture fixture;
 
         public GoogleCloudAssetStoreTests(GoogleCloudAssetStoreFixture fixture)
         {
-            _ = fixture;
+            this.fixture = fixture;
         }
 
         public override GoogleCloudAssetStore CreateStore()
         {
-            return _.AssetStore;
+            return fixture.AssetStore;
         }
 
         [Fact]

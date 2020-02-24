@@ -30,7 +30,7 @@ namespace Squidex.Infrastructure.States
         private readonly HandleEvent? applyEvent;
         private long versionSnapshot = EtagVersion.Empty;
         private long versionEvents = EtagVersion.Empty;
-        private long version = EtagVersion.Empty;
+        private long version;
 
         public long Version
         {

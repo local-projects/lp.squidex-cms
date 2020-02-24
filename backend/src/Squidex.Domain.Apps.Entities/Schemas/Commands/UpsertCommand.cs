@@ -41,22 +41,22 @@ namespace Squidex.Domain.Apps.Entities.Schemas.Commands
 
             if (Scripts != null)
             {
-                schema = schema.SetScripts(Scripts);
+                schema = schema.ConfigureScripts(Scripts);
             }
 
             if (PreviewUrls != null)
             {
-                schema = schema.SetPreviewUrls(PreviewUrls);
+                schema = schema.ConfigurePreviewUrls(PreviewUrls);
             }
 
             if (FieldsInLists != null)
             {
-                schema = schema.SetFieldsInLists(FieldsInLists);
+                schema = schema.ConfigureFieldsInLists(FieldsInLists);
             }
 
             if (FieldsInReferences != null)
             {
-                schema = schema.SetFieldsInReferences(FieldsInReferences);
+                schema = schema.ConfigureFieldsInReferences(FieldsInReferences);
             }
 
             if (!string.IsNullOrWhiteSpace(Category))

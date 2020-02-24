@@ -111,6 +111,15 @@ namespace Squidex.Domain.Apps.Entities.Assets.MongoDb
         }
 
         [Fact]
+        public void Should_make_query_with_isImage()
+        {
+            var i = F(ClrFilter.Eq("isImage", true));
+            var o = C("{ 'im' : true }");
+
+            Assert.Equal(o, i);
+        }
+
+        [Fact]
         public void Should_make_query_with_mimeType()
         {
             var i = F(ClrFilter.Eq("mimeType", "text/json"));
@@ -131,8 +140,8 @@ namespace Squidex.Domain.Apps.Entities.Assets.MongoDb
         [Fact]
         public void Should_make_query_with_pixelHeight()
         {
-            var i = F(ClrFilter.Eq("metadata.pixelHeight", 600));
-            var o = C("{ 'md.pixelHeight' : 600 }");
+            var i = F(ClrFilter.Eq("pixelHeight", 600));
+            var o = C("{ 'ph' : 600 }");
 
             Assert.Equal(o, i);
         }
@@ -140,8 +149,8 @@ namespace Squidex.Domain.Apps.Entities.Assets.MongoDb
         [Fact]
         public void Should_make_query_with_pixelWidth()
         {
-            var i = F(ClrFilter.Eq("metadata.pixelWidth", 800));
-            var o = C("{ 'md.pixelWidth' : 800 }");
+            var i = F(ClrFilter.Eq("pixelWidth", 800));
+            var o = C("{ 'pw' : 800 }");
 
             Assert.Equal(o, i);
         }
@@ -170,7 +179,7 @@ namespace Squidex.Domain.Apps.Entities.Assets.MongoDb
             var query = new ClrQuery { Take = 3 };
             var cursor = A.Fake<IFindFluent<MongoAssetEntity, MongoAssetEntity>>();
 
-            cursor.QueryLimit(query.AdjustToModel());
+            cursor.AssetTake(query.AdjustToModel());
 
             A.CallTo(() => cursor.Limit(3))
                 .MustHaveHappened();
@@ -182,7 +191,7 @@ namespace Squidex.Domain.Apps.Entities.Assets.MongoDb
             var query = new ClrQuery { Skip = 3 };
             var cursor = A.Fake<IFindFluent<MongoAssetEntity, MongoAssetEntity>>();
 
-            cursor.QuerySkip(query.AdjustToModel());
+            cursor.AssetSkip(query.AdjustToModel());
 
             A.CallTo(() => cursor.Skip(3))
                 .MustHaveHappened();
@@ -204,13 +213,13 @@ namespace Squidex.Domain.Apps.Entities.Assets.MongoDb
 
             var i = string.Empty;
 
-            A.CallTo(() => cursor.Sort(A<SortDefinition<MongoAssetEntity>>._))
+            A.CallTo(() => cursor.Sort(A<SortDefinition<MongoAssetEntity>>.Ignored))
                 .Invokes((SortDefinition<MongoAssetEntity> sortDefinition) =>
                 {
                     i = sortDefinition.Render(Serializer, Registry).ToString();
                 });
 
-            cursor.QuerySort(new ClrQuery { Sort = sorts.ToList() }.AdjustToModel());
+            cursor.AssetSort(new ClrQuery { Sort = sorts.ToList() }.AdjustToModel());
 
             return i;
         }

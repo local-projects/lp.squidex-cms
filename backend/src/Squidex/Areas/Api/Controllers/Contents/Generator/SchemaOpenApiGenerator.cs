@@ -75,6 +75,7 @@ namespace Squidex.Areas.Api.Controllers.Contents.Generator
                 GenerateSchemaUpdateOperation(),
                 GenerateSchemaUpdatePatchOperation(),
                 GenerateSchemaStatusOperation(),
+                GenerateSchemaDiscardOperation(),
                 GenerateSchemaDeleteOperation()
             };
 
@@ -124,7 +125,7 @@ namespace Squidex.Areas.Api.Controllers.Contents.Generator
                 operation.Summary = $"Create a {schemaName} content.";
 
                 operation.AddBody("data", dataSchema, NSwagHelper.SchemaBodyDocs);
-                operation.AddQuery("publish", JsonObjectType.Boolean, "True to automatically publish the content.");
+                operation.AddQuery("publish", JsonObjectType.Boolean, "Set to true to autopublish content.");
 
                 operation.AddResponse("201", $"{schemaName} content created.", contentSchema);
                 operation.AddResponse("400", $"{schemaName} content not valid.");
@@ -179,6 +180,20 @@ namespace Squidex.Areas.Api.Controllers.Contents.Generator
             });
         }
 
+        private OpenApiPathItem GenerateSchemaDiscardOperation()
+        {
+            return Add(OpenApiOperationMethod.Put, Permissions.AppContentsDraftDiscard, "/{id}/discard",
+                operation =>
+            {
+                operation.OperationId = $"Discard{schemaType}Content";
+
+                operation.Summary = $"Discard changes of {schemaName} content.";
+
+                operation.AddResponse("200", $"{schemaName} content status changed.", contentSchema);
+                operation.AddResponse("400", $"{schemaName} content has no pending draft.");
+            });
+        }
+
         private OpenApiPathItem GenerateSchemaDeleteOperation()
         {
             return Add(OpenApiOperationMethod.Delete, Permissions.AppContentsDelete, "/{id}",
@@ -229,8 +244,14 @@ namespace Squidex.Areas.Api.Controllers.Contents.Generator
             {
                 Properties =
                 {
-                    ["total"] = SchemaBuilder.NumberProperty($"The total number of {schemaName} contents.", true),
-                    ["items"] = SchemaBuilder.ArrayProperty(contentSchema, $"The {schemaName} contents.", true)
+                    ["total"] = new JsonSchemaProperty
+                    {
+                        Type = JsonObjectType.Number, IsRequired = true, Description = $"The total number of {schemaName} contents."
+                    },
+                    ["items"] = new JsonSchemaProperty
+                    {
+                        Type = JsonObjectType.Array, IsRequired = true, Description = $"The {schemaName} contents.", Item = contentSchema
+                    }
                 },
                 Type = JsonObjectType.Object
             };

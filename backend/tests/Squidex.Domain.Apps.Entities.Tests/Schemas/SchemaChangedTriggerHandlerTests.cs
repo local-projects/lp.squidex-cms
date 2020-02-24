@@ -7,11 +7,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using FakeItEasy;
 using Squidex.Domain.Apps.Core.HandleRules;
-using Squidex.Domain.Apps.Core.Rules.EnrichedEvents;
+using Squidex.Domain.Apps.Core.HandleRules.EnrichedEvents;
 using Squidex.Domain.Apps.Core.Rules.Triggers;
 using Squidex.Domain.Apps.Core.Scripting;
 using Squidex.Domain.Apps.Events;
@@ -31,35 +30,33 @@ namespace Squidex.Domain.Apps.Entities.Schemas
 
         public SchemaChangedTriggerHandlerTests()
         {
-            A.CallTo(() => scriptEngine.Evaluate("event", A<object>._, "true"))
+            A.CallTo(() => scriptEngine.Evaluate("event", A<object>.Ignored, "true"))
                 .Returns(true);
 
-            A.CallTo(() => scriptEngine.Evaluate("event", A<object>._, "false"))
+            A.CallTo(() => scriptEngine.Evaluate("event", A<object>.Ignored, "false"))
                 .Returns(false);
 
             sut = new SchemaChangedTriggerHandler(scriptEngine);
         }
 
-        public static IEnumerable<object[]> TestEvents()
+        public static IEnumerable<object[]> TestEvents = new[]
         {
-            yield return new object[] { new SchemaCreated(), EnrichedSchemaEventType.Created };
-            yield return new object[] { new SchemaUpdated(), EnrichedSchemaEventType.Updated };
-            yield return new object[] { new SchemaDeleted(), EnrichedSchemaEventType.Deleted };
-            yield return new object[] { new SchemaPublished(), EnrichedSchemaEventType.Published };
-            yield return new object[] { new SchemaUnpublished(), EnrichedSchemaEventType.Unpublished };
-        }
+            new object[] { new SchemaCreated(), EnrichedSchemaEventType.Created },
+            new object[] { new SchemaUpdated(), EnrichedSchemaEventType.Updated },
+            new object[] { new SchemaDeleted(), EnrichedSchemaEventType.Deleted },
+            new object[] { new SchemaPublished(), EnrichedSchemaEventType.Published },
+            new object[] { new SchemaUnpublished(), EnrichedSchemaEventType.Unpublished }
+        };
 
         [Theory]
         [MemberData(nameof(TestEvents))]
-        public async Task Should_create_enriched_events(SchemaEvent @event, EnrichedSchemaEventType type)
+        public async Task Should_enrich_events(SchemaEvent @event, EnrichedSchemaEventType type)
         {
             var envelope = Envelope.Create<AppEvent>(@event).SetEventStreamNumber(12);
 
-            var result = await sut.CreateEnrichedEventsAsync(envelope);
+            var result = await sut.CreateEnrichedEventAsync(envelope);
 
-            var enrichedEvent = result.Single() as EnrichedSchemaEvent;
-
-            Assert.Equal(type, enrichedEvent!.Type);
+            Assert.Equal(type, ((EnrichedSchemaEvent)result!).Type);
         }
 
         [Fact]
@@ -136,12 +133,12 @@ namespace Squidex.Domain.Apps.Entities.Schemas
 
             if (string.IsNullOrWhiteSpace(condition))
             {
-                A.CallTo(() => scriptEngine.Evaluate("event", A<object>._, condition))
+                A.CallTo(() => scriptEngine.Evaluate("event", A<object>.Ignored, condition))
                     .MustNotHaveHappened();
             }
             else
             {
-                A.CallTo(() => scriptEngine.Evaluate("event", A<object>._, condition))
+                A.CallTo(() => scriptEngine.Evaluate("event", A<object>.Ignored, condition))
                     .MustHaveHappened();
             }
         }

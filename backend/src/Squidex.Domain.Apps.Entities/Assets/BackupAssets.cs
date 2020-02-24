@@ -15,6 +15,7 @@ using Squidex.Domain.Apps.Events.Assets;
 using Squidex.Infrastructure;
 using Squidex.Infrastructure.Commands;
 using Squidex.Infrastructure.EventSourcing;
+using Squidex.Infrastructure.Tasks;
 
 namespace Squidex.Domain.Apps.Entities.Assets
 {
@@ -55,7 +56,7 @@ namespace Squidex.Domain.Apps.Entities.Assets
                     return WriteAssetAsync(assetUpdated.AssetId, assetUpdated.FileVersion, context.Writer);
             }
 
-            return Task.CompletedTask;
+            return TaskHelper.Done;
         }
 
         public async Task<bool> RestoreEventAsync(Envelope<IEvent> @event, RestoreContext context)
@@ -82,7 +83,7 @@ namespace Squidex.Domain.Apps.Entities.Assets
 
             if (assetIds.Count > 0)
             {
-                await rebuilder.InsertManyAsync<AssetDomainObject, AssetState>(async target =>
+                await rebuilder.InsertManyAsync<AssetState, AssetGrain>(async target =>
                 {
                     foreach (var id in assetIds)
                     {
@@ -93,7 +94,7 @@ namespace Squidex.Domain.Apps.Entities.Assets
 
             if (assetFolderIds.Count > 0)
             {
-                await rebuilder.InsertManyAsync<AssetFolderDomainObject, AssetFolderState>(async target =>
+                await rebuilder.InsertManyAsync<AssetFolderState, AssetFolderGrain>(async target =>
                 {
                     foreach (var id in assetFolderIds)
                     {

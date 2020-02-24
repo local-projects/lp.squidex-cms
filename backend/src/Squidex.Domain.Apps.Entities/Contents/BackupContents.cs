@@ -16,6 +16,7 @@ using Squidex.Domain.Apps.Events.Schemas;
 using Squidex.Infrastructure;
 using Squidex.Infrastructure.Commands;
 using Squidex.Infrastructure.EventSourcing;
+using Squidex.Infrastructure.Tasks;
 
 namespace Squidex.Domain.Apps.Entities.Contents
 {
@@ -45,14 +46,14 @@ namespace Squidex.Domain.Apps.Entities.Contents
                     break;
             }
 
-            return Task.FromResult(true);
+            return TaskHelper.True;
         }
 
         public async Task RestoreAsync(RestoreContext context)
         {
             if (contentIdsBySchemaId.Count > 0)
             {
-                await rebuilder.InsertManyAsync<ContentDomainObject, ContentState>(async target =>
+                await rebuilder.InsertManyAsync<ContentState, ContentGrain>(async target =>
                 {
                     foreach (var contentId in contentIdsBySchemaId.Values.SelectMany(x => x))
                     {

@@ -8,6 +8,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Squidex.Infrastructure.Tasks;
 
 namespace Squidex.Domain.Apps.Core.ValidateContent.Validators
 {
@@ -25,7 +26,7 @@ namespace Squidex.Domain.Apps.Core.ValidateContent.Validators
                 }
             }
 
-            return Task.CompletedTask;
+            return TaskHelper.Done;
         }
     }
 }

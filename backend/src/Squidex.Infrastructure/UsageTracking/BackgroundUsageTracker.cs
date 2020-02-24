@@ -12,6 +12,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Squidex.Infrastructure.Log;
+using Squidex.Infrastructure.Tasks;
 using Squidex.Infrastructure.Timers;
 
 namespace Squidex.Infrastructure.UsageTracking
@@ -108,7 +109,7 @@ namespace Squidex.Infrastructure.UsageTracking
                 usages.AddOrUpdate((key, category), _ => new Usage(elapsedMs, weight), (k, x) => x.Add(elapsedMs, weight));
             }
 
-            return Task.CompletedTask;
+            return TaskHelper.Done;
         }
 
         public async Task<IReadOnlyDictionary<string, IReadOnlyList<DateUsage>>> QueryAsync(string key, DateTime fromDate, DateTime toDate)

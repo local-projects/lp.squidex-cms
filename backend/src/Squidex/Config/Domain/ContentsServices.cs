@@ -10,11 +10,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Squidex.Domain.Apps.Entities.Contents;
 using Squidex.Domain.Apps.Entities.Contents.Queries;
-using Squidex.Domain.Apps.Entities.Contents.Queries.Steps;
 using Squidex.Domain.Apps.Entities.Contents.Text;
-using Squidex.Domain.Apps.Entities.Contents.Text.Lucene;
 using Squidex.Domain.Apps.Entities.History;
-using Squidex.Domain.Apps.Entities.Search;
 using Squidex.Infrastructure.EventSourcing;
 using Squidex.Infrastructure.Orleans;
 
@@ -33,35 +30,11 @@ namespace Squidex.Config.Domain
             services.AddSingletonAs<ContentQueryParser>()
                 .AsSelf();
 
-            services.AddTransientAs<ContentDomainObject>()
-                .AsSelf();
-
             services.AddSingletonAs<ContentHistoryEventsCreator>()
                 .As<IHistoryEventsCreator>();
 
             services.AddSingletonAs<ContentQueryService>()
                 .As<IContentQueryService>();
-
-            services.AddSingletonAs<ConvertData>()
-                .As<IContentEnricherStep>();
-
-            services.AddSingletonAs<EnrichForCaching>()
-                .As<IContentEnricherStep>();
-
-            services.AddSingletonAs<EnrichWithSchema>()
-                .As<IContentEnricherStep>();
-
-            services.AddSingletonAs<EnrichWithWorkflows>()
-                .As<IContentEnricherStep>();
-
-            services.AddSingletonAs<ResolveAssets>()
-                .As<IContentEnricherStep>();
-
-            services.AddSingletonAs<ResolveReferences>()
-                .As<IContentEnricherStep>();
-
-            services.AddSingletonAs<ScriptContent>()
-                .As<IContentEnricherStep>();
 
             services.AddSingletonAs<ContentEnricher>()
                 .As<IContentEnricher>();
@@ -75,14 +48,8 @@ namespace Squidex.Config.Domain
             services.AddSingletonAs<DefaultWorkflowsValidator>()
                 .AsOptional<IWorkflowsValidator>();
 
-            services.AddSingletonAs<LuceneTextIndex>()
-                .As<ITextIndex>();
-
-            services.AddSingletonAs<TextIndexingProcess>()
-                .As<IEventConsumer>();
-
-            services.AddSingletonAs<ContentsSearchSource>()
-                .As<ISearchSource>();
+            services.AddSingletonAs<GrainTextIndexer>()
+                .As<ITextIndexer>().As<IEventConsumer>();
 
             services.AddSingletonAs<IndexManager>()
                 .AsSelf();

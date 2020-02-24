@@ -52,7 +52,7 @@ namespace Squidex.Domain.Apps.Entities.Backup
 
             Dictionary<string, string>? storedUsers = null;
 
-            A.CallTo(() => writer.WriteJsonAsync(A<string>._, A<object>._))
+            A.CallTo(() => writer.WriteJsonAsync(A<string>.Ignored, A<object>.Ignored))
                 .Invokes((string _, object json) => storedUsers = (Dictionary<string, string>)json);
 
             await sut.StoreAsync(writer, userResolver);
@@ -141,7 +141,7 @@ namespace Squidex.Domain.Apps.Entities.Backup
 
             var reader = A.Fake<IBackupReader>();
 
-            A.CallTo(() => reader.ReadJsonAttachmentAsync<Dictionary<string, string>>(A<string>._))
+            A.CallTo(() => reader.ReadJsonAttachmentAsync<Dictionary<string, string>>(A<string>.Ignored))
                 .Returns(storedUsers);
 
             return reader;

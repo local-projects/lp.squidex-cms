@@ -5,8 +5,6 @@
  * Copyright (c) Squidex UG (haftungsbeschränkt). All rights reserved.
  */
 
-// tslint:disable: readonly-array
-
 import { Injectable } from '@angular/core';
 
 export class TitlesConfig {
@@ -24,6 +22,7 @@ export const TitleServiceFactory = (titles: TitlesConfig) => {
 
 @Injectable()
 export class TitleService {
+    // tslint:disable-next-line: readonly-array
     private readonly stack: any[] = [];
 
     constructor(private readonly titles: TitlesConfig) {
@@ -74,5 +73,6 @@ export class TitleService {
         }
 
         document.title = title;
+
     }
 }

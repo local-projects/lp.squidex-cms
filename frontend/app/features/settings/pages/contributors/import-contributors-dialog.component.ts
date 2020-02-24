@@ -90,6 +90,10 @@ export class ImportContributorsDialogComponent {
                 ), 1)
         ).subscribe();
     }
+
+    public emitClose() {
+        this.close.emit();
+    }
 }
 
 function createRequest(status: ImportStatus) {

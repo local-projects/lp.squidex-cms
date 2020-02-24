@@ -5,63 +5,70 @@
 //  All rights reserved. Licensed under the MIT license.
 // ==========================================================================
 
+using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace Squidex.Domain.Apps.Core
 {
-    public sealed class InvariantPartitioning : IFieldPartitioning
+    public sealed class InvariantPartitioning : IFieldPartitioning, IFieldPartitionItem
     {
         public static readonly InvariantPartitioning Instance = new InvariantPartitioning();
         public static readonly string Key = "iv";
 
-        public string Master
+        public int Count
+        {
+            get { return 1; }
+        }
+
+        public IFieldPartitionItem Master
+        {
+            get { return this; }
+        }
+
+        string IFieldPartitionItem.Key
         {
             get { return Key; }
         }
 
-        public IEnumerable<string> AllKeys
+        string IFieldPartitionItem.Name
         {
-            get { yield return Key; }
+            get { return "Invariant"; }
         }
 
-        public string? GetName(string key)
+        bool IFieldPartitionItem.IsOptional
         {
-            if (Contains(key))
-            {
-                return "Invariant";
-            }
-
-            return null;
+            get { return false; }
         }
 
-        public IEnumerable<string> GetPriorities(string key)
+        IEnumerable<string> IFieldPartitionItem.Fallback
         {
-            if (Contains(key))
-            {
-                yield return Key;
-            }
-
-            yield break;
+            get { return Enumerable.Empty<string>(); }
         }
 
-        public bool Contains(string key)
+        private InvariantPartitioning()
         {
-            return Equals(Key, key);
         }
 
-        public bool IsMaster(string key)
+        public bool TryGetItem(string key, [MaybeNullWhen(false)] out IFieldPartitionItem item)
         {
-            return Contains(key);
+            var isFound = string.Equals(key, Key, StringComparison.OrdinalIgnoreCase);
+
+            item = isFound ? this : null!;
+
+            return isFound;
         }
 
-        public bool IsOptional(string key)
+        IEnumerator<IFieldPartitionItem> IEnumerable<IFieldPartitionItem>.GetEnumerator()
         {
-            return false;
+            yield return this;
         }
 
-        public override string ToString()
+        IEnumerator IEnumerable.GetEnumerator()
         {
-            return "invariant value";
+            yield return this;
         }
     }
 }

@@ -20,17 +20,11 @@ namespace Squidex.Infrastructure.States
     public class MongoSnapshotStore<T, TKey> : MongoRepositoryBase<MongoState<T, TKey>>, ISnapshotStore<T, TKey> where TKey : notnull
     {
         public MongoSnapshotStore(IMongoDatabase database, JsonSerializer jsonSerializer)
-            : base(database, Register(jsonSerializer))
-        {
-        }
-
-        private static bool Register(JsonSerializer jsonSerializer)
+            : base(database)
         {
             Guard.NotNull(jsonSerializer);
 
             BsonJsonConvention.Register(jsonSerializer);
-
-            return true;
         }
 
         protected override string CollectionName()

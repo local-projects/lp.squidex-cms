@@ -21,6 +21,10 @@ export class NewsDialogComponent {
     @Input()
     public features: ReadonlyArray<FeatureDto>;
 
+    public emitClose() {
+        this.close.emit();
+    }
+
     public trackByFeature(index: number, feature: FeatureDto) {
         return feature;
     }

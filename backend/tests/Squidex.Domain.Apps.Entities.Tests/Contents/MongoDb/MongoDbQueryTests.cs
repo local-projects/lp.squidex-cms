@@ -17,7 +17,7 @@ using Squidex.Domain.Apps.Core.Apps;
 using Squidex.Domain.Apps.Core.Schemas;
 using Squidex.Domain.Apps.Entities.Apps;
 using Squidex.Domain.Apps.Entities.MongoDb.Contents;
-using Squidex.Domain.Apps.Entities.MongoDb.Contents.Operations;
+using Squidex.Domain.Apps.Entities.MongoDb.Contents.Visitors;
 using Squidex.Domain.Apps.Entities.Schemas;
 using Squidex.Infrastructure;
 using Squidex.Infrastructure.MongoDb;
@@ -34,7 +34,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.MongoDb
         private static readonly IBsonSerializerRegistry Registry = BsonSerializer.SerializerRegistry;
         private static readonly IBsonSerializer<MongoContentEntity> Serializer = BsonSerializer.SerializerRegistry.GetSerializer<MongoContentEntity>();
         private readonly Schema schemaDef;
-        private readonly LanguagesConfig languagesConfig = LanguagesConfig.English.Set(Language.DE);
+        private readonly LanguagesConfig languagesConfig = LanguagesConfig.Build(Language.EN, Language.DE);
 
         static MongoDbQueryTests()
         {
@@ -80,50 +80,6 @@ namespace Squidex.Domain.Apps.Entities.Contents.MongoDb
         public void Should_throw_exception_for_invalid_field()
         {
             Assert.Throws<NotSupportedException>(() => F(ClrFilter.Eq("data/invalid/iv", "Me")));
-        }
-
-        [Fact]
-        public void Should_make_query_with_id()
-        {
-            var id = Guid.NewGuid();
-
-            var i = F(ClrFilter.Eq("id", id));
-            var o = C($"{{ '_id' : '{id}' }}");
-
-            Assert.Equal(o, i);
-        }
-
-        [Fact]
-        public void Should_make_query_with_id_string()
-        {
-            var id = Guid.NewGuid().ToString();
-
-            var i = F(ClrFilter.Eq("id", id));
-            var o = C($"{{ '_id' : '{id}' }}");
-
-            Assert.Equal(o, i);
-        }
-
-        [Fact]
-        public void Should_make_query_with_id_list()
-        {
-            var id = Guid.NewGuid();
-
-            var i = F(ClrFilter.In("id", new List<Guid> { id }));
-            var o = C($"{{ '_id' : {{ '$in' : ['{id}'] }} }}");
-
-            Assert.Equal(o, i);
-        }
-
-        [Fact]
-        public void Should_make_query_with_id_string_list()
-        {
-            var id = Guid.NewGuid().ToString();
-
-            var i = F(ClrFilter.In("id", new List<string> { id }));
-            var o = C($"{{ '_id' : {{ '$in' : ['{id}'] }} }}");
-
-            Assert.Equal(o, i);
         }
 
         [Fact]
@@ -181,10 +137,19 @@ namespace Squidex.Domain.Apps.Entities.Contents.MongoDb
         }
 
         [Fact]
+        public void Should_make_query_from_draft()
+        {
+            var i = F(ClrFilter.Eq("data/dashed_field/iv", "Value"), true);
+            var o = C("{ 'dd.8.iv' : 'Value' }");
+
+            Assert.Equal(o, i);
+        }
+
+        [Fact]
         public void Should_make_query_with_empty_test()
         {
-            var i = F(ClrFilter.Empty("data/firstName/iv"));
-            var o = C("{ '$or' : [{ 'do.1.iv' : { '$exists' : false } }, { 'do.1.iv' : null }, { 'do.1.iv' : '' }, { 'do.1.iv' : [] }] }");
+            var i = F(ClrFilter.Empty("data/firstName/iv"), true);
+            var o = C("{ '$or' : [{ 'dd.1.iv' : { '$exists' : false } }, { 'dd.1.iv' : null }, { 'dd.1.iv' : '' }, { 'dd.1.iv' : [] }] }");
 
             Assert.Equal(o, i);
         }
@@ -267,7 +232,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.MongoDb
             var query = new ClrQuery { Take = 3 };
             var cursor = A.Fake<IFindFluent<MongoContentEntity, MongoContentEntity>>();
 
-            cursor.QueryLimit(query);
+            cursor.ContentTake(query.AdjustToModel(schemaDef, false));
 
             A.CallTo(() => cursor.Limit(3))
                 .MustHaveHappened();
@@ -279,7 +244,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.MongoDb
             var query = new ClrQuery { Skip = 3 };
             var cursor = A.Fake<IFindFluent<MongoContentEntity, MongoContentEntity>>();
 
-            cursor.QuerySkip(query);
+            cursor.ContentSkip(query.AdjustToModel(schemaDef, false));
 
             A.CallTo(() => cursor.Skip(3))
                 .MustHaveHappened();
@@ -290,9 +255,9 @@ namespace Squidex.Domain.Apps.Entities.Contents.MongoDb
             return value.Replace('\'', '"');
         }
 
-        private string F(FilterNode<ClrValue> filter)
+        private string F(FilterNode<ClrValue> filter, bool useDraft = false)
         {
-            return Q(new ClrQuery { Filter = filter });
+            return Q(new ClrQuery { Filter = filter }, useDraft);
         }
 
         private string S(params SortNode[] sorts)
@@ -301,21 +266,21 @@ namespace Squidex.Domain.Apps.Entities.Contents.MongoDb
 
             var i = string.Empty;
 
-            A.CallTo(() => cursor.Sort(A<SortDefinition<MongoContentEntity>>._))
+            A.CallTo(() => cursor.Sort(A<SortDefinition<MongoContentEntity>>.Ignored))
                 .Invokes((SortDefinition<MongoContentEntity> sortDefinition) =>
                 {
                     i = sortDefinition.Render(Serializer, Registry).ToString();
                 });
 
-            cursor.QuerySort(new ClrQuery { Sort = sorts.ToList() }.AdjustToModel(schemaDef));
+            cursor.ContentSort(new ClrQuery { Sort = sorts.ToList() }.AdjustToModel(schemaDef, false));
 
             return i;
         }
 
-        private string Q(ClrQuery query)
+        private string Q(ClrQuery query, bool useDraft = false)
         {
             var rendered =
-                query.AdjustToModel(schemaDef).BuildFilter<MongoContentEntity>().Filter!
+                query.AdjustToModel(schemaDef, useDraft).BuildFilter<MongoContentEntity>().Filter!
                     .Render(Serializer, Registry).ToString();
 
             return rendered;

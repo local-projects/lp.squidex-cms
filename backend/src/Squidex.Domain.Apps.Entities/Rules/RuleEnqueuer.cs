@@ -15,6 +15,7 @@ using Squidex.Domain.Apps.Entities.Rules.Repositories;
 using Squidex.Domain.Apps.Events;
 using Squidex.Infrastructure;
 using Squidex.Infrastructure.EventSourcing;
+using Squidex.Infrastructure.Tasks;
 
 namespace Squidex.Domain.Apps.Entities.Rules
 {
@@ -59,7 +60,7 @@ namespace Squidex.Domain.Apps.Entities.Rules
 
         public Task ClearAsync()
         {
-            return Task.CompletedTask;
+            return TaskHelper.Done;
         }
 
         public async Task Enqueue(Rule rule, Guid ruleId, Envelope<IEvent> @event)
@@ -67,9 +68,9 @@ namespace Squidex.Domain.Apps.Entities.Rules
             Guard.NotNull(rule);
             Guard.NotNull(@event);
 
-            var jobs = await ruleService.CreateJobsAsync(rule, ruleId, @event);
+            var job = await ruleService.CreateJobAsync(rule, ruleId, @event);
 
-            foreach (var job in jobs)
+            if (job != null)
             {
                 await ruleEventRepository.EnqueueAsync(job, job.Created);
             }

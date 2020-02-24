@@ -21,7 +21,7 @@ import {
     Version,
     Versioned
 } from '@app/shared/internal';
-import { encodeQuery } from './../state/query';
+import { encodeQuery } from '../state/query';
 
 describe('ContentsService', () => {
     const version = new Version('1');
@@ -261,24 +261,24 @@ describe('ContentsService', () => {
         expect(content!).toEqual(createContent(12));
     }));
 
-    it('should make post request to create draft',
+    it('should make put request to discard draft',
         inject([ContentsService, HttpTestingController], (contentsService: ContentsService, httpMock: HttpTestingController) => {
 
         const resource: Resource = {
             _links: {
-                ['draft/create']: { method: 'POST', href: '/api/content/my-app/my-schema/content1/draft' }
+                ['draft/discard']: { method: 'PUT', href: '/api/content/my-app/my-schema/content1/discard' }
             }
         };
 
         let content: ContentDto;
 
-        contentsService.createVersion('my-app', resource, version).subscribe(result => {
+        contentsService.discardDraft('my-app', resource, version).subscribe(result => {
             content = result;
         });
 
-        const req = httpMock.expectOne('http://service/p/api/content/my-app/my-schema/content1/draft');
+        const req = httpMock.expectOne('http://service/p/api/content/my-app/my-schema/content1/discard');
 
-        expect(req.request.method).toEqual('POST');
+        expect(req.request.method).toEqual('PUT');
         expect(req.request.headers.get('If-Match')).toBe(version.value);
 
         req.flush(contentResponse(12));
@@ -286,24 +286,51 @@ describe('ContentsService', () => {
         expect(content!).toEqual(createContent(12));
     }));
 
-    it('should make delete request to delete draft',
+    it('should make put request to propose draft',
         inject([ContentsService, HttpTestingController], (contentsService: ContentsService, httpMock: HttpTestingController) => {
+
+        const dto = {};
 
         const resource: Resource = {
             _links: {
-                ['draft/delete']: { method: 'DELETE', href: '/api/content/my-app/my-schema/content1/draft' }
+                ['draft/propose']: { method: 'PUT', href: '/api/content/my-app/my-schema/content1/status' }
             }
         };
 
         let content: ContentDto;
 
-        contentsService.deleteVersion('my-app', resource, version).subscribe(result => {
+        contentsService.proposeDraft('my-app', resource, dto, version).subscribe(result => {
             content = result;
         });
 
-        const req = httpMock.expectOne('http://service/p/api/content/my-app/my-schema/content1/draft');
+        const req = httpMock.expectOne('http://service/p/api/content/my-app/my-schema/content1/status');
 
-        expect(req.request.method).toEqual('DELETE');
+        expect(req.request.method).toEqual('PUT');
+        expect(req.request.headers.get('If-Match')).toBe(version.value);
+
+        req.flush(contentResponse(12));
+
+        expect(content!).toEqual(createContent(12));
+    }));
+
+    it('should make put request to publish draft',
+        inject([ContentsService, HttpTestingController], (contentsService: ContentsService, httpMock: HttpTestingController) => {
+
+        const resource: Resource = {
+            _links: {
+                ['draft/publish']: { method: 'PUT', href: '/api/content/my-app/my-schema/content1/status' }
+            }
+        };
+
+        let content: ContentDto;
+
+        contentsService.publishDraft('my-app', resource, null, version).subscribe(result => {
+            content = result;
+        });
+
+        const req = httpMock.expectOne('http://service/p/api/content/my-app/my-schema/content1/status');
+
+        expect(req.request.method).toEqual('PUT');
         expect(req.request.headers.get('If-Match')).toBe(version.value);
 
         req.flush(contentResponse(12));
@@ -360,8 +387,6 @@ describe('ContentsService', () => {
             id: `id${id}`,
             status: `Status${id}`,
             statusColor: 'black',
-            newStatus: `NewStatus${id}`,
-            newStatusColor: 'black',
             created: `${id % 1000 + 2000}-12-12T10:10:00`,
             createdBy: `creator${id}`,
             lastModified: `${id % 1000 + 2000}-11-11T10:10:00`,
@@ -369,10 +394,11 @@ describe('ContentsService', () => {
             scheduleJob: {
                 status: 'Draft',
                 scheduledBy: `Scheduler${id}`,
-                color: 'red',
                 dueTime: `${id % 1000 + 2000}-11-11T10:10:00`
             },
+            isPending: true,
             data: {},
+            dataDraft: {},
             schemaName: 'my-schema',
             schemaDisplayName: 'MySchema',
             referenceData: {},
@@ -394,15 +420,15 @@ export function createContent(id: number, suffix = '') {
         `id${id}`,
         `Status${id}${suffix}`,
         'black',
-        `NewStatus${id}${suffix}`,
-        'black',
         DateTime.parseISO_UTC(`${id % 1000 + 2000}-12-12T10:10:00`), `creator${id}`,
         DateTime.parseISO_UTC(`${id % 1000 + 2000}-11-11T10:10:00`), `modifier${id}`,
-        new ScheduleDto('Draft', `Scheduler${id}`, 'red', DateTime.parseISO_UTC(`${id % 1000 + 2000}-11-11T10:10:00`)),
+        new ScheduleDto('Draft', `Scheduler${id}`, DateTime.parseISO_UTC(`${id % 1000 + 2000}-11-11T10:10:00`)),
+        true,
+        {},
         {},
         'my-schema',
         'MySchema',
         {},
         [],
-        new Version(`${id}${suffix}`));
+        new Version(`${id}`));
 }

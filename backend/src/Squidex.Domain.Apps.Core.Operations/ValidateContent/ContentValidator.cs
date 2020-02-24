@@ -87,19 +87,22 @@ namespace Squidex.Domain.Apps.Core.ValidateContent
             var fieldValidator = field.CreateValidator();
             var fieldsValidators = new Dictionary<string, (bool IsOptional, IValidator Validator)>();
 
-            foreach (var partitionKey in partitioning.AllKeys)
+            foreach (var partition in partitioning)
             {
-                var optional = partitioning.IsOptional(partitionKey);
-
-                fieldsValidators[partitionKey] = (optional, fieldValidator);
+                fieldsValidators[partition.Key] = (partition.IsOptional, fieldValidator);
             }
-
-            var typeName = partitioning.ToString()!;
 
             return new AggregateValidator(
                 field.CreateBagValidator()
                     .Union(Enumerable.Repeat(
-                        new ObjectValidator<IJsonValue>(fieldsValidators, isPartial, typeName), 1)));
+                        new ObjectValidator<IJsonValue>(fieldsValidators, isPartial, TypeName(field)), 1)));
+        }
+
+        private static string TypeName(IRootField field)
+        {
+            var isLanguage = field.Partitioning.Equals(Partitioning.Language);
+
+            return isLanguage ? "language" : "invariant value";
         }
     }
 }

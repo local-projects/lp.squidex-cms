@@ -16,7 +16,6 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using NodaTime;
 using Squidex.Domain.Apps.Core;
-using Squidex.Domain.Apps.Core.Assets;
 using Squidex.Domain.Apps.Core.Contents;
 using Squidex.Domain.Apps.Core.Schemas;
 using Squidex.Domain.Apps.Entities.Apps;
@@ -88,7 +87,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.GraphQL
                         .AddBoolean(121, "nested-boolean")
                         .AddNumber(122, "nested-number")
                         .AddNumber(123, "nested_number"))
-                    .SetScripts(new SchemaScripts { Query = "<query-script>" });
+                    .ConfigureScripts(new SchemaScripts { Query = "<query-script>" });
 
             schema = Mocks.Schema(appId, schemaId, schemaDef);
 
@@ -111,7 +110,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.GraphQL
             sut = CreateSut();
         }
 
-        protected IEnrichedContentEntity CreateContent(Guid id, Guid refId, Guid assetId, NamedContentData? data = null)
+        protected IEnrichedContentEntity CreateContent(Guid id, Guid refId, Guid assetId, NamedContentData? data = null, NamedContentData? dataDraft = null)
         {
             var now = SystemClock.Instance.GetCurrentInstant();
 
@@ -174,6 +173,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.GraphQL
                 LastModified = now,
                 LastModifiedBy = new RefToken(RefTokenType.Subject, "user2"),
                 Data = data,
+                DataDraft = dataDraft!,
                 SchemaId = schemaId,
                 Status = Status.Draft,
                 StatusColor = "red"
@@ -201,6 +201,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.GraphQL
                 LastModified = now,
                 LastModifiedBy = new RefToken(RefTokenType.Subject, "user2"),
                 Data = data,
+                DataDraft = data,
                 SchemaId = schemaId,
                 Status = Status.Draft,
                 StatusColor = "red"
@@ -227,12 +228,9 @@ namespace Squidex.Domain.Apps.Entities.Contents.GraphQL
                 FileHash = "ABC123",
                 FileVersion = 123,
                 MimeType = "image/png",
-                Type = AssetType.Image,
-                MetadataText = "metadata-text",
-                Metadata =
-                    new AssetMetadata()
-                        .SetPixelWidth(800)
-                        .SetPixelHeight(600),
+                IsImage = true,
+                PixelWidth = 800,
+                PixelHeight = 600,
                 TagNames = new[] { "tag1", "tag2" }.ToHashSet()
             };
 

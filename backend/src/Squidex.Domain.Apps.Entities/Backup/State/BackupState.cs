@@ -6,11 +6,13 @@
 // ==========================================================================
 
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 
 namespace Squidex.Domain.Apps.Entities.Backup.State
 {
     public sealed class BackupState
     {
+        [DataMember]
         public List<BackupJob> Jobs { get; } = new List<BackupJob>();
     }
 }

@@ -27,21 +27,15 @@ const plugins = {
     // https://github.com/jrparish/tslint-webpack-plugin
     TsLintPlugin: require('tslint-webpack-plugin'),
     // https://www.npmjs.com/package/sass-lint-webpack
-    SassLintPlugin: require('sass-lint-webpack'),
-    // https://www.npmjs.com/package/webpack-bundle-analyzer
-    BundleAnalyzerPlugin: require('webpack-bundle-analyzer').BundleAnalyzerPlugin,
-    // https://www.npmjs.com/package/@angular-devkit/build-optimizer
-    BuildOptimizerWebpackPlugin: require('@angular-devkit/build-optimizer').BuildOptimizerWebpackPlugin
+    SassLintPlugin: require('sass-lint-webpack')
 };
 
 module.exports = function (env) {
     const isDevServer = path.basename(require.main.filename) === 'webpack-dev-server.js';
     const isProduction = env && env.production;
     const isTests = env && env.target === 'tests';
-    const isTestCoverage = env && env.coverage;
-    const isAnalyzing = isProduction && env.analyze;
-
-    const configFile = isTests ? 'tsconfig.spec.json' : 'tsconfig.app.json';
+    const isCoverage = env && env.coverage;
+    const isAot = isProduction;
 
     const config = {
         mode: isProduction ? 'production' : 'development',
@@ -72,9 +66,7 @@ module.exports = function (env) {
             ],
 
             plugins: [
-                new plugins.TsconfigPathsPlugin({
-                    configFile
-                })
+                new plugins.TsconfigPathsPlugin()
             ]
         },
 
@@ -153,10 +145,6 @@ module.exports = function (env) {
                 }, {
                     loader: 'sass-loader', 
                     options: {
-                        prependData: `
-                            @import '_vars';
-                            @import '_mixins';
-                        `,
                         sassOptions: {
                             includePaths: [root('app', 'theme')]
                         }
@@ -290,14 +278,14 @@ module.exports = function (env) {
         );
     }
 
-    if (!isTestCoverage) {
+    if (!isCoverage) {
         config.plugins.push(
             new plugins.NgToolsWebpack.AngularCompilerPlugin({
                 directTemplateLoading: true,
                 entryModule: 'app/app.module#AppModule',
                 sourceMap: !isProduction,
-                skipCodeGeneration: false,
-                tsConfigPath: configFile
+                skipCodeGeneration: !isAot,
+                tsConfigPath: './tsconfig.json'
             })
         );
     }
@@ -325,21 +313,9 @@ module.exports = function (env) {
         config.performance = {
             hints: false
         };
-
-        config.plugins.push(new plugins.BuildOptimizerWebpackPlugin());
-        
-        config.module.rules.push({
-            test: /\.js$/,
-            use: [{
-                loader: '@angular-devkit/build-optimizer/webpack-loader',
-                options: {
-                    sourceMap: false
-                }
-            }]
-        });
     }
 
-    if (isTestCoverage) {
+    if (isCoverage) {
         // Do not instrument tests.
         config.module.rules.push({
             test: /\.ts$/,
@@ -407,10 +383,6 @@ module.exports = function (env) {
              */
             include: root('app', 'theme')
         });
-    }
-
-    if (isAnalyzing) {
-        config.plugins.push(new plugins.BundleAnalyzerPlugin());
     }
 
     return config;

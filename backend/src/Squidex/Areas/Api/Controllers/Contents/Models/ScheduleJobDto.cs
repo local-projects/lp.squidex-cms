@@ -31,11 +31,6 @@ namespace Squidex.Areas.Api.Controllers.Contents.Models
         public Instant DueTime { get; set; }
 
         /// <summary>
-        /// The color of the scheduled status.
-        /// </summary>
-        public string Color { get; set; }
-
-        /// <summary>
         /// The user who schedule the content.
         /// </summary>
         [Required]

@@ -28,7 +28,7 @@ namespace Squidex.Domain.Apps.Core.Operations.ValidateContent.Validators
 
             var filter = string.Empty;
 
-            await sut.ValidateAsync("hi", errors, Context(Guid.NewGuid(), f => filter = f, ValidationMode.Default));
+            await sut.ValidateAsync("hi", errors, Context(Guid.NewGuid(), f => filter = f));
 
             errors.Should().BeEquivalentTo(
                 new[] { "property: Another content with the same value exists." });
@@ -43,24 +43,12 @@ namespace Squidex.Domain.Apps.Core.Operations.ValidateContent.Validators
 
             var filter = string.Empty;
 
-            await sut.ValidateAsync(12.5, errors, Context(Guid.NewGuid(), f => filter = f, ValidationMode.Default));
+            await sut.ValidateAsync(12.5, errors, Context(Guid.NewGuid(), f => filter = f));
 
             errors.Should().BeEquivalentTo(
                 new[] { "property: Another content with the same value exists." });
 
             Assert.Equal("Data.property.iv == 12.5", filter);
-        }
-
-        [Fact]
-        public async Task Should_not_add_error_if_string_value_not_found_but_in_optimized_mode()
-        {
-            var sut = new UniqueValidator();
-
-            var filter = string.Empty;
-
-            await sut.ValidateAsync("hi", errors, Context(Guid.NewGuid(), f => filter = f, ValidationMode.Optimized));
-
-            Assert.Empty(errors);
         }
 
         [Fact]
@@ -70,7 +58,7 @@ namespace Squidex.Domain.Apps.Core.Operations.ValidateContent.Validators
 
             var filter = string.Empty;
 
-            await sut.ValidateAsync("hi", errors, Context(contentId, f => filter = f, ValidationMode.Default));
+            await sut.ValidateAsync("hi", errors, Context(contentId, f => filter = f));
 
             Assert.Empty(errors);
         }
@@ -82,12 +70,12 @@ namespace Squidex.Domain.Apps.Core.Operations.ValidateContent.Validators
 
             var filter = string.Empty;
 
-            await sut.ValidateAsync(12.5, errors, Context(contentId, f => filter = f, ValidationMode.Default));
+            await sut.ValidateAsync(12.5, errors, Context(contentId, f => filter = f));
 
             Assert.Empty(errors);
         }
 
-        private ValidationContext Context(Guid id, Action<string> filter, ValidationMode mode)
+        private ValidationContext Context(Guid id, Action<string> filter)
         {
             return new ValidationContext(contentId, schemaId,
                 (schema, filterNode) =>
@@ -103,10 +91,7 @@ namespace Squidex.Domain.Apps.Core.Operations.ValidateContent.Validators
                 ids =>
                 {
                     return Task.FromResult<IReadOnlyList<IAssetInfo>>(new List<IAssetInfo>());
-                },
-                mode)
-                .Nested("property")
-                .Nested("iv");
+                }).Nested("property").Nested("iv");
         }
     }
 }

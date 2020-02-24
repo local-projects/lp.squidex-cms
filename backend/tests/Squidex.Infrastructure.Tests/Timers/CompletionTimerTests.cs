@@ -5,7 +5,7 @@
 //  All rights reserved. Licensed under the MIT license.
 // ==========================================================================
 
-using System.Threading.Tasks;
+using Squidex.Infrastructure.Tasks;
 using Xunit;
 
 namespace Squidex.Infrastructure.Timers
@@ -21,7 +21,7 @@ namespace Squidex.Infrastructure.Timers
             {
                 called = true;
 
-                return Task.CompletedTask;
+                return TaskHelper.Done;
             }, 2000);
 
             timer.SkipCurrentDelay();

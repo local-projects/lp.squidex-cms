@@ -11,6 +11,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MongoDB.Driver;
+using Squidex.Infrastructure.Tasks;
 using Xunit;
 
 namespace Squidex.Infrastructure.MongoDb
@@ -81,7 +82,7 @@ namespace Squidex.Infrastructure.MongoDb
             await cursor.ForEachPipelineAsync(x =>
             {
                 result.Add(x);
-                return Task.CompletedTask;
+                return TaskHelper.Done;
             });
 
             Assert.Equal(new List<int> { 0, 1, 2, 3, 4, 5 }, result);
@@ -101,7 +102,7 @@ namespace Squidex.Infrastructure.MongoDb
                     return cursor.ForEachPipelineAsync(x =>
                     {
                         result.Add(x);
-                        return Task.CompletedTask;
+                        return TaskHelper.Done;
                     });
                 });
             }
@@ -128,7 +129,7 @@ namespace Squidex.Infrastructure.MongoDb
                         }
 
                         result.Add(x);
-                        return Task.CompletedTask;
+                        return TaskHelper.Done;
                     });
                 });
             }
@@ -156,7 +157,7 @@ namespace Squidex.Infrastructure.MongoDb
 
                             result.Add(x);
 
-                            return Task.CompletedTask;
+                            return TaskHelper.Done;
                         }, cts.Token);
                     });
                 }

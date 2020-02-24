@@ -21,8 +21,7 @@ import {
     LogoutPageComponent,
     NotFoundPageComponent,
     NotificationsMenuComponent,
-    ProfileMenuComponent,
-    SearchMenuComponent
+    ProfileMenuComponent
 } from './declarations';
 
 @NgModule({
@@ -49,8 +48,7 @@ import {
         LogoutPageComponent,
         NotFoundPageComponent,
         NotificationsMenuComponent,
-        ProfileMenuComponent,
-        SearchMenuComponent
+        ProfileMenuComponent
     ]
 })
 export class SqxShellModule { }

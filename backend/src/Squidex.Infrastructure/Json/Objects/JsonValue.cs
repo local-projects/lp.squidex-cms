@@ -6,8 +6,6 @@
 // ==========================================================================
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using NodaTime;
 
 #pragma warning disable RECS0018 // Comparison of floating point numbers with equality operator
@@ -16,8 +14,6 @@ namespace Squidex.Infrastructure.Json.Objects
 {
     public static class JsonValue
     {
-        private static readonly char[] PathSeparators = { '.', '[', ']' };
-
         public static readonly IJsonValue Empty = new JsonString(string.Empty);
 
         public static readonly IJsonValue True = JsonBoolean.True;
@@ -68,8 +64,6 @@ namespace Squidex.Infrastructure.Json.Objects
                     return Create(i);
                 case long l:
                     return Create(l);
-                case Guid g:
-                    return Create(g);
                 case Instant i:
                     return Create(i);
             }
@@ -77,34 +71,9 @@ namespace Squidex.Infrastructure.Json.Objects
             throw new ArgumentException("Invalid json type");
         }
 
-        public static IJsonValue Create(Guid value)
+        public static IJsonValue Create(bool value)
         {
-            return Create(value.ToString());
-        }
-
-        public static IJsonValue Create(Guid? value)
-        {
-            if (value == null)
-            {
-                return Null;
-            }
-
-            return Create(value.Value);
-        }
-
-        public static IJsonValue Create(Instant value)
-        {
-            return Create(value.ToString());
-        }
-
-        public static IJsonValue Create(Instant? value)
-        {
-            if (value == null)
-            {
-                return Null;
-            }
-
-            return Create(value.Value);
+            return value ? True : False;
         }
 
         public static IJsonValue Create(double value)
@@ -119,6 +88,16 @@ namespace Squidex.Infrastructure.Json.Objects
             return new JsonNumber(value);
         }
 
+        public static IJsonValue Create(Instant? value)
+        {
+            if (value == null)
+            {
+                return Null;
+            }
+
+            return Create(value.Value.ToString());
+        }
+
         public static IJsonValue Create(double? value)
         {
             if (value == null)
@@ -127,11 +106,6 @@ namespace Squidex.Infrastructure.Json.Objects
             }
 
             return Create(value.Value);
-        }
-
-        public static IJsonValue Create(bool value)
-        {
-            return value ? True : False;
         }
 
         public static IJsonValue Create(bool? value)
@@ -157,29 +131,6 @@ namespace Squidex.Infrastructure.Json.Objects
             }
 
             return new JsonString(value);
-        }
-
-        public static bool TryGetByPath(this IJsonValue value, string? path, [MaybeNullWhen(false)] out IJsonValue result)
-        {
-            return TryGetByPath(value, path?.Split(PathSeparators, StringSplitOptions.RemoveEmptyEntries), out result!);
-        }
-
-        public static bool TryGetByPath(this IJsonValue? value, IEnumerable<string>? path, [MaybeNullWhen(false)] out IJsonValue result)
-        {
-            result = value!;
-
-            if (path != null)
-            {
-                foreach (var pathSegment in path)
-                {
-                    if (result == null || !result.TryGet(pathSegment, out result!))
-                    {
-                        break;
-                    }
-                }
-            }
-
-            return result != null && !ReferenceEquals(result, value);
         }
     }
 }

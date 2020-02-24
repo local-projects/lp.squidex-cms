@@ -15,17 +15,13 @@ import { ErrorDto } from './utils/error';
 import { ResourceLinks } from './utils/hateos';
 import { Types } from './utils/types';
 
-export type Mutable<T> = {
-    -readonly [P in keyof T ]: T[P]
-};
-
 export interface FormState {
     submitted: boolean;
 
     error?: ErrorDto | null;
 }
 
-export class Form<T extends AbstractControl, TOut, TIn = TOut> {
+export class Form<T extends AbstractControl, V> {
     private readonly state = new State<FormState>({ submitted: false });
 
     public submitted =
@@ -55,7 +51,7 @@ export class Form<T extends AbstractControl, TOut, TIn = TOut> {
         this.form.disable();
     }
 
-    protected setValue(value?: Partial<TIn>) {
+    protected setValue(value?: V) {
         if (value) {
             this.form.reset(this.transformLoad(value));
         } else {
@@ -63,21 +59,21 @@ export class Form<T extends AbstractControl, TOut, TIn = TOut> {
         }
     }
 
-    protected transformLoad(value: Partial<TIn>): any {
+    protected transformLoad(value: V): any {
         return value;
     }
 
-    protected transformSubmit(value: any): TOut {
+    protected transformSubmit(value: any): V {
         return value;
     }
 
-    public load(value: Partial<TIn> | undefined) {
+    public load(value: V | undefined) {
         this.state.next({ submitted: false, error: null });
 
         this.setValue(value);
     }
 
-    public submit(): TOut | null {
+    public submit(): V | null {
         this.state.next({ submitted: true, error: null });
 
         if (this.form.valid) {
@@ -93,7 +89,7 @@ export class Form<T extends AbstractControl, TOut, TIn = TOut> {
         }
     }
 
-    public submitCompleted(options?: { newValue?: TOut, noReset?: boolean }) {
+    public submitCompleted(options?: { newValue?: V, noReset?: boolean }) {
         this.state.next({ submitted: false, error: null });
 
         this.enable();
@@ -101,7 +97,7 @@ export class Form<T extends AbstractControl, TOut, TIn = TOut> {
         if (options && options.noReset) {
             this.form.markAsPristine();
         } else {
-            this.setValue(options?.newValue);
+            this.setValue(options ? options.newValue : undefined);
         }
     }
 

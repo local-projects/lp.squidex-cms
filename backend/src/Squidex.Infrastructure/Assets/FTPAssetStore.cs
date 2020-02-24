@@ -114,9 +114,7 @@ namespace Squidex.Infrastructure.Assets
                 throw new AssetAlreadyExistsException(fileName);
             }
 
-            var mode = overwrite ? FtpRemoteExists.Overwrite : FtpRemoteExists.Skip;
-
-            await client.UploadAsync(stream, fileName, mode, true, null, ct);
+            await client.UploadAsync(stream, fileName, overwrite ? FtpExists.Overwrite : FtpExists.Skip, true, null, ct);
         }
 
         public async Task DeleteAsync(string fileName)

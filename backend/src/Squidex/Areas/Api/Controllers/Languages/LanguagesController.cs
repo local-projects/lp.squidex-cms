@@ -36,7 +36,7 @@ namespace Squidex.Areas.Api.Controllers.Languages
         /// </returns>
         [HttpGet]
         [Route("languages/")]
-        [ProducesResponseType(typeof(LanguageDto[]), 200)]
+        [ProducesResponseType(typeof(string[]), 200)]
         [ApiPermission]
         public IActionResult GetLanguages()
         {

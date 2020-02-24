@@ -1,3 +1,6 @@
+@import '_mixins';
+@import '_vars';
+
 .code {
     background: $color-code-background;
     margin: .25rem 0;

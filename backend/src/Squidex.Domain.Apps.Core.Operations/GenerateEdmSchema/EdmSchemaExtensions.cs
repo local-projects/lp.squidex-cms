@@ -52,11 +52,11 @@ namespace Squidex.Domain.Apps.Core.GenerateEdmSchema
 
                 if (created)
                 {
-                    var partitioning = partitionResolver(field.Partitioning);
+                    var partition = partitionResolver(field.Partitioning);
 
-                    foreach (var partitionKey in partitioning.AllKeys)
+                    foreach (var partitionItem in partition)
                     {
-                        partitionType.AddStructuralProperty(partitionKey.EscapeEdmField(), fieldEdmType);
+                        partitionType.AddStructuralProperty(partitionItem.Key.EscapeEdmField(), fieldEdmType);
                     }
                 }
 

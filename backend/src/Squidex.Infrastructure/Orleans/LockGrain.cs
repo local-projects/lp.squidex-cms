@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Squidex.Infrastructure.Tasks;
 
 namespace Squidex.Infrastructure.Orleans
 {
@@ -39,7 +40,7 @@ namespace Squidex.Infrastructure.Orleans
                 locks.Remove(key);
             }
 
-            return Task.CompletedTask;
+            return TaskHelper.Done;
         }
     }
 }

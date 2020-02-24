@@ -1,13 +1,24 @@
+@import '_vars';
+@import '_mixins';
+
 .navbar {
-    @include box-shadow-outer(0, 3px, 5px, .13);
-    padding-left: $size-sidebar-width + 2rem;
+    @include box-shadow(0, 3px, 5px, .13);
+    display: block;
 }
 
 .navbar-brand {
-    @include absolute(0, null, 0, 0);
     background: $color-theme-blue-dark;
     cursor: pointer;
+    float: left;
     font-size: 1.8rem;
-    font-weight: normal;
+    height: $size-navbar-height;
+    line-height: $size-navbar-height;
+    margin-left: -1rem;
+    margin-right: 2rem;
+    margin-top: -.5rem;
+    padding-bottom: 0;
+    padding-top: 0;
+    text-align: center;
+    text-decoration: none;
     width: $size-sidebar-width;
 }

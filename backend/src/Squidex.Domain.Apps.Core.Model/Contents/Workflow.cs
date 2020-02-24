@@ -8,13 +8,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using Squidex.Infrastructure;
-
-#pragma warning disable IDE0051 // Remove unused private members
 
 namespace Squidex.Domain.Apps.Core.Contents
 {
-    [Equals(DoNotAddEqualityOperators = true)]
     public sealed class Workflow : Named
     {
         private const string DefaultName = "Unnamed";
@@ -24,7 +20,6 @@ namespace Squidex.Domain.Apps.Core.Contents
         public static readonly Workflow Default = CreateDefault();
         public static readonly Workflow Empty = new Workflow(default, EmptySteps);
 
-        [IgnoreDuringEquals]
         public IReadOnlyDictionary<Status, WorkflowStep> Steps { get; } = EmptySteps;
 
         public IReadOnlyList<Guid> SchemaIds { get; } = EmptySchemaIds;
@@ -126,18 +121,6 @@ namespace Squidex.Domain.Apps.Core.Contents
         public (Status Key, WorkflowStep) GetInitialStep()
         {
             return (Initial, Steps[Initial]);
-        }
-
-        [CustomEqualsInternal]
-        private bool CustomEquals(Workflow other)
-        {
-            return Steps.EqualsDictionary(other.Steps);
-        }
-
-        [CustomGetHashCode]
-        private int CustomHashCode()
-        {
-            return Steps.DictionaryHashCode();
         }
     }
 }

@@ -44,14 +44,13 @@ export class ResourceLoaderService {
         let result = this.cache[key];
 
         if (!result) {
-            const script = this.renderer.createElement('script');
+            result = new Promise((resolve, reject) => {
+                const script = this.renderer.createElement('script');
 
-            this.renderer.setProperty(script, 'src', url);
-            this.renderer.setProperty(script, 'async', false);
-            this.renderer.appendChild(document.body, script);
-
-            result = new Promise((resolve) => {
                 this.renderer.listen(script, 'load', () => resolve());
+                this.renderer.setProperty(script, 'src', url);
+                this.renderer.setProperty(script, 'async', true);
+                this.renderer.appendChild(document.body, script);
             });
 
             this.cache[key] = result;

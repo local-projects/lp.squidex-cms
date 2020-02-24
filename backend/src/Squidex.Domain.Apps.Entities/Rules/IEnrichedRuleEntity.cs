@@ -9,7 +9,7 @@ using NodaTime;
 
 namespace Squidex.Domain.Apps.Entities.Rules
 {
-    public interface IEnrichedRuleEntity : IRuleEntity
+    public interface IEnrichedRuleEntity : IRuleEntity, IEntityWithCacheDependencies
     {
         int NumSucceeded { get; }
 

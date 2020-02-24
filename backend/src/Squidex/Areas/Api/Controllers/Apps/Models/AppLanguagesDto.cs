@@ -7,6 +7,7 @@
 
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using Squidex.Domain.Apps.Core.Apps;
 using Squidex.Domain.Apps.Entities.Apps;
 using Squidex.Shared;
 using Squidex.Web;
@@ -23,12 +24,10 @@ namespace Squidex.Areas.Api.Controllers.Apps.Models
 
         public static AppLanguagesDto FromApp(IAppEntity app, ApiController controller)
         {
-            var config = app.LanguagesConfig;
-
             var result = new AppLanguagesDto
             {
-                Items = config.Languages
-                    .Select(x => AppLanguageDto.FromLanguage(x.Key, x.Value, config))
+                Items = app.LanguagesConfig.OfType<LanguageConfig>()
+                    .Select(x => AppLanguageDto.FromLanguage(x, app))
                     .Select(x => x.WithLinks(controller, app))
                     .OrderByDescending(x => x.IsMaster).ThenBy(x => x.Iso2Code)
                     .ToArray()

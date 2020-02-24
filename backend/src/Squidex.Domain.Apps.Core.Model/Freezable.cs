@@ -7,17 +7,13 @@
 
 using System;
 using Squidex.Infrastructure;
-using Squidex.Infrastructure.Reflection;
 
 namespace Squidex.Domain.Apps.Core
 {
-    [Equals(DoNotAddEquals = true, DoNotAddGetHashCode = true, DoNotAddEqualityOperators = true)]
     public abstract class Freezable : IFreezable
     {
         private bool isFrozen;
 
-        [IgnoreEquals]
-        [IgnoreDuringEquals]
         public bool IsFrozen
         {
             get { return isFrozen; }

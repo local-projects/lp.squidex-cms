@@ -30,7 +30,6 @@ namespace Squidex.Infrastructure.EventSourcing
         public void Dispose()
         {
             client.DeleteDatabaseAsync(UriFactory.CreateDatabaseUri("Test")).Wait();
-            client.Dispose();
         }
     }
 }

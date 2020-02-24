@@ -61,13 +61,13 @@ namespace Squidex.Infrastructure.EventSourcing.Grains
 
             consumerName = eventConsumer.GetType().Name;
 
-            A.CallTo(() => eventStore.CreateSubscription(A<IEventSubscriber>._, A<string>._, A<string>._))
+            A.CallTo(() => eventStore.CreateSubscription(A<IEventSubscriber>.Ignored, A<string>.Ignored, A<string>.Ignored))
                 .Returns(eventSubscription);
 
             A.CallTo(() => eventConsumer.Name)
                 .Returns(consumerName);
 
-            A.CallTo(() => eventConsumer.Handles(A<StoredEvent>._))
+            A.CallTo(() => eventConsumer.Handles(A<StoredEvent>.Ignored))
                 .Returns(true);
 
             A.CallTo(() => formatter.Parse(eventData, null))
@@ -91,7 +91,7 @@ namespace Squidex.Infrastructure.EventSourcing.Grains
 
             grainState.Value.Should().BeEquivalentTo(new EventConsumerState { IsStopped = true, Position = initialPosition, Error = null });
 
-            A.CallTo(() => eventStore.CreateSubscription(A<IEventSubscriber>._, A<string>._, A<string>._))
+            A.CallTo(() => eventStore.CreateSubscription(A<IEventSubscriber>.Ignored, A<string>.Ignored, A<string>.Ignored))
                 .MustNotHaveHappened();
         }
 
@@ -103,7 +103,7 @@ namespace Squidex.Infrastructure.EventSourcing.Grains
 
             grainState.Value.Should().BeEquivalentTo(new EventConsumerState { IsStopped = false, Position = initialPosition, Error = null });
 
-            A.CallTo(() => eventStore.CreateSubscription(A<IEventSubscriber>._, A<string>._, A<string>._))
+            A.CallTo(() => eventStore.CreateSubscription(A<IEventSubscriber>.Ignored, A<string>.Ignored, A<string>.Ignored))
                 .MustHaveHappened(1, Times.Exactly);
         }
 
@@ -115,7 +115,7 @@ namespace Squidex.Infrastructure.EventSourcing.Grains
 
             grainState.Value.Should().BeEquivalentTo(new EventConsumerState { IsStopped = false, Position = initialPosition, Error = null });
 
-            A.CallTo(() => eventStore.CreateSubscription(A<IEventSubscriber>._, A<string>._, A<string>._))
+            A.CallTo(() => eventStore.CreateSubscription(A<IEventSubscriber>.Ignored, A<string>.Ignored, A<string>.Ignored))
                 .MustHaveHappened(1, Times.Exactly);
         }
 
@@ -155,10 +155,10 @@ namespace Squidex.Infrastructure.EventSourcing.Grains
             A.CallTo(() => eventSubscription.StopAsync())
                 .MustHaveHappened(1, Times.Exactly);
 
-            A.CallTo(() => eventStore.CreateSubscription(A<IEventSubscriber>._, A<string>._, grainState.Value.Position))
+            A.CallTo(() => eventStore.CreateSubscription(A<IEventSubscriber>.Ignored, A<string>.Ignored, grainState.Value.Position))
                 .MustHaveHappened(1, Times.Exactly);
 
-            A.CallTo(() => eventStore.CreateSubscription(A<IEventSubscriber>._, A<string>._, null))
+            A.CallTo(() => eventStore.CreateSubscription(A<IEventSubscriber>.Ignored, A<string>.Ignored, null))
                 .MustHaveHappened(1, Times.Exactly);
         }
 
@@ -392,7 +392,7 @@ namespace Squidex.Infrastructure.EventSourcing.Grains
             A.CallTo(() => eventSubscription.StopAsync())
                 .MustHaveHappened(1, Times.Exactly);
 
-            A.CallTo(() => eventStore.CreateSubscription(A<IEventSubscriber>._, A<string>._, A<string>._))
+            A.CallTo(() => eventStore.CreateSubscription(A<IEventSubscriber>.Ignored, A<string>.Ignored, A<string>.Ignored))
                 .MustHaveHappened(2, Times.Exactly);
         }
 

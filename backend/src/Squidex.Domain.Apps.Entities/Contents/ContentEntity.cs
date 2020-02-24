@@ -6,6 +6,7 @@
 // ==========================================================================
 
 using System;
+using System.Collections.Generic;
 using NodaTime;
 using Squidex.Domain.Apps.Core.Contents;
 using Squidex.Domain.Apps.Core.Schemas;
@@ -13,7 +14,7 @@ using Squidex.Infrastructure;
 
 namespace Squidex.Domain.Apps.Entities.Contents
 {
-    public sealed class ContentEntity : IEnrichedContentEntity, IContentEntity
+    public sealed class ContentEntity : IEnrichedContentEntity
     {
         public Guid Id { get; set; }
 
@@ -31,32 +32,30 @@ namespace Squidex.Domain.Apps.Entities.Contents
 
         public RefToken LastModifiedBy { get; set; }
 
-        public NamedContentData Data { get; set; }
+        public ScheduleJob ScheduleJob { get; set; }
+
+        public NamedContentData? Data { get; set; }
+
+        public NamedContentData DataDraft { get; set; }
 
         public NamedContentData? ReferenceData { get; set; }
 
-        public ScheduleJob? ScheduleJob { get; set; }
-
-        public Status? NewStatus { get; set; }
-
         public Status Status { get; set; }
 
-        public StatusInfo[]? NextStatuses { get; set; }
+        public StatusInfo[]? Nexts { get; set; }
 
-        public bool CanUpdate { get; set; }
-
-        public bool IsSingleton { get; set; }
+        public string StatusColor { get; set; }
 
         public string SchemaName { get; set; }
 
         public string SchemaDisplayName { get; set; }
 
-        public string StatusColor { get; set; }
-
-        public string? NewStatusColor { get; set; }
-
-        public string? ScheduledStatusColor { get; set; }
-
         public RootField[]? ReferenceFields { get; set; }
+
+        public bool CanUpdate { get; set; }
+
+        public bool IsPending { get; set; }
+
+        public HashSet<object?> CacheDependencies { get; set; }
     }
 }

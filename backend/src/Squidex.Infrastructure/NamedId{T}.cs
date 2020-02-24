@@ -12,10 +12,9 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Squidex.Infrastructure
 {
-    public delegate bool Parser<T>(ReadOnlySpan<char> input, out T result);
+    public delegate bool Parser<T>(string input, out T result);
 
-    [Equals(DoNotAddEqualityOperators = true)]
-    public sealed class NamedId<T> where T : notnull
+    public sealed class NamedId<T> : IEquatable<NamedId<T>> where T : notnull
     {
         private static readonly int GuidLength = Guid.Empty.ToString().Length;
 
@@ -38,17 +37,30 @@ namespace Squidex.Infrastructure
             return $"{Id},{Name}";
         }
 
+        public override bool Equals(object? obj)
+        {
+            return Equals(obj as NamedId<T>);
+        }
+
+        public bool Equals(NamedId<T>? other)
+        {
+            return other != null && (ReferenceEquals(this, other) || (Id.Equals(other.Id) && Name.Equals(other.Name)));
+        }
+
+        public override int GetHashCode()
+        {
+            return (Id.GetHashCode() * 397) ^ Name.GetHashCode();
+        }
+
         public static bool TryParse(string value, Parser<T> parser, [MaybeNullWhen(false)] out NamedId<T> result)
         {
             if (value != null)
             {
-                var span = value.AsSpan();
-
                 if (typeof(T) == typeof(Guid))
                 {
                     if (value.Length > GuidLength + 1 && value[GuidLength] == ',')
                     {
-                        if (parser(span.Slice(0, GuidLength), out var id))
+                        if (parser(value.Substring(0, GuidLength), out var id))
                         {
                             result = new NamedId<T>(id, value.Substring(GuidLength + 1));
 
@@ -62,7 +74,7 @@ namespace Squidex.Infrastructure
 
                     if (index > 0 && index < value.Length - 1)
                     {
-                        if (parser(span.Slice(0, index), out var id))
+                        if (parser(value.Substring(0, index), out var id))
                         {
                             result = new NamedId<T>(id, value.Substring(index + 1));
 

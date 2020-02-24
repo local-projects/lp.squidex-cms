@@ -79,7 +79,7 @@ namespace Squidex.Domain.Apps.Core.Operations.ValidateContent
             await sut.ValidateAsync(JsonValue.Create("Invalid"), errors);
 
             errors.Should().BeEquivalentTo(
-                new[] { "The value string does not match the required number from the format string \"uuuu\". Value being parsed: '^Invalid'. (^ indicates error position.)" });
+                new[] { "Not a valid value." });
         }
 
         [Fact]
@@ -90,7 +90,7 @@ namespace Squidex.Domain.Apps.Core.Operations.ValidateContent
             await sut.ValidateAsync(JsonValue.Create(123), errors);
 
             errors.Should().BeEquivalentTo(
-                new[] { "Invalid json type, expected string." });
+                new[] { "Not a valid value." });
         }
 
         private static Instant FutureDays(int days)
@@ -100,7 +100,7 @@ namespace Squidex.Domain.Apps.Core.Operations.ValidateContent
 
         private static IJsonValue CreateValue(Instant v)
         {
-            return JsonValue.Create(v);
+            return JsonValue.Create(v.ToString());
         }
 
         private static RootField<DateTimeFieldProperties> Field(DateTimeFieldProperties properties)

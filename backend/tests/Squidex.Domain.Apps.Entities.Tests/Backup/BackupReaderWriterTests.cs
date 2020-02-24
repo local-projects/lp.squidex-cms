@@ -17,6 +17,7 @@ using Squidex.Infrastructure.EventSourcing;
 using Squidex.Infrastructure.Json;
 using Squidex.Infrastructure.Reflection;
 using Squidex.Infrastructure.States;
+using Squidex.Infrastructure.Tasks;
 using Xunit;
 
 namespace Squidex.Domain.Apps.Entities.Backup
@@ -46,7 +47,7 @@ namespace Squidex.Domain.Apps.Entities.Backup
 
             formatter = new DefaultEventDataFormatter(typeNameRegistry, serializer);
 
-            A.CallTo(() => streamNameResolver.WithNewId(A<string>._, A<Func<string, string>>._))
+            A.CallTo(() => streamNameResolver.WithNewId(A<string>.Ignored, A<Func<string, string>>.Ignored))
                 .ReturnsLazily(new Func<string, Func<string, string>, string>((stream, idGenerator) => stream + "^2"));
         }
 
@@ -108,7 +109,7 @@ namespace Squidex.Domain.Apps.Entities.Backup
                         {
                             innerStream.WriteByte((byte)index);
 
-                            return Task.CompletedTask;
+                            return TaskHelper.Done;
                         });
                     }
                     else if (index % 37 == 0)
@@ -138,7 +139,7 @@ namespace Squidex.Domain.Apps.Entities.Backup
 
                             Assert.Equal((byte)index, byteRead);
 
-                            return Task.CompletedTask;
+                            return TaskHelper.Done;
                         });
                     }
                     else if (index % 37 == 0)

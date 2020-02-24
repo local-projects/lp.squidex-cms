@@ -176,7 +176,7 @@ namespace Squidex.Infrastructure.States
         }
 
         [Fact]
-        public async Task Should_write_to_store_with_previous_version()
+        public async Task Should_write_to_store_with_previous_position()
         {
             SetupEventStore(3);
 
@@ -188,27 +188,16 @@ namespace Squidex.Infrastructure.States
             await persistence.WriteEventAsync(Envelope.Create(new MyEvent()));
             await persistence.WriteEventAsync(Envelope.Create(new MyEvent()));
 
-            A.CallTo(() => eventStore.AppendAsync(A<Guid>._, key, 2, A<ICollection<EventData>>.That.Matches(x => x.Count == 1)))
+            A.CallTo(() => eventStore.AppendAsync(A<Guid>.Ignored, key, 2, A<ICollection<EventData>>.That.Matches(x => x.Count == 1)))
                 .MustHaveHappened();
-            A.CallTo(() => eventStore.AppendAsync(A<Guid>._, key, 3, A<ICollection<EventData>>.That.Matches(x => x.Count == 1)))
+            A.CallTo(() => eventStore.AppendAsync(A<Guid>.Ignored, key, 3, A<ICollection<EventData>>.That.Matches(x => x.Count == 1)))
                 .MustHaveHappened();
-            A.CallTo(() => eventEnricher.Enrich(A<Envelope<IEvent>>._, key))
+            A.CallTo(() => eventEnricher.Enrich(A<Envelope<IEvent>>.Ignored, key))
                 .MustHaveHappenedTwiceExactly();
         }
 
         [Fact]
-        public async Task Should_write_events_to_store_with_empty_version()
-        {
-            var persistence = sut.WithEventSourcing(None.Type, key, null);
-
-            await persistence.WriteEventAsync(Envelope.Create(new MyEvent()));
-
-            A.CallTo(() => eventStore.AppendAsync(A<Guid>._, key, EtagVersion.Empty, A<ICollection<EventData>>.That.Matches(x => x.Count == 1)))
-                .MustHaveHappened();
-        }
-
-        [Fact]
-        public async Task Should_wrap_exception_when_writing_to_store_with_previous_version()
+        public async Task Should_wrap_exception_when_writing_to_store_with_previous_position()
         {
             SetupEventStore(3);
 
@@ -217,7 +206,7 @@ namespace Squidex.Infrastructure.States
 
             await persistence.ReadAsync();
 
-            A.CallTo(() => eventStore.AppendAsync(A<Guid>._, key, 2, A<ICollection<EventData>>.That.Matches(x => x.Count == 1)))
+            A.CallTo(() => eventStore.AppendAsync(A<Guid>.Ignored, key, 2, A<ICollection<EventData>>.That.Matches(x => x.Count == 1)))
                 .Throws(new WrongEventVersionException(1, 1));
 
             await Assert.ThrowsAsync<InconsistentStateException>(() => persistence.WriteEventAsync(Envelope.Create(new MyEvent())));

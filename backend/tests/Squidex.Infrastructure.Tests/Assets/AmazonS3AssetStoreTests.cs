@@ -8,29 +8,27 @@
 using System.Threading.Tasks;
 using Xunit;
 
-#pragma warning disable SA1300 // Element should begin with upper-case letter
-
 namespace Squidex.Infrastructure.Assets
 {
     [Trait("Category", "Dependencies")]
     public class AmazonS3AssetStoreTests : AssetStoreTests<AmazonS3AssetStore>, IClassFixture<AmazonS3AssetStoreFixture>
     {
-        public AmazonS3AssetStoreFixture _ { get; }
+        private readonly AmazonS3AssetStoreFixture fixture;
 
         public AmazonS3AssetStoreTests(AmazonS3AssetStoreFixture fixture)
         {
-            _ = fixture;
+            this.fixture = fixture;
         }
 
         public override AmazonS3AssetStore CreateStore()
         {
-            return _.AssetStore;
+            return fixture.AssetStore;
         }
 
         [Fact]
         public async Task Should_throw_exception_for_invalid_config()
         {
-            var sut = new AmazonS3AssetStore(new AmazonS3Options
+            var sut = new AmazonS3AssetStore(new MyAmazonS3Options
             {
                 ServiceUrl = null,
                 RegionName = "invalid",

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Orleans;
 using Orleans.Core;
 using Orleans.Runtime;
+using Squidex.Infrastructure.Tasks;
 
 namespace Squidex.Infrastructure.Orleans
 {
@@ -40,12 +41,12 @@ namespace Squidex.Infrastructure.Orleans
 
         protected virtual Task OnLoadAsync(string key)
         {
-            return Task.CompletedTask;
+            return TaskHelper.Done;
         }
 
         protected virtual Task OnActivateAsync(string key)
         {
-            return Task.CompletedTask;
+            return TaskHelper.Done;
         }
     }
 }

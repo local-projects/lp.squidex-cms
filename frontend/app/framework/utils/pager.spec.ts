@@ -235,7 +235,5 @@ describe('Pager', () => {
         pager.saveTo('my', localStore.object);
 
         localStore.verify(x => x.setInt('my.pageSize', 25), Times.once());
-
-        expect().nothing();
     });
 });

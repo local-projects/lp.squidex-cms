@@ -14,25 +14,18 @@ namespace Squidex.Domain.Apps.Core.ExtractReferenceIds
 {
     public static class ValueReferencesConverter
     {
-        public static ValueConverter CleanReferences(HashSet<Guid>? validIds = null)
+        public static ValueConverter CleanReferences(IEnumerable<Guid> deletedReferencedIds)
         {
-            if (validIds == null)
-            {
-                return (value, field) => value;
-            }
-
-            var cleaner = new ReferencesCleaner(validIds);
+            var ids = new HashSet<Guid>(deletedReferencedIds);
 
             return (value, field) =>
             {
                 if (value.Type == JsonValueType.Null)
                 {
-                    return value!;
+                    return value;
                 }
 
-                cleaner.SetValue(value);
-
-                return field.Accept(cleaner);
+                return field.CleanReferences(value, ids);
             };
         }
     }

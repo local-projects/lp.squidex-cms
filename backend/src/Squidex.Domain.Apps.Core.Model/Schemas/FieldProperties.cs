@@ -9,7 +9,6 @@ using System.Collections.ObjectModel;
 
 namespace Squidex.Domain.Apps.Core.Schemas
 {
-    [Equals(DoNotAddEqualityOperators = true)]
     public abstract class FieldProperties : NamedElementPropertiesBase
     {
         public bool IsRequired { get; set; }

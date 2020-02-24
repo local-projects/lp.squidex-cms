@@ -49,7 +49,7 @@ namespace Squidex.Domain.Apps.Entities.Apps.Indexes
         {
             var expected = SetupApp(0, false);
 
-            A.CallTo(() => indexByName.GetIdsAsync(A<string[]>.That.IsSameSequenceAs(new[] { appId.Name })))
+            A.CallTo(() => indexByName.GetIdsAsync(A<string[]>.That.IsSameSequenceAs(new string[] { appId.Name })))
                 .Returns(new List<Guid> { appId.Id });
 
             var actual = await sut.GetAppsForUserAsync(userId, new PermissionSet($"squidex.apps.{appId.Name}"));
@@ -143,7 +143,7 @@ namespace Squidex.Domain.Apps.Entities.Apps.Indexes
             A.CallTo(() => indexByName.AddAsync(token))
                 .MustHaveHappened();
 
-            A.CallTo(() => indexByName.RemoveReservationAsync(A<string>._))
+            A.CallTo(() => indexByName.RemoveReservationAsync(A<string>.Ignored))
                 .MustNotHaveHappened();
 
             A.CallTo(() => indexByUser.AddAsync(appId.Id))
@@ -167,7 +167,7 @@ namespace Squidex.Domain.Apps.Entities.Apps.Indexes
             A.CallTo(() => indexByName.AddAsync(token))
                 .MustHaveHappened();
 
-            A.CallTo(() => indexByName.RemoveReservationAsync(A<string>._))
+            A.CallTo(() => indexByName.RemoveReservationAsync(A<string>.Ignored))
                 .MustNotHaveHappened();
 
             A.CallTo(() => indexByUser.AddAsync(appId.Id))
@@ -209,10 +209,10 @@ namespace Squidex.Domain.Apps.Entities.Apps.Indexes
 
             await Assert.ThrowsAsync<ValidationException>(() => sut.HandleAsync(context));
 
-            A.CallTo(() => indexByName.AddAsync(A<string>._))
+            A.CallTo(() => indexByName.AddAsync(A<string>.Ignored))
                 .MustNotHaveHappened();
 
-            A.CallTo(() => indexByName.RemoveReservationAsync(A<string>._))
+            A.CallTo(() => indexByName.RemoveReservationAsync(A<string>.Ignored))
                 .MustNotHaveHappened();
 
             A.CallTo(() => indexByUser.AddAsync(appId.Id))
@@ -228,10 +228,10 @@ namespace Squidex.Domain.Apps.Entities.Apps.Indexes
 
             await sut.HandleAsync(context);
 
-            A.CallTo(() => indexByName.ReserveAsync(appId.Id, A<string>._))
+            A.CallTo(() => indexByName.ReserveAsync(appId.Id, A<string>.Ignored))
                 .MustNotHaveHappened();
 
-            A.CallTo(() => indexByName.RemoveReservationAsync(A<string>._))
+            A.CallTo(() => indexByName.RemoveReservationAsync(A<string>.Ignored))
                 .MustNotHaveHappened();
 
             A.CallTo(() => indexByUser.AddAsync(appId.Id))
@@ -241,10 +241,8 @@ namespace Squidex.Domain.Apps.Entities.Apps.Indexes
         [Fact]
         public async Task Should_add_app_to_index_on_contributor_assignment()
         {
-            var command = new AssignContributor { AppId = appId.Id, ContributorId = userId };
-
             var context =
-                new CommandContext(command, commandBus)
+                new CommandContext(new AssignContributor { AppId = appId.Id, ContributorId = userId }, commandBus)
                     .Complete();
 
             await sut.HandleAsync(context);
@@ -256,10 +254,8 @@ namespace Squidex.Domain.Apps.Entities.Apps.Indexes
         [Fact]
         public async Task Should_remove_from_user_index_on_remove_of_contributor()
         {
-            var command = new RemoveContributor { AppId = appId.Id, ContributorId = userId };
-
             var context =
-                new CommandContext(command, commandBus)
+                new CommandContext(new RemoveContributor { AppId = appId.Id, ContributorId = userId }, commandBus)
                     .Complete();
 
             await sut.HandleAsync(context);
@@ -273,10 +269,8 @@ namespace Squidex.Domain.Apps.Entities.Apps.Indexes
         {
             SetupApp(0, isArchived);
 
-            var command = new ArchiveApp { AppId = appId.Id };
-
             var context =
-                new CommandContext(command, commandBus)
+                new CommandContext(new ArchiveApp { AppId = appId.Id }, commandBus)
                     .Complete();
 
             await sut.HandleAsync(context);

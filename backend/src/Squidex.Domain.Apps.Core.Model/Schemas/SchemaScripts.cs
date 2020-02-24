@@ -7,7 +7,6 @@
 
 namespace Squidex.Domain.Apps.Core.Schemas
 {
-    [Equals(DoNotAddEqualityOperators =true)]
     public sealed class SchemaScripts : Freezable
     {
         public static readonly SchemaScripts Empty = new SchemaScripts();

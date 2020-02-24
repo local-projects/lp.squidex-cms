@@ -11,22 +11,20 @@ using FakeItEasy;
 using Squidex.Infrastructure.Log;
 using Xunit;
 
-#pragma warning disable SA1300 // Element should begin with upper-case letter
-
 namespace Squidex.Infrastructure.Assets
 {
     public class FolderAssetStoreTests : AssetStoreTests<FolderAssetStore>, IClassFixture<FolderAssetStoreFixture>
     {
-        public FolderAssetStoreFixture _ { get; }
+        private readonly FolderAssetStoreFixture fixture;
 
         public FolderAssetStoreTests(FolderAssetStoreFixture fixture)
         {
-            _ = fixture;
+            this.fixture = fixture;
         }
 
         public override FolderAssetStore CreateStore()
         {
-            return _.AssetStore;
+            return fixture.AssetStore;
         }
 
         [Fact]
@@ -38,7 +36,7 @@ namespace Squidex.Infrastructure.Assets
         [Fact]
         public void Should_create_directory_when_connecting()
         {
-            Assert.True(Directory.Exists(_.TestFolder));
+            Assert.True(Directory.Exists(fixture.TestFolder));
         }
 
         [Fact]

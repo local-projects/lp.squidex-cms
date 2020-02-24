@@ -8,12 +8,11 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Threading.Tasks;
 using FakeItEasy;
 using Squidex.Domain.Apps.Core.Contents;
 using Squidex.Domain.Apps.Core.HandleRules;
-using Squidex.Domain.Apps.Core.Rules.EnrichedEvents;
+using Squidex.Domain.Apps.Core.HandleRules.EnrichedEvents;
 using Squidex.Domain.Apps.Core.Rules.Triggers;
 using Squidex.Domain.Apps.Core.Scripting;
 using Squidex.Domain.Apps.Events;
@@ -39,63 +38,37 @@ namespace Squidex.Domain.Apps.Entities.Contents
 
         public ContentChangedTriggerHandlerTests()
         {
-            A.CallTo(() => scriptEngine.Evaluate("event", A<object>._, "true"))
+            A.CallTo(() => scriptEngine.Evaluate("event", A<object>.Ignored, "true"))
                 .Returns(true);
 
-            A.CallTo(() => scriptEngine.Evaluate("event", A<object>._, "false"))
+            A.CallTo(() => scriptEngine.Evaluate("event", A<object>.Ignored, "false"))
                 .Returns(false);
 
             sut = new ContentChangedTriggerHandler(scriptEngine, contentLoader);
         }
 
-        public static IEnumerable<object[]> TestEvents()
+        public static IEnumerable<object[]> TestEvents = new[]
         {
-            yield return new object[] { new ContentCreated(), EnrichedContentEventType.Created };
-            yield return new object[] { new ContentUpdated(), EnrichedContentEventType.Updated };
-            yield return new object[] { new ContentDeleted(), EnrichedContentEventType.Deleted };
-            yield return new object[] { new ContentStatusChanged { Change = StatusChange.Change }, EnrichedContentEventType.StatusChanged };
-            yield return new object[] { new ContentStatusChanged { Change = StatusChange.Published }, EnrichedContentEventType.Published };
-            yield return new object[] { new ContentStatusChanged { Change = StatusChange.Unpublished }, EnrichedContentEventType.Unpublished };
-        }
+            new object[] { new ContentCreated(), EnrichedContentEventType.Created },
+            new object[] { new ContentUpdated(), EnrichedContentEventType.Updated },
+            new object[] { new ContentDeleted(), EnrichedContentEventType.Deleted },
+            new object[] { new ContentStatusChanged { Change = StatusChange.Change }, EnrichedContentEventType.StatusChanged },
+            new object[] { new ContentStatusChanged { Change = StatusChange.Published }, EnrichedContentEventType.Published },
+            new object[] { new ContentStatusChanged { Change = StatusChange.Unpublished }, EnrichedContentEventType.Unpublished }
+        };
 
         [Theory]
         [MemberData(nameof(TestEvents))]
-        public async Task Should_create_enriched_events(ContentEvent @event, EnrichedContentEventType type)
+        public async Task Should_enrich_events(ContentEvent @event, EnrichedContentEventType type)
         {
             var envelope = Envelope.Create<AppEvent>(@event).SetEventStreamNumber(12);
 
             A.CallTo(() => contentLoader.GetAsync(@event.ContentId, 12))
                 .Returns(new ContentEntity { SchemaId = SchemaMatch });
 
-            var result = await sut.CreateEnrichedEventsAsync(envelope);
+            var result = await sut.CreateEnrichedEventAsync(envelope) as EnrichedContentEvent;
 
-            var enrichedEvent = result.Single() as EnrichedContentEvent;
-
-            Assert.Equal(type, enrichedEvent!.Type);
-        }
-
-        [Fact]
-        public async Task Should_enrich_with_old_data_when_updated()
-        {
-            var @event = new ContentUpdated();
-
-            var envelope = Envelope.Create<AppEvent>(@event).SetEventStreamNumber(12);
-
-            var dataNow = new NamedContentData();
-            var dataOld = new NamedContentData();
-
-            A.CallTo(() => contentLoader.GetAsync(@event.ContentId, 12))
-                .Returns(new ContentEntity { SchemaId = SchemaMatch, Version = 12, Data = dataNow });
-
-            A.CallTo(() => contentLoader.GetAsync(@event.ContentId, 11))
-                .Returns(new ContentEntity { SchemaId = SchemaMatch, Version = 11, Data = dataOld });
-
-            var result = await sut.CreateEnrichedEventsAsync(envelope);
-
-            var enrichedEvent = result.Single() as EnrichedContentEvent;
-
-            Assert.Same(dataNow, enrichedEvent!.Data);
-            Assert.Same(dataOld, enrichedEvent!.DataOld);
+            Assert.Equal(type, result!.Type);
         }
 
         [Fact]
@@ -249,12 +222,12 @@ namespace Squidex.Domain.Apps.Entities.Contents
 
             if (string.IsNullOrWhiteSpace(condition))
             {
-                A.CallTo(() => scriptEngine.Evaluate("event", A<object>._, A<string>._))
+                A.CallTo(() => scriptEngine.Evaluate("event", A<object>.Ignored, A<string>.Ignored))
                     .MustNotHaveHappened();
             }
             else
             {
-                A.CallTo(() => scriptEngine.Evaluate("event", A<object>._, condition))
+                A.CallTo(() => scriptEngine.Evaluate("event", A<object>.Ignored, condition))
                     .MustHaveHappened();
             }
         }

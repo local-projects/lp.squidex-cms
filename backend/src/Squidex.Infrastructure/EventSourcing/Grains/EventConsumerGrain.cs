@@ -55,7 +55,7 @@ namespace Squidex.Infrastructure.EventSourcing.Grains
 
             eventConsumer = eventConsumerFactory(key);
 
-            return Task.CompletedTask;
+            return TaskHelper.Done;
         }
 
         public Task<Immutable<EventConsumerInfo>> GetStateAsync()
@@ -72,7 +72,7 @@ namespace Squidex.Infrastructure.EventSourcing.Grains
         {
             if (subscription.Value != currentSubscription)
             {
-                return Task.CompletedTask;
+                return TaskHelper.Done;
             }
 
             return DoAndUpdateStateAsync(async () =>
@@ -95,7 +95,7 @@ namespace Squidex.Infrastructure.EventSourcing.Grains
         {
             if (subscription.Value != currentSubscription)
             {
-                return Task.CompletedTask;
+                return TaskHelper.Done;
             }
 
             return DoAndUpdateStateAsync(() =>
@@ -113,7 +113,7 @@ namespace Squidex.Infrastructure.EventSourcing.Grains
                 Subscribe(state.Value.Position);
             }
 
-            return Task.CompletedTask;
+            return TaskHelper.Done;
         }
 
         public async Task<Immutable<EventConsumerInfo>> StartAsync()
@@ -168,7 +168,7 @@ namespace Squidex.Infrastructure.EventSourcing.Grains
 
         private Task DoAndUpdateStateAsync(Action action, [CallerMemberName] string? caller = null)
         {
-            return DoAndUpdateStateAsync(() => { action(); return Task.CompletedTask; }, caller);
+            return DoAndUpdateStateAsync(() => { action(); return TaskHelper.Done; }, caller);
         }
 
         private async Task DoAndUpdateStateAsync(Func<Task> action, [CallerMemberName] string? caller = null)

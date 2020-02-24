@@ -13,15 +13,17 @@ using Squidex.Domain.Apps.Events;
 using Squidex.Domain.Apps.Events.Schemas;
 using Squidex.Infrastructure;
 using Squidex.Infrastructure.EventSourcing;
+using Squidex.Infrastructure.Json;
 
 namespace Squidex.Domain.Apps.Core.EventSynchronization
 {
     public static class SchemaSynchronizer
     {
-        public static IEnumerable<IEvent> Synchronize(this Schema source, Schema? target, Func<long> idGenerator,
+        public static IEnumerable<IEvent> Synchronize(this Schema source, Schema? target, IJsonSerializer serializer, Func<long> idGenerator,
             SchemaSynchronizationOptions? options = null)
         {
             Guard.NotNull(source);
+            Guard.NotNull(serializer);
             Guard.NotNull(idGenerator);
 
             if (target == null)
@@ -37,7 +39,7 @@ namespace Squidex.Domain.Apps.Core.EventSynchronization
                     return @event;
                 }
 
-                if (!source.Properties.DeepEquals(target.Properties))
+                if (!source.Properties.EqualsJson(target.Properties, serializer))
                 {
                     yield return E(new SchemaUpdated { Properties = target.Properties });
                 }
@@ -47,7 +49,7 @@ namespace Squidex.Domain.Apps.Core.EventSynchronization
                     yield return E(new SchemaCategoryChanged { Name = target.Category });
                 }
 
-                if (!source.Scripts.Equals(target.Scripts))
+                if (!source.Scripts.EqualsJson(target.Scripts, serializer))
                 {
                     yield return E(new SchemaScriptsConfigured { Scripts = target.Scripts });
                 }
@@ -64,7 +66,7 @@ namespace Squidex.Domain.Apps.Core.EventSynchronization
                         E(new SchemaUnpublished());
                 }
 
-                var events = SyncFields(source.FieldCollection, target.FieldCollection, idGenerator, CanUpdateRoot, null, options);
+                var events = SyncFields(source.FieldCollection, target.FieldCollection, serializer, idGenerator, CanUpdateRoot, null, options);
 
                 foreach (var @event in events)
                 {
@@ -86,6 +88,7 @@ namespace Squidex.Domain.Apps.Core.EventSynchronization
         private static IEnumerable<SchemaEvent> SyncFields<T>(
             FieldCollection<T> source,
             FieldCollection<T> target,
+            IJsonSerializer serializer,
             Func<long> idGenerator,
             Func<T, T, bool> canUpdate,
             NamedId<long>? parentId, SchemaSynchronizationOptions options) where T : class, IField
@@ -128,7 +131,7 @@ namespace Squidex.Domain.Apps.Core.EventSynchronization
 
                     if (canUpdate(sourceField, targetField))
                     {
-                        if (!sourceField.RawProperties.Equals(targetField.RawProperties))
+                        if (!sourceField.RawProperties.EqualsJson(targetField.RawProperties, serializer))
                         {
                             yield return E(new FieldUpdated { FieldId = id, Properties = targetField.RawProperties });
                         }
@@ -191,7 +194,7 @@ namespace Squidex.Domain.Apps.Core.EventSynchronization
                     {
                         var fields = (sourceField as IArrayField)?.FieldCollection ?? FieldCollection<NestedField>.Empty;
 
-                        var events = SyncFields(fields, targetArrayField.FieldCollection, idGenerator, CanUpdate, id, options);
+                        var events = SyncFields(fields, targetArrayField.FieldCollection, serializer, idGenerator, CanUpdate, id, options);
 
                         foreach (var @event in events)
                         {

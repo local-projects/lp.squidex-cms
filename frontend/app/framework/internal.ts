@@ -16,10 +16,8 @@ export * from './services/loading.service';
 export * from './services/local-store.service';
 export * from './services/message-bus.service';
 export * from './services/onboarding.service';
-export * from './services/resize.service';
 export * from './services/resource-loader.service';
 export * from './services/shortcut.service';
-export * from './services/temp.service';
 export * from './services/title.service';
 
 export * from './utils/array-helper';

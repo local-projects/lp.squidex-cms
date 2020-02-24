@@ -63,37 +63,37 @@ describe('SchemaDetailsDto', () => {
     it('should return configured fields as list fields if fields are declared', () => {
         const schema = createSchema({ properties: new SchemaPropertiesDto(''), fields: [field1, field2, field3], fieldsInLists: ['field1', 'field3'] });
 
-        expect(schema.defaultListFields).toEqual([field1, field3]);
+        expect(schema.listFields).toEqual([field1, field3]);
     });
 
     it('should return first fields as list fields if no field is declared', () => {
         const schema = createSchema({ properties: new SchemaPropertiesDto(''), fields: [field1, field2, field3] });
 
-        expect(schema.defaultListFields).toEqual([MetaFields.lastModifiedByAvatar, field1, MetaFields.statusColor, MetaFields.lastModified]);
+        expect(schema.listFields).toEqual([MetaFields.lastModifiedByAvatar, field1, MetaFields.statusColor, MetaFields.lastModified]);
     });
 
     it('should return preset with empty content field as list fields if fields is empty', () => {
         const schema = createSchema({ properties: new SchemaPropertiesDto() });
 
-        expect(schema.defaultListFields).toEqual([MetaFields.lastModifiedByAvatar, '', MetaFields.statusColor, MetaFields.lastModified]);
+        expect(schema.listFields).toEqual([MetaFields.lastModifiedByAvatar, '', MetaFields.statusColor, MetaFields.lastModified]);
     });
 
     it('should return configured fields as references fields if fields are declared', () => {
         const schema = createSchema({ properties: new SchemaPropertiesDto(''), fields: [field1, field2, field3], fieldsInReferences: ['field1', 'field3'] });
 
-        expect(schema.defaultReferenceFields).toEqual([field1, field3]);
+        expect(schema.referenceFields).toEqual([field1, field3]);
     });
 
     it('should return first field as reference fields if no field is declared', () => {
         const schema = createSchema({ properties: new SchemaPropertiesDto(''), fields: [field1, field2, field3] });
 
-        expect(schema.defaultReferenceFields).toEqual([field1]);
+        expect(schema.referenceFields).toEqual([field1]);
     });
 
     it('should return noop field as reference field if list is empty', () => {
         const schema = createSchema({ properties: new SchemaPropertiesDto() });
 
-        expect(schema.defaultReferenceFields).toEqual(['']);
+        expect(schema.referenceFields).toEqual(['']);
     });
 });
 
@@ -152,12 +152,8 @@ describe('ArrayField', () => {
         expect(FieldFormatter.format(field, null)).toBe('');
     });
 
-    it('should format to plural count for many items', () => {
-        expect(FieldFormatter.format(field, [1, 2, 3])).toBe('3 Items');
-    });
-
-    it('should format to plural count for single item', () => {
-        expect(FieldFormatter.format(field, [1])).toBe('1 Item');
+    it('should format to asset count', () => {
+        expect(FieldFormatter.format(field, [1, 2, 3])).toBe('3 Item(s)');
     });
 
     it('should return zero formatting if other type', () => {
@@ -180,12 +176,8 @@ describe('AssetsField', () => {
         expect(FieldFormatter.format(field, null)).toBe('');
     });
 
-    it('should format to plural count for many items', () => {
-        expect(FieldFormatter.format(field, [1, 2, 3])).toBe('3 Assets');
-    });
-
-    it('should format to plural count for single item', () => {
-        expect(FieldFormatter.format(field, [1])).toBe('1 Asset');
+    it('should format to asset count', () => {
+        expect(FieldFormatter.format(field, [1, 2, 3])).toBe('3 Asset(s)');
     });
 
     it('should return zero formatting if other type', () => {
@@ -397,12 +389,8 @@ describe('ReferencesField', () => {
         expect(FieldFormatter.format(field, null)).toBe('');
     });
 
-    it('should format to plural count for many items', () => {
-        expect(FieldFormatter.format(field, [1, 2, 3])).toBe('3 References');
-    });
-
-    it('should format to plural count for single item', () => {
-        expect(FieldFormatter.format(field, [1])).toBe('1 Reference');
+    it('should format to asset count', () => {
+        expect(FieldFormatter.format(field, [1, 2, 3])).toBe('3 Reference(s)');
     });
 
     it('should return zero formatting if other type', () => {
@@ -427,24 +415,6 @@ describe('StringField', () => {
 
     it('should format to string', () => {
         expect(FieldFormatter.format(field, 'hello')).toBe('hello');
-    });
-
-    it('should format to preview image', () => {
-        const field2 = createField({ properties: createProperties('String', { editor: 'StockPhoto' }) });
-
-        expect(FieldFormatter.format(field2, 'https://images.unsplash.com/123?x', true)).toEqual(new HtmlValue('<img src="https://images.unsplash.com/123?x&q=80&fm=jpg&crop=entropy&cs=tinysrgb&h=50&fit=max" />'));
-    });
-
-    it('should not format to preview image when html not allowed', () => {
-        const field2 = createField({ properties: createProperties('String', { editor: 'StockPhoto' }) });
-
-        expect(FieldFormatter.format(field2, 'https://images.unsplash.com/123?x', false)).toBe('https://images.unsplash.com/123?x');
-    });
-
-    it('should not format to preview image when not unsplash image', () => {
-        const field2 = createField({ properties: createProperties('String', { editor: 'StockPhoto' }) });
-
-        expect(FieldFormatter.format(field2, 'https://images.com/123?x', true)).toBe('https://images.com/123?x');
     });
 
     it('should return default value for default properties', () => {
@@ -552,7 +522,7 @@ describe('GetContentValue', () => {
 
     it('should resolve invariant field', () => {
         const content: any = {
-            data: {
+            dataDraft: {
                 field1: {
                     iv: 13
                 }
@@ -566,7 +536,7 @@ describe('GetContentValue', () => {
 
     it('should resolve localized field', () => {
         const content: any = {
-            data: {
+            dataDraft: {
                 field1: {
                     en: 13
                 }
@@ -580,7 +550,7 @@ describe('GetContentValue', () => {
 
     it('should return default values if field not found', () => {
         const content: any = {
-            data: {
+            dataDraft: {
                 other: {
                     en: 13
                 }

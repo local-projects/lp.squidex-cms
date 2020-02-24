@@ -3,12 +3,13 @@
 <form [formGroup]="contentForm.form" (ngSubmit)="saveAndPublish()">
     <sqx-panel desiredWidth="*" minWidth="60rem" [showSidebar]="!!content" grid="true">
         <ng-container title>
-            <a class="btn btn-text" (click)="back()" *ngIf="!schema.isSingleton">
-                <i class="icon-angle-left"></i>
+            <a class="btn btn-primary" (click)="back()" *ngIf="!schema.isSingleton">
+                <a class="icon-angle-left"></a>
             </a>
 
             <ng-container *ngIf="content else noContentTitle">
                 <sqx-title message="Edit Content"></sqx-title>
+                
 
                 Edit Content
             </ng-container>
@@ -21,26 +22,57 @@
 
         <ng-container menu>
             <ng-container *ngIf="content; else noContent">
-                <div class="dropdown dropdown-options ml-1" *ngIf="!schema.isSingleton">
+                <div class="dropdown dropdown-options ml-1">
                     <sqx-preview-button [schema]="schema" [content]="content"></sqx-preview-button>
 
-                    <ng-container *ngIf="content?.canDelete">
-                        <button type="button" class="btn btn-outline-secondary" (click)="dropdown.toggle()" [class.active]="dropdown.isOpen | async" #buttonOptions>
-                            <i class="icon-more"></i>
-                        </button>
+                    <button type="button" class="btn btn-outline-secondary btn-status" (click)="dropdown.toggle()" [disabled]="schema.isSingleton && !content.isPending"
+                        [class.active]="dropdown.isOpen | async" #buttonOptions>
+                        <sqx-content-status 
+                            [status]="content.status"
+                            [statusColor]="content.statusColor"
+                            [scheduledTo]="content.scheduleJob?.status"
+                            [scheduledAt]="content.scheduleJob?.dueTime"
+                            [isPending]="content.isPending"
+                            showLabel="true">
+                        </sqx-content-status>
+                    </button>
 
+                    <ng-container *ngIf="content.isPending || !schema.isSingleton">
                         <ng-container *sqxModal="dropdown;closeAlways:true">
                             <div class="dropdown-menu" [sqxAnchoredTo]="buttonOptions" @fade>
-                                <a class="dropdown-item dropdown-item-delete"
-                                    (sqxConfirmClick)="delete()"
-                                    confirmTitle="Delete content"
-                                    confirmText="Do you really want to delete the content?">
-                                    Delete
+                                <a class="dropdown-item" (click)="discardChanges()" *ngIf="content.canDraftDiscard">
+                                    Discard changes
                                 </a>
+
+                                <div class="dropdown-divider"></div>
+
+                                <a class="dropdown-item" (click)="publishChanges()" *ngIf="content.canDraftPublish">
+                                    Publish changes
+                                </a>
+
+                                <ng-container *ngIf="!schema.isSingleton">
+                                    <a class="dropdown-item" *ngFor="let info of content.statusUpdates" (click)="changeStatus(info.status)">
+                                        Change to <i class="icon-circle icon-sm" [style.color]="info.color"></i> {{info.status}}
+                                    </a>
+
+                                    <div class="dropdown-divider"></div>
+
+                                    <a class="dropdown-item dropdown-item-delete"
+                                        [class.disabled]="!content.canDelete"
+                                        (sqxConfirmClick)="delete()"
+                                        confirmTitle="Delete content"
+                                        confirmText="Do you really want to delete the content?">
+                                        Delete
+                                    </a>
+                                </ng-container>
                             </div>
                         </ng-container>
                     </ng-container>
                 </div>
+
+                <button type="button" class="btn btn-secondary ml-1" (click)="saveAsDraft()" *ngIf="content.canDraftPropose">
+                    Save as Draft
+                </button>
 
                 <ng-container *ngIf="content?.canUpdate">
                     <button type="submit" class="btn btn-primary ml-1" title="CTRL + S">
@@ -69,17 +101,17 @@
         <ng-container content>
             <sqx-list-view>
                 <ng-container topHeader>
-                    <div class="panel-alert panel-alert-danger" *ngIf="contentVersion">
+                    <div class="panel-alert panel-alert-danger" *ngIf="contentVersion; let version">
                         <div class="float-right">
-                            <a class="force" (click)="loadLatest()">View latest</a>
+                            <a class="force" (click)="showLatest()">View latest</a>
                         </div>
         
-                        Viewing <strong>version {{contentVersion}}</strong>.
+                        Viewing <strong>version {{version.value}}</strong>.
                     </div>
                 </ng-container>
 
                 <div content>
-                    <sqx-content-field *ngFor="let field of schema.fields; trackBy: trackByField"
+                    <sqx-content-field *ngFor="let field of schema.fields; trackBy: trackByFieldFn"
                         [form]="contentForm"
                         [formContext]="formContext"
                         [field]="field"
@@ -96,12 +128,12 @@
 
         <ng-container sidebar>
             <div class="panel-nav">
-                <a class="panel-link" routerLink="history" routerLinkActive="active" title="Workflow" titlePosition="left" #linkHistory>
-                    <i class="icon-time"></i>
-                </a>
-
                 <a class="panel-link" routerLink="comments" routerLinkActive="active" title="Comments" titlePosition="left">
                     <i class="icon-comments"></i>
+                </a>
+
+                <a class="panel-link" routerLink="history" routerLinkActive="active" title="History" titlePosition="left" #linkHistory>
+                    <i class="icon-time"></i>
                 </a>
 
                 <sqx-onboarding-tooltip helpId="history" [for]="linkHistory" position="left-top" after="120000">
@@ -113,3 +145,5 @@
 </form>
 
 <router-outlet></router-outlet>
+
+<sqx-due-time-selector #dueTimeSelector></sqx-due-time-selector>

@@ -39,7 +39,7 @@ namespace Squidex.Infrastructure.Tasks
         {
             Guard.NotNull(action);
 
-            return block.SendAsync(() => { action(); return Task.CompletedTask; });
+            return block.SendAsync(() => { action(); return TaskHelper.Done; });
         }
 
         public async Task StopAndWaitAsync()
@@ -58,7 +58,7 @@ namespace Squidex.Infrastructure.Tasks
         {
             if (isStopped)
             {
-                return Task.CompletedTask;
+                return TaskHelper.Done;
             }
 
             return action();

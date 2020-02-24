@@ -9,8 +9,21 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 
 @Component({
     selector: 'sqx-form-hint',
-    styleUrls: ['./form-hint.component.scss'],
-    templateUrl: './form-hint.component.html',
+    template: `
+        <small class="text-muted form-text mt-{{marginTop}} mb-{{marginBottom}} {{class}}">
+            <ng-content></ng-content>
+        </small>`,
+    styles: [`
+        :host {
+            display: block;
+            margin-top: 0;
+            margin-bottom: .5rem
+        }
+
+        :host::last-child {
+            margin-bottom: 0;
+        }`
+    ],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FormHintComponent {

@@ -67,7 +67,7 @@ namespace Squidex.Domain.Apps.Entities.Rules
 
             HashSet<Guid>? newIndex = null;
 
-            A.CallTo(() => index.RebuildAsync(appId, A<HashSet<Guid>>._))
+            A.CallTo(() => index.RebuildAsync(appId, A<HashSet<Guid>>.Ignored))
                 .Invokes(new Action<Guid, HashSet<Guid>>((_, i) => newIndex = i));
 
             await sut.RestoreAsync(context);
@@ -75,7 +75,7 @@ namespace Squidex.Domain.Apps.Entities.Rules
             Assert.Equal(new HashSet<Guid>
             {
                 ruleId1,
-                ruleId2
+                ruleId2,
             }, newIndex);
         }
     }

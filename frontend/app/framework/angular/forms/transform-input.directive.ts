@@ -26,9 +26,7 @@ export const SQX_TRANSFORM_INPUT_VALUE_ACCESSOR: any = {
 
 @Directive({
     selector: '[sqxTransformInput]',
-    providers: [
-        SQX_TRANSFORM_INPUT_VALUE_ACCESSOR
-    ]
+    providers: [SQX_TRANSFORM_INPUT_VALUE_ACCESSOR]
 })
 export class TransformInputDirective implements ControlValueAccessor {
     private callChange = (v: any) => { /* NOOP */ };

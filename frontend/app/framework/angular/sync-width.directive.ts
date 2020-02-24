@@ -5,46 +5,40 @@
  * Copyright (c) Squidex UG (haftungsbeschränkt). All rights reserved.
  */
 
-import { AfterViewInit, Directive, ElementRef, Input, Renderer2 } from '@angular/core';
+import { AfterViewInit, Directive, ElementRef, Input, OnInit, Renderer2 } from '@angular/core';
+import { timer } from 'rxjs';
 
-import {
-    ResizeListener,
-    ResizeService,
-    ResourceOwner
-} from '@app/framework/internal';
+import { ResourceOwner } from '@app/framework/internal';
 
 @Directive({
     selector: '[sqxSyncWidth]'
 })
-export class SyncWidthDirective extends ResourceOwner implements AfterViewInit, ResizeListener {
+export class SyncWidthDirective extends ResourceOwner implements OnInit, AfterViewInit {
     @Input('sqxSyncWidth')
     public target: HTMLElement;
 
     constructor(
         private readonly element: ElementRef<HTMLElement>,
-        private readonly renderer: Renderer2,
-        private readonly resizeService: ResizeService
+        private readonly renderer: Renderer2
     ) {
         super();
+    }
 
-        this.own(this.resizeService.listen(this.element.nativeElement, this));
+    public ngOnInit() {
+        this.own(timer(100, 100).subscribe(() => this.reposition()));
     }
 
     public ngAfterViewInit() {
-        this.onReposition();
+        this.reposition();
     }
 
-    public onResize(size: ClientRect) {
-        this.resize(size.width);
-    }
-
-    private onReposition() {
-        this.resize(this.element.nativeElement.clientWidth);
-    }
-
-    private resize(width: number) {
-        if (this.target) {
-            this.renderer.setStyle(this.target, 'width', `${width}px`);
+    private reposition() {
+        if (!this.target) {
+            return;
         }
+
+        const size = this.element.nativeElement.clientWidth;
+
+        this.renderer.setStyle(this.target, 'width', `${size}px`);
     }
 }

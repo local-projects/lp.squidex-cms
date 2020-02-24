@@ -7,44 +7,68 @@
 
 using System;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Squidex.Infrastructure.Orleans;
+using Squidex.Infrastructure.EventSourcing;
+using Squidex.Infrastructure.Log;
+using Squidex.Infrastructure.States;
 
 namespace Squidex.Infrastructure.Commands
 {
-    public abstract class DomainObjectGrain<T, TState> : GrainOfGuid where T : DomainObjectBase<TState> where TState : class, IDomainState<TState>, new()
+    public abstract class DomainObjectGrain<T> : DomainObjectGrainBase<T> where T : class, IDomainState<T>, new()
     {
-        private readonly T domainObject;
+        private readonly IStore<Guid> store;
+        private T snapshot = new T { Version = EtagVersion.Empty };
+        private IPersistence<T>? persistence;
 
-        public TState Snapshot
+        public override T Snapshot
         {
-            get { return domainObject.Snapshot; }
+            get { return snapshot; }
         }
 
-        protected T DomainObject
+        protected DomainObjectGrain(IStore<Guid> store, ISemanticLog log)
+            : base(log)
         {
-            get { return domainObject; }
+            Guard.NotNull(store);
+
+            this.store = store;
         }
 
-        protected DomainObjectGrain(IServiceProvider serviceProvider)
+        protected sealed override void ApplyEvent(Envelope<IEvent> @event)
         {
-            Guard.NotNull(serviceProvider);
+            var newVersion = Version + 1;
 
-            domainObject = serviceProvider.GetRequiredService<T>();
+            snapshot = OnEvent(@event);
+            snapshot.Version = newVersion;
         }
 
-        protected override Task OnActivateAsync(Guid key)
+        protected sealed override void RestorePreviousSnapshot(T previousSnapshot, long previousVersion)
         {
-            domainObject.Setup(key);
-
-            return base.OnActivateAsync(key);
+            snapshot = previousSnapshot;
         }
 
-        public async Task<J<object?>> ExecuteAsync(J<IAggregateCommand> command)
+        protected sealed override Task ReadAsync(Type type, Guid id)
         {
-            var result = await domainObject.ExecuteAsync(command.Value);
+            persistence = store.WithSnapshotsAndEventSourcing(GetType(), id, new HandleSnapshot<T>(ApplySnapshot), ApplyEvent);
 
-            return result;
+            return persistence.ReadAsync();
+        }
+
+        private void ApplySnapshot(T state)
+        {
+            snapshot = state;
+        }
+
+        protected sealed override async Task WriteAsync(Envelope<IEvent>[] newEvents, long previousVersion)
+        {
+            if (newEvents.Length > 0 && persistence != null)
+            {
+                await persistence.WriteEventsAsync(newEvents);
+                await persistence.WriteSnapshotAsync(Snapshot);
+            }
+        }
+
+        protected T OnEvent(Envelope<IEvent> @event)
+        {
+            return Snapshot.Apply(@event);
         }
     }
 }

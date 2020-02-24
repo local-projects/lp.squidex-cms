@@ -7,6 +7,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using Squidex.Infrastructure.Json.Newtonsoft;
 
@@ -30,7 +31,7 @@ namespace Squidex.Domain.Apps.Core.Contents.Json
         {
             var json = serializer.Deserialize<Dictionary<Guid, Workflow>>(reader);
 
-            return new Workflows(json!);
+            return new Workflows(json.ToArray());
         }
     }
 }

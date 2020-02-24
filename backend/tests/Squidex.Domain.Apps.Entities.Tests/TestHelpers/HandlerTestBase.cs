@@ -27,8 +27,6 @@ namespace Squidex.Domain.Apps.Entities.TestHelpers
 
         protected RefToken Actor { get; } = new RefToken(RefTokenType.Subject, "me");
 
-        protected RefToken ActorClient { get; } = new RefToken(RefTokenType.Client, "client");
-
         protected Guid AppId { get; } = Guid.NewGuid();
 
         protected Guid SchemaId { get; } = Guid.NewGuid();
@@ -60,16 +58,16 @@ namespace Squidex.Domain.Apps.Entities.TestHelpers
 
         protected HandlerTestBase()
         {
-            A.CallTo(() => store.WithSnapshotsAndEventSourcing(A<Type>._, Id, A<HandleSnapshot<TState>>._, A<HandleEvent>._))
+            A.CallTo(() => store.WithSnapshotsAndEventSourcing(A<Type>.Ignored, Id, A<HandleSnapshot<TState>>.Ignored, A<HandleEvent>.Ignored))
                 .Returns(persistenceWithState);
 
-            A.CallTo(() => store.WithEventSourcing(A<Type>._, Id, A<HandleEvent>._))
+            A.CallTo(() => store.WithEventSourcing(A<Type>.Ignored, Id, A<HandleEvent>.Ignored))
                 .Returns(persistence);
 
-            A.CallTo(() => persistenceWithState.WriteEventsAsync(A<IEnumerable<Envelope<IEvent>>>._))
+            A.CallTo(() => persistenceWithState.WriteEventsAsync(A<IEnumerable<Envelope<IEvent>>>.Ignored))
                 .Invokes((IEnumerable<Envelope<IEvent>> events) => LastEvents = events);
 
-            A.CallTo(() => persistence.WriteEventsAsync(A<IEnumerable<Envelope<IEvent>>>._))
+            A.CallTo(() => persistence.WriteEventsAsync(A<IEnumerable<Envelope<IEvent>>>.Ignored))
                 .Invokes((IEnumerable<Envelope<IEvent>> events) => LastEvents = events);
         }
 
@@ -87,7 +85,7 @@ namespace Squidex.Domain.Apps.Entities.TestHelpers
                 command.Actor = Actor;
             }
 
-            if (command.User == null && command.Actor.IsSubject)
+            if (command.User == null)
             {
                 command.User = User;
             }
@@ -110,21 +108,30 @@ namespace Squidex.Domain.Apps.Entities.TestHelpers
             return command.AsJ();
         }
 
-        protected TEvent CreateEvent<TEvent>(TEvent @event, bool fromClient = false) where TEvent : SquidexEvent
+        protected TEvent CreateEvent<TEvent>(TEvent @event) where TEvent : SquidexEvent
         {
-            @event.Actor = fromClient ? ActorClient : Actor;
+            @event.Actor = Actor;
 
+            EnrichAppInfo(@event);
+            EnrichSchemaInfo(@event);
+
+            return @event;
+        }
+
+        private void EnrichAppInfo(IEvent @event)
+        {
             if (@event is AppEvent appEvent)
             {
                 appEvent.AppId = AppNamedId;
             }
+        }
 
+        private void EnrichSchemaInfo(IEvent @event)
+        {
             if (@event is SchemaEvent schemaEvent)
             {
                 schemaEvent.SchemaId = SchemaNamedId;
             }
-
-            return @event;
         }
     }
 }

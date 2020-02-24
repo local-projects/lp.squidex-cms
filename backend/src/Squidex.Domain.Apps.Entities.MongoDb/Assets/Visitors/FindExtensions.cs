@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using Squidex.Infrastructure;
 using Squidex.Infrastructure.MongoDb.Queries;
 using Squidex.Infrastructure.Queries;
 
@@ -18,22 +19,38 @@ namespace Squidex.Domain.Apps.Entities.MongoDb.Assets.Visitors
     public static class FindExtensions
     {
         private static readonly FilterDefinitionBuilder<MongoAssetEntity> Filter = Builders<MongoAssetEntity>.Filter;
+        private static readonly SortDefinitionBuilder<MongoAssetEntity> Sorting = Builders<MongoAssetEntity>.Sort;
 
         public static ClrQuery AdjustToModel(this ClrQuery query)
         {
             if (query.Filter != null)
             {
-                query.Filter = FirstPascalPathConverter<ClrValue>.Transform(query.Filter);
+                query.Filter = PascalCasePathConverter<ClrValue>.Transform(query.Filter);
             }
 
             query.Sort = query.Sort
                 .Select(x =>
                     new SortNode(
-                        x.Path.ToFirstPascalCase(),
+                        x.Path.Select(p => p.ToPascalCase()).ToList(),
                         x.Order))
                     .ToList();
 
             return query;
+        }
+
+        public static IFindFluent<MongoAssetEntity, MongoAssetEntity> AssetSort(this IFindFluent<MongoAssetEntity, MongoAssetEntity> cursor, ClrQuery query)
+        {
+            return cursor.Sort(query.BuildSort<MongoAssetEntity>());
+        }
+
+        public static IFindFluent<MongoAssetEntity, MongoAssetEntity> AssetTake(this IFindFluent<MongoAssetEntity, MongoAssetEntity> cursor, ClrQuery query)
+        {
+            return cursor.Take(query);
+        }
+
+        public static IFindFluent<MongoAssetEntity, MongoAssetEntity> AssetSkip(this IFindFluent<MongoAssetEntity, MongoAssetEntity> cursor, ClrQuery query)
+        {
+            return cursor.Skip(query);
         }
 
         public static FilterDefinition<MongoAssetEntity> BuildFilter(this ClrQuery query, Guid appId, Guid? parentId)

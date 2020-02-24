@@ -1,3 +1,6 @@
+@import '_vars';
+@import '_mixins';
+
 $circle-size: 2rem;
 
 h3 {
@@ -6,6 +9,10 @@ h3 {
 
 .section {
     margin-bottom: .8rem;
+}
+
+.container {
+    padding-top: 2rem;
 }
 
 .card {
@@ -31,13 +38,18 @@ h3 {
 .restore {
     &-status {
         & {
-            @include circle-icon($circle-size);
+            @include circle($circle-size);
             background: $color-border;
+            color: $color-dark-foreground;
+            font-size: .6 * $circle-size;
+            font-weight: normal;
+            line-height: $circle-size + .1rem;
+            text-align: center;
+            vertical-align: middle;
         }
 
-        &-failed,
-        &-success {
-            color: $color-dark-foreground;
+        &-pending {
+            color: inherit;
         }
 
         &-failed {
@@ -51,6 +63,6 @@ h3 {
 
     &-url {
         @include truncate;
-        line-height: $circle-size;
+        line-height: 30px;
     }
 }

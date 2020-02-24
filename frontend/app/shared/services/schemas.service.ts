@@ -105,9 +105,9 @@ export type TableField = RootFieldDto | string;
 
 export class SchemaDetailsDto extends SchemaDto {
     public readonly contentFields: ReadonlyArray<RootFieldDto>;
-
-    public readonly defaultListFields: ReadonlyArray<TableField>;
-    public readonly defaultReferenceFields: ReadonlyArray<TableField>;
+    public readonly listFields: ReadonlyArray<TableField>;
+    public readonly listFieldsEditable: ReadonlyArray<RootFieldDto>;
+    public readonly referenceFields: ReadonlyArray<TableField>;
 
     constructor(links: ResourceLinks, id: string, name: string, category: string,
         properties: SchemaPropertiesDto,
@@ -144,15 +144,16 @@ export class SchemaDetailsDto extends SchemaDto {
                 listFields.push(MetaFields.lastModified);
             }
 
-            this.defaultListFields = listFields;
+            this.listFields = listFields;
+            this.listFieldsEditable = <any>this.listFields.filter(x => Types.is(x, RootFieldDto) && x.isInlineEditable);
 
-            this.defaultReferenceFields = findFields(fieldsInReferences, this.contentFields);
+            this.referenceFields = findFields(fieldsInReferences, this.contentFields);
 
-            if (this.defaultReferenceFields.length === 0) {
+            if (this.referenceFields.length === 0) {
                 if (fields.length > 0) {
-                    this.defaultReferenceFields = [fields[0]];
+                    this.referenceFields = [fields[0]];
                 } else {
-                    this.defaultReferenceFields = [''];
+                    this.referenceFields = [''];
                 }
             }
         }
@@ -358,7 +359,6 @@ export interface SynchronizeSchemaDto {
 export interface UpdateSchemaDto {
     readonly label?: string;
     readonly hints?: string;
-    readonly tags?: ReadonlyArray<string>;
 }
 
 @Injectable()

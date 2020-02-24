@@ -8,7 +8,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.Linq;
 using Squidex.Infrastructure;
 
 namespace Squidex.Domain.Apps.Core.Schemas
@@ -117,89 +116,64 @@ namespace Squidex.Domain.Apps.Core.Schemas
         [Pure]
         public Schema Update(SchemaProperties newProperties)
         {
-            newProperties ??= new SchemaProperties();
-
-            if (properties.Equals(newProperties))
-            {
-                return this;
-            }
+            Guard.NotNull(newProperties);
 
             return Clone(clone =>
             {
                 clone.properties = newProperties;
-                clone.Properties.Freeze();
+                clone.properties.Freeze();
             });
         }
 
         [Pure]
-        public Schema SetScripts(SchemaScripts newScripts)
+        public Schema ConfigureScripts(SchemaScripts newScripts)
         {
-            newScripts ??= new SchemaScripts();
-
-            if (scripts.Equals(newScripts))
-            {
-                return this;
-            }
-
             return Clone(clone =>
             {
-                clone.scripts = newScripts;
+                clone.scripts = newScripts ?? new SchemaScripts();
                 clone.scripts.Freeze();
             });
         }
 
         [Pure]
-        public Schema SetFieldsInLists(FieldNames names)
+        public Schema ConfigureFieldsInLists(FieldNames names)
         {
-            names ??= FieldNames.Empty;
-
-            if (fieldsInLists.SequenceEqual(names))
-            {
-                return this;
-            }
-
             return Clone(clone =>
             {
-                clone.fieldsInLists = names;
+                clone.fieldsInLists = names ?? FieldNames.Empty;
             });
         }
 
         [Pure]
-        public Schema SetFieldsInLists(params string[] names)
+        public Schema ConfigureFieldsInLists(params string[] names)
         {
-            return SetFieldsInLists(new FieldNames(names));
-        }
-
-        [Pure]
-        public Schema SetFieldsInReferences(FieldNames names)
-        {
-            names ??= FieldNames.Empty;
-
-            if (fieldsInReferences.SequenceEqual(names))
-            {
-                return this;
-            }
-
             return Clone(clone =>
             {
-                clone.fieldsInReferences = names;
+                clone.fieldsInLists = new FieldNames(names);
             });
         }
 
         [Pure]
-        public Schema SetFieldsInReferences(params string[] names)
+        public Schema ConfigureFieldsInReferences(FieldNames names)
         {
-            return SetFieldsInReferences(new FieldNames(names));
+            return Clone(clone =>
+            {
+                clone.fieldsInReferences = names ?? FieldNames.Empty;
+            });
+        }
+
+        [Pure]
+        public Schema ConfigureFieldsInReferences(params string[] names)
+        {
+            return Clone(clone =>
+            {
+                clone.fieldsInReferences = new FieldNames(names);
+            });
         }
 
         [Pure]
         public Schema Publish()
         {
-            if (isPublished)
-            {
-                return this;
-            }
-
             return Clone(clone =>
             {
                 clone.isPublished = true;
@@ -209,11 +183,6 @@ namespace Squidex.Domain.Apps.Core.Schemas
         [Pure]
         public Schema Unpublish()
         {
-            if (!isPublished)
-            {
-                return this;
-            }
-
             return Clone(clone =>
             {
                 clone.isPublished = false;
@@ -223,11 +192,6 @@ namespace Squidex.Domain.Apps.Core.Schemas
         [Pure]
         public Schema ChangeCategory(string newCategory)
         {
-            if (string.Equals(category, newCategory))
-            {
-                return this;
-            }
-
             return Clone(clone =>
             {
                 clone.category = newCategory;
@@ -235,18 +199,11 @@ namespace Squidex.Domain.Apps.Core.Schemas
         }
 
         [Pure]
-        public Schema SetPreviewUrls(IReadOnlyDictionary<string, string> newPreviewUrls)
+        public Schema ConfigurePreviewUrls(IReadOnlyDictionary<string, string> newPreviewUrls)
         {
-            previewUrls ??= EmptyPreviewUrls;
-
-            if (previewUrls.EqualsDictionary(newPreviewUrls))
-            {
-                return this;
-            }
-
             return Clone(clone =>
             {
-                clone.previewUrls = newPreviewUrls;
+                clone.previewUrls = newPreviewUrls ?? EmptyPreviewUrls;
             });
         }
 

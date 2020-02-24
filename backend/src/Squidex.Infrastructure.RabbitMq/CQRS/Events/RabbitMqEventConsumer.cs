@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using RabbitMQ.Client;
 using Squidex.Infrastructure.EventSourcing;
 using Squidex.Infrastructure.Json;
+using Squidex.Infrastructure.Tasks;
 
 namespace Squidex.Infrastructure.CQRS.Events
 {
@@ -72,7 +73,7 @@ namespace Squidex.Infrastructure.CQRS.Events
                     throw new ConfigurationException($"RabbitMq event bus failed to connect to {connectionFactory.Endpoint}");
                 }
 
-                return Task.CompletedTask;
+                return TaskHelper.Done;
             }
             catch (Exception e)
             {
@@ -87,7 +88,7 @@ namespace Squidex.Infrastructure.CQRS.Events
 
         public Task ClearAsync()
         {
-            return Task.CompletedTask;
+            return TaskHelper.Done;
         }
 
         public Task On(Envelope<IEvent> @event)
@@ -97,7 +98,7 @@ namespace Squidex.Infrastructure.CQRS.Events
 
             channel.Value.BasicPublish(exchange, string.Empty, null, jsonBytes);
 
-            return Task.CompletedTask;
+            return TaskHelper.Done;
         }
     }
 }

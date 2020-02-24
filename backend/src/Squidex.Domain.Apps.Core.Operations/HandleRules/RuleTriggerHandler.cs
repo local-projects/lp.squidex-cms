@@ -6,10 +6,9 @@
 // ==========================================================================
 
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
+using Squidex.Domain.Apps.Core.HandleRules.EnrichedEvents;
 using Squidex.Domain.Apps.Core.Rules;
-using Squidex.Domain.Apps.Core.Rules.EnrichedEvents;
 using Squidex.Domain.Apps.Events;
 using Squidex.Infrastructure.EventSourcing;
 
@@ -22,28 +21,14 @@ namespace Squidex.Domain.Apps.Core.HandleRules
         where TEvent : AppEvent
         where TEnrichedEvent : EnrichedEvent
     {
-        private readonly List<EnrichedEvent> emptyEnrichedEvents = new List<EnrichedEvent>();
-
         public Type TriggerType
         {
             get { return typeof(TTrigger); }
         }
 
-        public virtual async Task<List<EnrichedEvent>> CreateEnrichedEventsAsync(Envelope<AppEvent> @event)
+        async Task<EnrichedEvent?> IRuleTriggerHandler.CreateEnrichedEventAsync(Envelope<AppEvent> @event)
         {
-            var enrichedEvent = await CreateEnrichedEventAsync(@event.To<TEvent>());
-
-            if (enrichedEvent != null)
-            {
-                return new List<EnrichedEvent>
-                {
-                    enrichedEvent
-                };
-            }
-            else
-            {
-                return emptyEnrichedEvents;
-            }
+            return await CreateEnrichedEventAsync(@event.To<TEvent>());
         }
 
         bool IRuleTriggerHandler.Trigger(EnrichedEvent @event, RuleTrigger trigger)
@@ -66,10 +51,7 @@ namespace Squidex.Domain.Apps.Core.HandleRules
             return false;
         }
 
-        protected virtual Task<TEnrichedEvent?> CreateEnrichedEventAsync(Envelope<TEvent> @event)
-        {
-            return Task.FromResult<TEnrichedEvent?>(null);
-        }
+        protected abstract Task<TEnrichedEvent?> CreateEnrichedEventAsync(Envelope<TEvent> @event);
 
         protected abstract bool Trigger(TEnrichedEvent @event, TTrigger trigger);
 

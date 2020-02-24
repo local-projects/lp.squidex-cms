@@ -9,7 +9,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using Squidex.Infrastructure.Reflection.Internal;
 
 #pragma warning disable RECS0108 // Warns about static fields in generic types
 
@@ -20,8 +19,8 @@ namespace Squidex.Infrastructure.Reflection
         private sealed class StringConversionPropertyMapper : PropertyMapper
         {
             public StringConversionPropertyMapper(
-                PropertyAccessor sourceAccessor,
-                PropertyAccessor targetAccessor)
+                IPropertyAccessor sourceAccessor,
+                IPropertyAccessor targetAccessor)
                 : base(sourceAccessor, targetAccessor)
             {
             }
@@ -39,8 +38,8 @@ namespace Squidex.Infrastructure.Reflection
             private readonly Type targetType;
 
             public ConversionPropertyMapper(
-                PropertyAccessor sourceAccessor,
-                PropertyAccessor targetAccessor,
+                IPropertyAccessor sourceAccessor,
+                IPropertyAccessor targetAccessor,
                 Type targetType)
                 : base(sourceAccessor, targetAccessor)
             {
@@ -71,10 +70,10 @@ namespace Squidex.Infrastructure.Reflection
 
         private class PropertyMapper
         {
-            private readonly PropertyAccessor sourceAccessor;
-            private readonly PropertyAccessor targetAccessor;
+            private readonly IPropertyAccessor sourceAccessor;
+            private readonly IPropertyAccessor targetAccessor;
 
-            public PropertyMapper(PropertyAccessor sourceAccessor, PropertyAccessor targetAccessor)
+            public PropertyMapper(IPropertyAccessor sourceAccessor, IPropertyAccessor targetAccessor)
             {
                 this.sourceAccessor = sourceAccessor;
                 this.targetAccessor = targetAccessor;
@@ -150,10 +149,8 @@ namespace Squidex.Infrastructure.Reflection
 
             public static TTarget MapClass(TSource source, TTarget destination, CultureInfo culture)
             {
-                for (var i = 0; i < Mappers.Count; i++)
+                foreach (var mapper in Mappers)
                 {
-                    var mapper = Mappers[i];
-
                     mapper.MapProperty(source, destination, culture);
                 }
 

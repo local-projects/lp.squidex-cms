@@ -7,7 +7,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
 using Squidex.Domain.Apps.Entities.Apps.Indexes;
 using Squidex.Domain.Apps.Entities.Backup;
@@ -156,22 +155,16 @@ namespace Squidex.Domain.Apps.Entities.Apps
 
         private async Task ReadAssetAsync(Guid appId, IBackupReader reader)
         {
-            try
+            await reader.ReadBlobAsync(AvatarFile, async stream =>
             {
-                await reader.ReadBlobAsync(AvatarFile, async stream =>
+                try
                 {
-                    try
-                    {
-                        await appImageStore.UploadAsync(appId, stream);
-                    }
-                    catch (AssetAlreadyExistsException)
-                    {
-                    }
-                });
-            }
-            catch (FileNotFoundException)
-            {
-            }
+                    await appImageStore.UploadAsync(appId, stream);
+                }
+                catch (AssetAlreadyExistsException)
+                {
+                }
+            });
         }
     }
 }

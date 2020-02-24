@@ -44,6 +44,10 @@ export class WorkflowTransitionComponent {
         this.update.emit(({ roles: roles || [] }) as any);
     }
 
+    public emitRemove() {
+        this.remove.emit();
+    }
+
     public trackByRole(index: number, role: RoleDto) {
         return role.name;
     }

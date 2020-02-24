@@ -12,6 +12,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Squidex.Domain.Apps.Core.Contents;
 using Squidex.Domain.Apps.Entities.Schemas;
+using Squidex.Infrastructure.Tasks;
 
 namespace Squidex.Domain.Apps.Entities.Contents
 {
@@ -47,40 +48,42 @@ namespace Squidex.Domain.Apps.Entities.Contents
                 })
             };
 
-        public Task<Status> GetInitialStatusAsync(ISchemaEntity schema)
+        public Task<StatusInfo> GetInitialStatusAsync(ISchemaEntity schema)
         {
-            return Task.FromResult(Status.Draft);
+            var result = InfoDraft;
+
+            return Task.FromResult(result);
         }
 
         public Task<bool> CanPublishOnCreateAsync(ISchemaEntity schema, NamedContentData data, ClaimsPrincipal user)
         {
-            return Task.FromResult(true);
+            return TaskHelper.True;
         }
 
-        public Task<bool> CanMoveToAsync(IContentEntity content, Status status, Status next, ClaimsPrincipal user)
+        public Task<bool> CanMoveToAsync(IContentEntity content, Status next, ClaimsPrincipal user)
         {
-            var result = Flow.TryGetValue(status, out var step) && step.Transitions.Any(x => x.Status == next);
+            var result = Flow.TryGetValue(content.Status, out var step) && step.Transitions.Any(x => x.Status == next);
 
             return Task.FromResult(result);
         }
 
-        public Task<bool> CanUpdateAsync(IContentEntity content, Status status, ClaimsPrincipal user)
+        public Task<bool> CanUpdateAsync(IContentEntity content, ClaimsPrincipal user)
         {
-            var result = status != Status.Archived;
+            var result = content.Status != Status.Archived;
 
             return Task.FromResult(result);
         }
 
-        public Task<StatusInfo> GetInfoAsync(IContentEntity content, Status status)
+        public Task<StatusInfo> GetInfoAsync(IContentEntity content)
         {
-            var result = Flow[status].Info;
+            var result = Flow[content.Status].Info;
 
             return Task.FromResult(result);
         }
 
-        public Task<StatusInfo[]> GetNextAsync(IContentEntity content, Status status, ClaimsPrincipal user)
+        public Task<StatusInfo[]> GetNextsAsync(IContentEntity content, ClaimsPrincipal user)
         {
-            var result = Flow.TryGetValue(status, out var step) ? step.Transitions : Array.Empty<StatusInfo>();
+            var result = Flow.TryGetValue(content.Status, out var step) ? step.Transitions : Array.Empty<StatusInfo>();
 
             return Task.FromResult(result);
         }

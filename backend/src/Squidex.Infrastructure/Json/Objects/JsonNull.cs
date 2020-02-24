@@ -6,7 +6,6 @@
 // ==========================================================================
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Squidex.Infrastructure.Json.Objects
 {
@@ -51,13 +50,6 @@ namespace Squidex.Infrastructure.Json.Objects
         public override string ToString()
         {
             return "null";
-        }
-
-        public bool TryGet(string pathSegment, [MaybeNullWhen(false)] out IJsonValue result)
-        {
-            result = null!;
-
-            return false;
         }
     }
 }

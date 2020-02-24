@@ -32,7 +32,10 @@ export class ModalDialogComponent implements AfterViewInit {
     public showFooter = true;
 
     @Input()
-    public size: 'sm' | 'md' | 'lg' | 'xl' = 'md';
+    public showTabs = true;
+
+    @Input()
+    public large = false;
 
     @Input()
     public flexBody = false;
@@ -74,5 +77,9 @@ export class ModalDialogComponent implements AfterViewInit {
                 this.renderer.setStyle(element.nativeElement.parentNode, 'display', 'none');
             }
         }
+    }
+
+    public emitClose() {
+        this.close.emit();
     }
 }

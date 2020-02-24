@@ -60,13 +60,13 @@ namespace Squidex.Domain.Apps.Entities.Schemas
                     })
                     .HideField(1).DisableField(1).LockField(1)
                     .ChangeCategory("myCategory")
-                    .SetFieldsInLists(new FieldNames("meta.id", "myString"))
-                    .SetFieldsInReferences(new FieldNames("myString"))
-                    .SetScripts(new SchemaScripts
+                    .ConfigureFieldsInLists(new FieldNames("meta.id", "myString"))
+                    .ConfigureFieldsInReferences(new FieldNames("myString"))
+                    .ConfigureScripts(new SchemaScripts
                     {
                         Change = "change-script"
                     })
-                    .SetPreviewUrls(new Dictionary<string, string>
+                    .ConfigurePreviewUrls(new Dictionary<string, string>
                     {
                         ["mobile"] = "http://mobile"
                     })
